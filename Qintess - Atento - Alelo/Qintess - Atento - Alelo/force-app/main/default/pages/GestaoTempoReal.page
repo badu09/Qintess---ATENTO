@@ -1,0 +1,139 @@
+<apex:page showHeader="false" controller="GestaoTempoRealController">
+    <head>
+        -
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+              integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+              crossorigin="anonymous"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}"/>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css"/>
+        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"/>
+        <style>
+            th{ text-align:center; }
+            td{ text-align:center; }
+            .dataTables_length{ display:none !important; }
+            .dataTables_filter{ display:none !important; }
+
+        </style>
+    </head>
+    <body>
+    <apex:form >
+        <apex:actionFunction name="pesquisaUsuario" reRender="valoresOperador" action="{!filtrarOperadores}"
+                             oncomplete="atualizaDataTable()();"/>
+        <apex:actionFunction name="pesquisaFila" reRender="valoresOperador" action="{!filtrarOperadores}"
+                             oncomplete="atualizaDataTable()();"/>
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.75; z-index: 1000; background-color: black;">
+                    &nbsp;
+                </div>
+                <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 5% 25%"
+                     align="center">
+                    <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                        <i class="glyphicon glyphicon-refresh" aria-hidden="true"></i>
+                        <span style="display: inline-block; padding: 10px 0px;">Aguarde</span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        <apex:outputPanel >
+            <div class="container" style="height:100px;">
+                <div class="row" style="margin-top:30px;">
+                    <div class="col-sm" align="right">
+                        <h3>Fila</h3>
+                    </div>
+                    <div class="col-md-auto">
+                        <apex:selectList value="{!filaSelecionada}" multiselect="false" size="1"
+                                         styleClass="form-control" style="height:35px;" onchange="pesquisaFila();">
+                            <apex:selectOptions value="{!listFilasFiltro}"/>
+                        </apex:selectList>
+                    </div>
+                    <div align="right" class="col-2">
+                        <h3>Usuário</h3>
+                    </div>
+                    <div class="col">
+                        <apex:selectList value="{!usuarioSelecionado}" multiselect="false" size="1"
+                                         styleClass="form-control" style="height:35px;" onchange="pesquisaUsuario();">
+                            <apex:selectOptions value="{!listUsersFiltro}"/>
+                        </apex:selectList>
+                    </div>
+                    <div class="col">
+                        <apex:commandLink action="{!refreshOperadores}" styleClass="btn btn-light"
+                                          style="height:35px; width:35px;" reRender="valoresOperador" status="status" oncomplete="atualizaDataTable()"><span style="font-size:25px;"
+                                                                                class="glyphicon glyphicon-refresh"></span>
+                        </apex:commandLink>
+                    </div>
+                </div>
+            </div>
+        </apex:outputPanel>
+        <apex:outputPanel id="valoresOperador">
+            <table id="table_id" class="display">
+                <thead>
+                <tr>
+                    <th>FILA</th>
+                    <th>USUÁRIO</th>
+                    <th>SUPERVISOR</th>
+                    <th>TIPO DE AÇÃO</th>
+                    <th>MOTIVO DE PAUSA</th>
+                    <th>TEMPO EM HORAS</th>
+                    <th>TEMPO EM MINUTOS</th>
+                </tr>
+                </thead>
+                <tbody>
+                <apex:repeat var="l" value="{!listHistoricoExibicao}">
+                    <tr>
+                        <td>
+                            <apex:repeat var="f" value="{!l.filas}">
+                            {!f}<br/>
+                            </apex:repeat>
+                        </td>
+                        <td>{!l.operador}</td>
+                        <td>{!l.supervisor}</td>
+                        <td>{!l.tipoAcao}</td>
+                        <td>{!l.motivoPausa}</td>
+                        <td>{!l.tempoHoras}</td>
+                        <td>{!l.tempoMinutos}</td>
+                    </tr>
+                </apex:repeat>
+                </tbody>
+            </table>
+        </apex:outputPanel>
+    </apex:form>
+    <!--<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>-->
+    <script>
+        var table;
+        var $j = jQuery.noConflict();
+        $j(document).ready( function () {
+            atualizaDataTable()
+        });
+
+        function atualizaDataTable() {
+            $j('#table_id').DataTable({
+                "pagingType": "full_numbers",
+                "language": {
+                    "lengthMenu": "Exibindo _MENU_ registros por página",
+                    "zeroRecords": "Nenhum registro encontrado",
+                    "info": "Exibindo página _PAGE_ de _PAGES_",
+                    "infoEmpty": "",
+                    "infoFiltered": "",
+                    "search":"Buscar",
+                    "oPaginate": {
+                        "sNext": "Próximo",
+                        "sPrevious": "Anterior",
+                        "sFirst": "",
+                        "sLast": ""
+                    }
+                },
+                aLengthMenu: [
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "Todos"]
+                ],
+                iDisplayLength: -1
+            });
+        }
+
+    </script>
+    </body>
+</apex:page>

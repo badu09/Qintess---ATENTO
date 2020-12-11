@@ -1,0 +1,158 @@
+<apex:page id="pageProdutoAlelo" StandardController="Opportunity" extensions="CtrlProdutoAlelo">
+<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+<apex:includeScript value="/support/console/37.0/integration.js"/>
+<apex:includeScript value="/soap/ajax/37.0/connection.js" />
+<apex:includeScript value="/soap/ajax/37.0/apex.js" />
+<style type="text/css">
+    
+</style>
+<script type="text/javascript">
+    var $j = jQuery.noConflict();
+
+    function blockPage(){
+         var timeoutPasscode; 
+         $j.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+              css: {
+               border: 'none',
+               padding: '15px',
+               '-webkit-border-radius': '10px',
+               '-moz-border-radius': '10px',
+               opacity: .9
+              }
+            });
+      } 
+
+    function unblockPage(){
+        $j.unblockUI();
+    }
+    
+    $j(window).ready(function() {
+        if (sforce.console.isInConsole()) {
+            console.log('isInConsole: in console');
+            //alert('isInConsole: in console');
+            sforce.console.disableTabClose(true, false, displayResultsCallback);
+        }
+        else {
+            console.log('isInConsole: not  in console');
+            //alert('isInConsole: not  in console');
+        }
+    });
+    
+    var displayResultsCallback = function displayResultsCallback(result){
+    
+        console.log('displayResultsCallback: ' + JSON.stringify(result));
+        //alert('displayResultsCallback: ' + JSON.stringify(result));
+    }
+    
+    var refreshSuccess = function refreshSuccess(result) {
+        console.log('refreshSuccess: ' + result.success);
+        //alert(result.success);
+    };
+    
+    var refreshSubTab = function refreshSubTab(result) {
+        console.log('refreshSubTab: ' + result.id);
+        //alert(result.id);  
+        sforce.console.refreshSubtabById(result.id, true, refreshSuccess);
+    }
+    
+    var callbackCTIMessage = function callbackCTIMessage(result) {
+        console.log('callbackCTIMessage: ' + result.success); 
+        //alert('callbackCTIMessage: ' + result.success);
+        if (result.success == true) {
+            //sforce.console.getEnclosingTabId(refreshSubTab);
+            sforce.console.disableTabClose(false, false, displayResultsCallback);
+        }
+    };
+    
+    function carregarRegistro(message){
+        console.log('CTIMessage: ' + message); 
+        //alert('CTIMessage: ' + message);  
+        if(message != '') {
+            //sforce.console.disableTabClose(true, true, displayResultsCallback);
+            sforce.console.cti.sendCTIMessage(message, callbackCTIMessage);
+        }
+    }   
+    
+    function liberarAba() {
+        var codigo = window.prompt("Por favor, entre com o código de liberação.", "");
+           
+        if (codigo == '9321') {
+            sforce.console.disableTabClose(false, false, displayResultsCallback);
+        }
+        else {
+            alert('Código inválido, tente novamente.');
+        }
+    }
+</script>
+<apex:actionStatus onstart="blockPage()" onstop="unblockPage();" id="blockUI"/>
+<apex:sectionHeader id="shCabecalho" title="Tabulação" subtitle="Produtos Alelo"/>
+<apex:form id="formpageProdutoAlelo">
+    <apex:pageMessages id="pmMensagem" />
+    <apex:outputPanel id="opPrincipal">
+        <apex:pageBlock id="pbProdutos" mode="maindetail">
+            <apex:outputPanel id="opComponentePrincipal"> 
+                <apex:repeat id="rOportunidade" value="{!lOportunidade}" var="o">
+                    <apex:repeat id="rProdutoAlelo" value="{!o.Produtos_Alelo__r}" var="pa"> 
+                        <apex:pageBlock id="pbProduto" title="{!pa.Name}" mode="maindetail"> 
+                            <apex:pageBlockSection id="pbsDetalhe" title="Detalhes de Produtos Alelo">
+                                <apex:outputField id="ofName" value="{!pa.Name}"/> 
+                                <apex:outputField id="ofNumeroContrato" value="{!pa.Numero_do_Contrato__c}"/>
+                                <apex:outputField id="ofValorUnitario" value="{!pa.Valor_Unitario__c}"/>
+                                <apex:outputField id="ofNumeroFilial" value="{!pa.Numero_de_Filiais__c}"/>
+                                <apex:outputField id="ofValorTotal" value="{!pa.F_Valor_Total__c}"/>
+                                <apex:outputField id="ofQuantidadeRecargaPrevista" value="{!pa.Quantidade_de_Recarga_Prevista__c}"/>
+                                <apex:outputField id="ofNomeEmpresaGravacaoCartao" value="{!pa.Nome_Empresa_Gravacao_Cartao__c}"/>
+                                <apex:outputField id="ofQuantidadeCartao" value="{!pa.Quantidade_de_Cartoes__c}"/>                      
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection id="pbsFaturamento" title="Faturamento">
+                                <apex:outputField id="ofQtdDiaPagamento" value="{!pa.Qtd_Dias_para_Pagamento__c}"/>
+                                <apex:outputField id="ofBanco" value="{!pa.Banco__c}"/>
+                                <apex:outputField id="ofFaturamento" value="{!pa.Faturamento__c}"/>
+                                <apex:outputField id="ofAgenciaDigito" value="{!pa.Agencia_Digito__c}"/>
+                                <apex:outputField id="ofFormaPagamento" value="{!pa.FormaPagamento__c}"/>
+                                <apex:outputField id="ofDataFaturamento" value="{!pa.Data_Faturamento__c}"/>
+                            </apex:pageBlockSection> 
+                            <apex:pageBlockSection id="pbsImplantacaoInput" title="Implantação" rendered="{!pa.Tabulacao_Pai_Implantacao__c != 'IMPLANTADO' && pa.Tabulacao_Pai_Implantacao__c != 'DESEJA CANCELAR' && !alteraObservacao}">
+                                <apex:inputField id="ifTabulacaoPaiImplantacao" value="{!pa.Tabulacao_Pai_Implantacao__c}" required="true"/>
+                                <apex:inputField id="ifNumeroPedido" value="{!pa.Numero_de_Pedido__c}"/>
+                                <apex:inputField id="ifTabulacaoFilhoImplantacao" value="{!pa.Tabulacao_Filho_Implantacao__c}"/>
+                                <apex:inputField id="ifAgendamentoRetornoImplantacao" value="{!pa.Agendamento_Retorno_Implanta_o__c}"/>
+                                <apex:inputField id="ifTabulacaoNetoImplantacao" value="{!pa.Tabulacao_Neto_Implantacao__c}"/>
+                                <apex:inputField id="ifDataPedido" value="{!pa.Data_do_pedido__c }" />
+                                <apex:inputField id="ifValorImplantado" value="{!pa.Valor_Implantado__c}"/>
+                                <apex:inputField id="ifDataFaseada" value="{!pa.Data_Faseada__c}"/>
+                                <apex:inputField id="ifValorFaseado" value="{!pa.Valor_Faseado__c}"/>
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection id="pbsObservacaoIf" title="Observação" rendered="{!pa.Tabulacao_Pai_Implantacao__c != 'IMPLANTADO' && pa.Tabulacao_Pai_Implantacao__c != 'DESEJA CANCELAR' && alteraObservacao}">
+                                <apex:inputField style="width: 500px; hegiht:70px;" id="ifObservacaoImplantacao2" value="{!pa.Observacao_Implantacao2__c}"/>
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection id="pbsImplantacaoOutput" title="Implantação" rendered="{!pa.Tabulacao_Pai_Implantacao__c == 'IMPLANTADO' || pa.Tabulacao_Pai_Implantacao__c == 'DESEJA CANCELAR'}">
+                                <apex:outputField id="ofTabulacaoPaiImplantacao" value="{!pa.Tabulacao_Pai_Implantacao__c}" />
+                                <apex:outputField id="ofNumeroPedido" value="{!pa.Numero_de_Pedido__c}"/>
+                                <apex:outputField id="ofTabulacaoFilhoImplantacao" value="{!pa.Tabulacao_Filho_Implantacao__c}"/>
+                                <apex:outputField id="ofAgendamentoRetornoImplantacao" value="{!pa.Agendamento_Retorno_Implanta_o__c}"/>
+                                <apex:outputField id="ofTabulacaoNetoImplantacao" value="{!pa.Tabulacao_Neto_Implantacao__c}"/>
+                                <apex:outputField id="ofDataPedido" value="{!pa.Data_do_pedido__c }"/>
+                                <apex:outputField id="ofValorImplantado" value="{!pa.Valor_Implantado__c}"/>
+                                <apex:outputField id="ofDataFaseada" value="{!pa.Data_Faseada__c}"/>
+                                <apex:outputField id="ofValorFaseado" value="{!pa.Valor_Faseado__c}"/>
+                            </apex:pageBlockSection> 
+                            <apex:pageBlockSection id="pbsObservacaoOf" title="Observação" rendered="{!pa.Tabulacao_Pai_Implantacao__c == 'IMPLANTADO' || pa.Tabulacao_Pai_Implantacao__c == 'DESEJA CANCELAR'  || !alteraObservacao}">
+                                <apex:outputField style="width: 500px; hegiht:70px;" id="ofObservacaoImplantacao2" value="{!pa.Observacao_Implantacao2__c}"/>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                    </apex:repeat>
+                </apex:repeat>
+            </apex:outputPanel>
+            <apex:pageBlockButtons id="pbbTabularProduto">
+                <apex:commandButton id="cbSalvar" value="{!IF(alteraObservacao, 'Salvar Observação', 'Salvar')}" action="{!salvar}" oncomplete="carregarRegistro('{!ctiMessage}');"
+                                    reRender="opPrincipal, pmMensagem, pmMensagemRodape" status="blockUI" />
+                <apex:commandButton id="cbEditarObservacao" immediate="true" value="Editar Observação" action="{!alterarObservacao}" disabled="{!alteraObservacao || (model == null || model.Id == null)}" reRender="opPrincipal, pmMensagem, pmMensagemRodape" status="blockUI" />
+<!--                <apex:commandButton id="cbLiberar" value="Liberar Aba" onclick="liberarAba(); return false;" reRender="none" status="blockUI" /> -->
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:outputPanel>
+    <apex:pageMessages id="pmMensagemRodape" />
+</apex:form> 
+</apex:page>

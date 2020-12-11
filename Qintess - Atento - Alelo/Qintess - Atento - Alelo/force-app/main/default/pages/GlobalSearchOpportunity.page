@@ -1,0 +1,59 @@
+<apex:page id="pProcessoImplantacao" StandardController="Opportunity" extensions="CtrlGlobalSearchOpportunity" action="{!encaminhar}">
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}"/>
+    <apex:includeScript value="/support/console/37.0/integration.js"/>
+    <apex:includeScript value="/soap/ajax/37.0/connection.js"/>
+    <apex:includeScript value="/soap/ajax/37.0/apex.js"/>
+    <script type="text/javascript">
+	var $j = jQuery.noConflict();
+
+    function blockPage(){
+         var timeoutPasscode;
+         $j.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+              css: {
+               border: 'none',
+               padding: '15px',
+               '-webkit-border-radius': '10px',
+               '-moz-border-radius': '10px',
+               opacity: .9
+              }
+            });
+      }
+
+    function unblockPage(){
+    	$j.unblockUI();
+    }
+
+    $j(document).ready(function(){
+        if('{!ocorreuErro}' == 'true') {
+            alert('{!model.mensagemErro}');
+            if(sforce.console.isInConsole()) {
+                sforce.console.getFocusedPrimaryTabId(function(result) {
+                    sforce.console.disableTabClose(false, false, {});
+                    sforce.console.closeTab(result.id);
+                })
+            }
+        }
+        if('{!bloqueiaAba}' == 'false') {
+            if(sforce.console.isInConsole()) {
+                sforce.console.disableTabClose(false, false, {});
+            }
+        }
+        if('{!toRedirect}' != '') {
+            if(sforce.console.isInConsole()) {
+                srcSelf('{!toRedirect}');
+            }
+            else {
+                window.location.href = '{!toRedirect}'
+            }
+
+        }
+    })
+    </script>
+    <apex:actionStatus onstart="blockPage()" onstop="unblockPage();" id="blockUI"/>
+    <apex:form id="fOpportunity">
+        <apex:pageMessages id="pmMensagem"/>
+        <apex:outputPanel id="opPrincipal">
+        </apex:outputPanel>
+    </apex:form>
+</apex:page>

@@ -1,0 +1,1683 @@
+<!--<apex:page id="pageFichaPropostaPrepaxPDF" controller="CtrlFichaPropostaPDF" showheader="false" applyhtmltag="false" language="pt_BR">-->
+<apex:page id="pageFichaPropostaPrepaxPDF" controller="CtrlFichaPropostaPDF" renderAs="pdf" showheader="false" applyhtmltag="false" language="pt_BR">
+    <html>
+    <head>
+        <style type="text/css">
+	    	 @page{
+                @bottom-right {    
+                   z-index: 3;
+                   color: #A9A9A9;
+                   font-family:"Arial";
+                   font-size:7.5pt;            
+                }
+                size: A4 portrait;
+                margin-top:0.5cm;
+                margin-left:1.0cm;
+                margin-right:1.0cm;
+                margin-bottom:0.5cm;
+            }
+            body{
+                font-family: "Helvetica Neue" , "Lucida Grande" , "Segoe UI" , Arial, Helvetica, Verdana, sans-serif;
+                font-size: 10px;  
+                color:black;
+                counter-reset: page_number;
+            }
+            footer {
+            	font-family: "Helvetica Neue" , "Lucida Grande" , "Segoe UI" , Arial, Helvetica, Verdana, sans-serif;
+                font-size: 10px;
+			    position:fixed;
+			    bottom:-13px;
+			    right:0;
+			}
+			#page-number:before {
+			    counter-increment: page_number;
+			    content: "Página " counter(page_number);
+			    content: "Página " counter(page) " de " counter(pages);
+			    padding: 0px 6px 0px 0px;
+			}
+            div {
+            	width: 100%;
+            	text-align: left;
+            	margin-top: 0px;
+            	padding: 0px 0px 0px 0px;
+            	display: table;
+            	float: left;
+            	overflow: auto;
+            }
+            div p {
+            	min-height: 13px;
+            	height: auto !important;
+            	text-align: left;
+            	margin:0;	
+            	padding: 5px 0px 0px 0px;
+            }
+            div p span, div span {
+            	width: 100%;
+            	min-height: 13px;
+            	height: auto !important;
+            	text-align: left;
+            	vertical-align: top;
+            	margin:0;
+            	padding: 2px 0px 0px 0px;
+            	border: 0px solid #000;
+            	display: table;
+            	float: left;
+            }
+            div p span label {
+            	width: auto !important;
+            	height: 12px;
+            	text-align: left;
+            	vertical-align: top;
+            	margin:0;
+            	padding: 0px 0px 3px 0px;
+            	border: 0px solid #000;
+            	display: table;
+            	float: left;
+            }
+            div p span .campo {
+            	width: 100%;
+            	height: 12px;
+            	text-align: left;
+            	vertical-align: top;
+            	margin:0;
+            	padding: 0px 5px 0px 5px;
+            	border-right: 1px solid #000;
+            	border-left: 1px solid #000;
+            	border: 0px solid #000;
+            	border-bottom: 1px solid #000;
+            	display: table;
+            	float: right;
+            }
+            div p strong {
+            	height: 12px;
+            	text-align: left;
+            	vertical-align: top;
+            	margin:0;
+            	padding: 0px 5px 0px 0px;
+            	border: 0px solid #000;
+            }
+            div.checkbox p span {
+            	font-size: 9px;
+            }
+            img.checkbox {
+            	width: 13px;
+            	height: 13px;
+            	margin:0;
+            	padding: 0px 5px 0px 0px;
+            	float: left;
+            }
+            div#principal {
+            	width: 100%;
+            	height: auto !importante;
+            	text-align: left;
+            	margin-top: 0px;
+            	padding: 0;
+            	display: table;
+            	float: left;
+            	padding: 0px 0px 0px 0px;
+            	border-top: 0px solid #000;
+            }
+            div p.subtitulo {
+            	width: 100%;
+            	background-color: #CCC;
+            	text-align: center;
+            	font-size: 11px;
+            	margin-bottom: 0px;
+            	padding: 1px 0px 1px 0px;
+            	border-top: 1px solid #000;
+            	border-bottom: 1px solid #000;
+            }
+            div p.subtitulo strong {
+            	width: 100%;
+            	background-color: #CCC;
+            	text-align: left;
+            	font-size: 11px;
+            	margin-bottom: 5px;
+            	padding: 0px 0px 0px 0px;
+            }
+            div.header{
+            	background-color: black;
+            	color: white;
+            	font-size: 13px;
+			    height: auto !important; 
+			    width:100%;
+			    padding: 5px 0px 5px 0px;
+			    marging: 0px 0px 5px 0px;
+			}
+			div.header img.header-logo{
+				padding: 0 0 0 10px;
+			}
+			div.header img.header-prepax{
+				padding: 13px 0 0 0;
+			}
+            div.footer{
+            	background-color: red;
+			    height: 30px; 
+			    width:100%;
+			    position: absolute;
+			    left: 0;
+			    bottom: 0; 
+			}
+			h2 {
+				font-size: 12px;
+				width: auto !important;
+				height: 16px;
+				background-color: #000;
+				color: #fff;
+				padding: 0 5px 0 5px;
+			}
+			h3 {
+				font-size: 12px;
+				width: auto !important;
+				height: 16px;
+				background-color: #ccc;
+				color: #000;
+				padding: 0;
+				margin: 10px 0 5px 0;
+				border-bottom: 2px solid #000;
+			}
+			.observacao {
+            	width: 100%;
+            	text-align: left;
+            	font-size: 9px;
+            	padding: 0px 0px 0px 0px;
+            }
+            div.page-break {
+            	page-break-before: always;
+		    }
+            div.assinatura {
+            	width: 50%;
+            	height: auto !important;
+            	padding: 0 0 60px 0;
+            	float: left;
+            }
+            div.assinatura span.assinatura {
+            	width: 100%;
+            	padding: 0;
+            	text-align: center;
+            }
+            div.assinatura span.assinatura .campo {
+            	width: 310px;
+            	height: auto !important;
+            	padding: 0;
+            	margin-left: 20px;
+            	float: left;
+            }
+            div.assinatura span.assinatura font {
+            	width: 100%;
+            	height: 12px;
+            	text-align: center;
+            	border: 0px solid #000;
+            }
+            .table-produtos { width: 100%; display: table; float: left; border-collapse: collapse; border: 1px solid #CCC; }
+			.table-produtos th {
+		        background-color: #CDCDCD;
+				color: #000;
+				padding: 3px 5px 3px 5px;
+				text-align: left;
+				border: 1px solid #DDD;
+		    }
+		    .table-produtos tr td {
+		        background-color: #FFFFFF;
+		        padding: 3px 5px 3px 5px;
+		        border: 1px solid #CCC;
+		    }
+		    .table-produtos tr.alternar-cor td {
+		        background-color: #EEE5DE;
+		    }
+		    td.number {
+		        text-align: right;
+		    }
+		    td.date {
+		    	width: 120px;
+		        text-align: center;
+		    }
+		</style>
+    </head>
+    <body>
+    <apex:form >
+        <div id="principal">
+            <div class="primeira-pagina dado-cadastral-contratante">
+                <div class="header">
+                    <span style="width: 100px;"><img class="header-logo" src="{!URLFOR($Resource.img_proposta, 'logo-ficha-prepax.png')}" width="70" /></span>
+                    <span style="width: 300px;"><strong>Ficha Proposta - Cartões Pré-Pagos</strong><br />Companhia Brasileira de Soluções e Serviços</span>
+                    <span style="width: 220px;"><br />CNPJ 04.740.876/0001-25</span>
+                    <span style="width: 70px;"><img class="header-prepax" src="{!URLFOR($Resource.img_proposta, 'prepax-ficha-prepax.png')}" width="70" /></span>
+                </div>
+                <div class="contratante">
+                    <h2>1. Dados Cadastrais do Contratante</h2>
+                    <p>
+							<span>
+								<label>*CNPJ do Contratante: </label>
+								<apex:outputText style="width: 590px;" styleClass="campo" value="{!cnpjContratante}" />
+							</span>
+                    </p>
+                    <p>
+							<span>
+								<label>*Razão Social: </label>
+								<apex:outputText style="width: 630px;" styleClass="campo" value="{!objOportunidade.Account.Razao_Social__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 540px;">
+								<label>*Nome Fantasia</label><br />
+								<apex:outputText styleClass="campo" value="{!objOportunidade.Account.Nome_Fantasia__c}" />
+							</span>
+                        <span style="width: 160px;">
+								<label>*Quantidade Total de Funcionarios</label><br />
+								<apex:outputText styleClass="campo" value="{!objOportunidade.Account.Quantidade_de_Funcionarios__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span>
+								<label>*Faturamento Anual: </label>
+								<apex:outputText style="width: 590px;" styleClass="campo" value="R$ {!FormatCurrency}" />
+							</span>
+                    </p>
+                    <p>
+							<span>
+								<label>*Atividade Principal - Ramo de Atividade (Seção/Divisão/Descrição) – ver códigos no anexo</label><br />
+								<apex:outputText styleClass="campo" value="{!AtividadePrincipalCompleto}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 100px;">
+								<label>*Forma de Constituição</label><br />
+							</span>
+                        <span style="width: 130px;">
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!FormaConstituicao != 1}" />
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!FormaConstituicao == 1}" />
+								<label>1-Sociedade Anônima</label><br />
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!FormaConstituicao != 2}" />
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!FormaConstituicao == 2}" />
+								<label>2-Limitada</label>
+							</span>
+                        <span style="width: 98px;">
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!FormaConstituicao != 3}" />
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!FormaConstituicao == 3}" />
+								<label>3-Cooperativa</label><br />
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!FormaConstituicao != 4}" />
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!FormaConstituicao == 4}" />
+								<label>4-Micro-empresa</label>
+							</span>
+                        <span style="width: 160px;">
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!FormaConstituicao != 5}" />
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!FormaConstituicao == 5}" />
+								<label>5-Empresa de pequeno porte</label><br />
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!FormaConstituicao != 6}" />
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!FormaConstituicao == 6}" />
+								<label>6-Sociedade Civil</label>
+							</span>
+                        <span style="width: 160px;text-aling:left;">
+								<label>*Data da Constituição</label><br />
+								<apex:outputText style="width: 160px;" styleClass="campo" value="{0,date,dd/MM/yyyy}">
+									<apex:param value="{!objAccountParent.Data_da_Constituicao__c}" />
+								</apex:outputText>
+							</span>
+                    </p>
+                </div>
+                <div class="responsavel-legal">
+                    <h3>Responsáveis Legais</h3>
+                    <span class="observacao">
+							<strong>Dados dos Administradores</strong>
+							(Pessoas físicas que representam a empresa. Podem ser membros da diretoria ou administradores eleitos pela Sociedade.)
+						</span>
+                    <p>
+							<span style="width: 540px;">
+								<label>*Nome</label><br />
+								<apex:outputText styleClass="campo" value="{!objOportunidade.Responsavel_Legal__r.Name}" />
+							</span>
+                        <span style="width: 160px;">
+								<label>*CPF</label><br />
+								<apex:outputText styleClass="campo" value="{!cpfResponsavelLegal1}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 540px;">
+								<label>*Nome 1</label><br />
+								<apex:outputText styleClass="campo" value="{!objOportunidade.Responsavel_Legal_2__r.Name}" />
+							</span>
+                        <span style="width: 160px;">
+								<label>*CPF 1</label><br />
+								<apex:outputText styleClass="campo" value="{!cpfResponsavelLegal2}" />
+							</span>
+                    </p>
+                </div>
+                <div class="matriz">
+                    <h3>Filial Contratante (Matriz)</h3>
+                    <p>
+							<span>
+								<label>Nome: </label>
+								<apex:outputText style="width: 670px;" styleClass="campo" value="{!objAccountParent.Razao_Social__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 350px;">
+								<label>*Inscrição Estadual: </label>
+								<apex:outputText style="width: 250px;" styleClass="campo" value="{!objAccountParent.Inscricao_Estadual__c}" />
+							</span>
+                        <span style="width: 350px;">
+								<label>*Inscrição Municipal: </label>
+								<apex:outputText style="width: 250px;" styleClass="campo" value="{!objAccountParent.Inscricao_Municipal__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span>
+								<label>*E-mail de contato: </label>
+								<apex:outputText style="width: 610px;" styleClass="campo" value="{!objAccountParent.Email__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span>
+								<label>*E-mail para envio de nota fiscal eletrônica: </label>
+								<apex:outputText style="width: 505px;" styleClass="campo" value="{!objAccountParent.E_mail_Para_Envio_de_NFE__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 350px;">
+								<label>Telefone Fixo 1: </label>
+								<apex:outputText style="width: 270px;" styleClass="campo" value="{!objAccountParent.Phone}" />
+							</span>
+                        <span style="width: 350px;">
+								<label>Telefone Fixo 2: </label>
+								<apex:outputText style="width: 270px;" styleClass="campo" value="{!objAccountParent.Telefone2__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 550px;">
+								<label>Endereço (Rua/Avenida): </label>
+								<apex:outputText style="width: 430px;" styleClass="campo" value="{!objAccountParent.ShippingStreet}" />
+							</span>
+                        <span style="width: 150px;">
+								<label>*Número: </label>
+								<apex:outputText style="width: 100px;" styleClass="campo" value="{!objAccountParent.Numero__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 350px;">
+								<label>Complemento: </label>
+								<apex:outputText style="width: 280px;" styleClass="campo" value="{!objAccountParent.Complemento__c}" />
+							</span>
+                        <span style="width: 350px;">
+								<label>*Bairro: </label>
+								<apex:outputText style="width: 310px;" styleClass="campo" value="{!objAccountParent.Bairro__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 200px;">
+								<label>*CEP: </label>
+								<apex:outputText style="width: 160px;" styleClass="campo" value="{!objAccountParent.ShippingPostalCode}" />
+							</span>
+                        <span style="width: 400px;">
+								<label>*Cidade: </label>
+								<apex:outputText style="width: 350px;" styleClass="campo" value="{!objAccountParent.ShippingCity}" />
+							</span>
+                        <span style="width: 100px;">
+								<label>*UF: </label>
+								<apex:outputText style="width: 70px;" styleClass="campo" value="{!objAccountParent.Estado__c}" />
+							</span>
+                    </p>
+                </div>
+                <div class="filia1">
+                    <h3>Filial 1</h3>
+                    <p>
+							<span style="width: 400px;">
+								<label>Nome: </label>
+								<apex:outputText style="width: 370px;" styleClass="campo" value="{!objAccount.Razao_Social__c}" />
+							</span>
+                        <span style="width: 300px;">
+								<label>CNPJ Filial 1: </label>
+								<apex:outputText style="width: 230px;" styleClass="campo" value="{!objAccount.CPF_CNPJ__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 350px;">
+								<label>*Inscrição Estadual: </label>
+								<apex:outputText style="width: 250px;" styleClass="campo" value="{!objAccount.Inscricao_Estadual__c}" />
+							</span>
+                        <span style="width: 350px;">
+								<label>*Inscrição Municipal: </label>
+								<apex:outputText style="width: 250px;" styleClass="campo" value="{!objAccount.Inscricao_Municipal__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span>
+								<label>*E-mail de contato: </label>
+								<apex:outputText style="width: 610px;" styleClass="campo" value="{!objAccount.Email__c }" />
+							</span>
+                    </p>
+                    <p>
+							<span>
+								<label>*E-mail para envio de nota fiscal eletrônica: </label>
+								<apex:outputText style="width: 505px;" styleClass="campo" value="{!objAccount.E_mail_Para_Envio_de_NFE__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 350px;">
+								<label>Telefone Fixo 1: </label>
+								<apex:outputText style="width: 270px;" styleClass="campo" value="{!objAccount.Phone}" />
+							</span>
+                        <span style="width: 350px;">
+								<label>Telefone Fixo 2: </label>
+								<apex:outputText style="width: 270px;" styleClass="campo" value="{!objAccount.Telefone2__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 550px;">
+								<label>Endereço (Rua/Avenida): </label>
+								<apex:outputText style="width: 430px;" styleClass="campo" value="{!objAccount.ShippingStreet}" />
+							</span>
+                        <span style="width: 150px;">
+								<label>*Número: </label>
+								<apex:outputText style="width: 100px;" styleClass="campo" value="{!objAccount.Numero__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 350px;">
+								<label>Complemento: </label>
+								<apex:outputText style="width: 280px;" styleClass="campo" value="{!objAccount.Complemento__c}" />
+							</span>
+                        <span style="width: 350px;">
+								<label>*Bairro: </label>
+								<apex:outputText style="width: 310px;" styleClass="campo" value="{!objAccount.Bairro__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 200px;">
+								<label>*CEP: </label>
+								<apex:outputText style="width: 160px;" styleClass="campo" value="{!objAccount.ShippingPostalCode}" />
+							</span>
+                        <span style="width: 400px;">
+								<label>*Cidade: </label>
+								<apex:outputText style="width: 350px;" styleClass="campo" value="{!objAccount.ShippingCity}" />
+							</span>
+                        <span style="width: 100px;">
+								<label>*UF: </label>
+								<apex:outputText style="width: 70px;" styleClass="campo" value="{!objAccount.Estado__c}" />
+							</span>
+                    </p>
+                </div>
+                <div class="filia2">
+                    <h3>Filial 2</h3>
+                    <p>
+                            <span style="width: 400px;">
+								<label>Nome: </label>
+								<apex:outputText style="width: 370px;" styleClass="campo" value="" />
+							</span>
+                        <span style="width: 300px;">
+								<label>CNPJ Filial 2: </label>
+								<apex:outputText style="width: 230px;" styleClass="campo" value="" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 350px;">
+								<label>*Inscrição Estadual: </label>
+								<apex:outputText style="width: 250px;" styleClass="campo" value="" />
+							</span>
+                        <span style="width: 350px;">
+								<label>*Inscrição Municipal: </label>
+								<apex:outputText style="width: 250px;" styleClass="campo" value="" />
+							</span>
+                    </p>
+                    <p>
+							<span>
+								<label>*E-mail de contato: </label>
+								<apex:outputText style="width: 610px;" styleClass="campo" value="" />
+							</span>
+                    </p>
+                    <p>
+							<span>
+								<label>*E-mail para envio de nota fiscal eletrônica: </label>
+								<apex:outputText style="width: 505px;" styleClass="campo" value="" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 350px;">
+								<label>Telefone Fixo 1: </label>
+								<apex:outputText style="width: 270px;" styleClass="campo" value="" />
+							</span>
+                        <span style="width: 350px;">
+								<label>Telefone Fixo 2: </label>
+								<apex:outputText style="width: 270px;" styleClass="campo" value="" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 550px;">
+								<label>Endereço (Rua/Avenida): </label>
+								<apex:outputText style="width: 430px;" styleClass="campo" value="" />
+							</span>
+                        <span style="width: 150px;">
+								<label>*Número: </label>
+								<apex:outputText style="width: 100px;" styleClass="campo" value="" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 350px;">
+								<label>Complemento: </label>
+								<apex:outputText style="width: 280px;" styleClass="campo" value="" />
+							</span>
+                        <span style="width: 350px;">
+								<label>*Bairro: </label>
+								<apex:outputText style="width: 310px;" styleClass="campo" value="" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 200px;">
+								<label>*CEP: </label>
+								<apex:outputText style="width: 160px;" styleClass="campo" value="" />
+							</span>
+                        <span style="width: 400px;">
+								<label>*Cidade: </label>
+								<apex:outputText style="width: 350px;" styleClass="campo" value="" />
+							</span>
+                        <span style="width: 100px;">
+								<label>*UF: </label>
+								<apex:outputText style="width: 70px;" styleClass="campo" value="" />
+							</span>
+                    </p>
+                </div>
+            </div>
+            <div class="segunda-pagina page-break">
+                <div class="header">
+                    <span style="width: 100px;"><img class="header-logo" src="{!URLFOR($Resource.img_proposta, 'logo-ficha-prepax.png')}" width="70" /></span>
+                    <span style="width: 300px;"><strong>Ficha Proposta - Cartões Pré-Pagos</strong><br />Companhia Brasileira de Soluções e Serviços</span>
+                    <span style="width: 220px;"><br />CNPJ 04.740.876/0001-25</span>
+                    <span style="width: 70px;"><img class="header-prepax" src="{!URLFOR($Resource.img_proposta, 'prepax-ficha-prepax.png')}" width="70" /></span>
+                </div>
+                <div class="dado-interlocutor-decisao">
+                    <h2>2. Dados do interlocutor de decisão <font class="observacao" style="font-size: 7px; wdth: auto !important;">(Não precisa ser um Responsável Legal. Pessoa nomeada pelos administradores para primeiro acesso ao Portal de Gestão Prepax.)</font></h2>
+                    <p>
+							<span>
+								<label>*Nome Completo: </label>
+								<apex:outputText style="width: 610px;" styleClass="campo" value="{!objContact1.Name}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 200px;">
+								<label>*CPF: </label>
+								<apex:outputText style="width: 170px;" styleClass="campo" value="{!cpfContact1}" />
+							</span>
+                        <span style="width: 250px;">
+								<label>*Data de Nascimento: </label>
+								<apex:outputText style="width: 150px;" styleClass="campo" value="{0,date,dd/MM/yyyy}">
+									<apex:param value="{!objContact1.Data_de_Nascimento__c}" />
+								</apex:outputText>
+							</span>
+                        <span style="width: 50px;">
+								<label>*Sexo: </label>
+							</span>
+                        <span style="width: 100px;">
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!IF(objContact1.Sexo__c!='Feminino',true,false)}" />
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!IF(objContact1.Sexo__c=='Feminino',true,false)}" />
+						        <label>Feminino </label>
+						  	</span>
+                        <span style="width: 100px;">
+						        <apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!IF(objContact1.Sexo__c!='Masculino',true,false)}" />
+								<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!IF(objContact1.Sexo__c=='Masculino',true,false)}" />
+								<label>Masculino </label>
+							</span>
+                    </p>
+                    <p>
+							<span>
+								<label>*E-mail (que receberá link de ativação do Login e Senha para primeiro acesso ao Portal de Gestão Prepax)</label><br />
+								<apex:outputText styleClass="campo" value="{!objContact1.Email}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 400px;">
+								<label>*Nível Hierárquico: </label>
+								<apex:outputText style="width: 310px;" styleClass="campo" value="{!objContact1.Nivel_Hierarquico__c}" />
+							</span>
+                        <span style="width: 300px;">
+								<label>Número de Matrícula: </label>
+								<apex:outputText style="width: 200px;" styleClass="campo" value="{!objContact1.Numero_de_Matricula__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 400px;">
+								<label>*Nome do Cargo: </label>
+								<apex:outputText style="width: 315px;" styleClass="campo" value="{!objContact1.Department}" />
+							</span>
+                        <span style="width: 300px;">
+								<label>*Localização Interna: </label>
+								<apex:outputText style="width: 200px;" styleClass="campo" value="{!objContact1.Localizacao_Interna__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 200px;">
+								<label>*Telefone Fixo: </label>
+								<apex:outputText style="width: 130px;" styleClass="campo" value="{!objContact1.DDD__c} {!objContact1.Telefone_Comercial__c}" />
+							</span>
+                        <span style="width: 100px;">
+								<label>Ramal: </label>
+								<apex:outputText style="width: 65px;" styleClass="campo" value="{!objContact1.Ramal__c}" />
+							</span>
+                        <span style="width: 220px;">
+								<label>Telefone Celular: </label>
+								<apex:outputText style="width: 140px;" styleClass="campo" value="{!objContact1.DDDCelular__c} {!objContact1.Telefone_Celular__c}" />
+							</span>
+                        <span style="width: 180px;">
+								<label>Fax: </label>
+								<apex:outputText style="width: 155px;" styleClass="campo" value="{!objContact1.dddfax__c} {!objContact1.Telefone_Fax__c}" />
+							</span>
+                    </p>
+                </div>
+                <div class="dado-interlocutor-operacao">
+                    <h2>3. Dados do interlocutor de operação <font class="observacao">(Responsável pelo recebimento do cartão, recomendado definir 3 interlocutores)</font></h2>
+                    <div class="interlocutor-operacao1">
+                        <h3>Interlocutor de operação 1</h3>
+                        <p>
+								<span>
+									<label>*Nome Completo: </label>
+									<apex:outputText style="width: 610px;" styleClass="campo" value="{!objContact2.Name}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 200px;">
+									<label>*CPF: </label>
+									<apex:outputText style="width: 170px;" styleClass="campo" value="{!cpfContact2}" />
+								</span>
+                            <span style="width: 250px;">
+									<label>*Data de Nascimento: </label>
+									<apex:outputText style="width: 150px;" styleClass="campo" value="{0,date,dd/MM/yyyy}">
+										<apex:param value="{!objContact2.Data_de_Nascimento__c}" />
+									</apex:outputText>
+								</span>
+                            <span style="width: 50px;">
+									<label>*Sexo: </label>
+								</span>
+                            <span style="width: 100px;">
+									<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!IF(objContact2.Sexo__c!='Feminino',true,false)}" />
+									<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!IF(objContact2.Sexo__c=='Feminino',true,false)}" />
+							        <label>Feminino </label>
+							  	</span>
+                            <span style="width: 100px;">
+							        <apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!IF(objContact2.Sexo__c!='Masculino',true,false)}" />
+									<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!IF(objContact2.Sexo__c=='Masculino',true,false)}" />
+									<label>Masculino </label>
+								</span>
+                        </p>
+                        <p>
+								<span>
+									<label>*E-mail: </label>
+									<apex:outputText style="width: 665px;" styleClass="campo" value="{!objContact2.Email}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 400px;">
+									<label>*Nível Hierárquico: </label>
+									<apex:outputText style="width: 310px;" styleClass="campo" value="{!objContact2.Nivel_Hierarquico__c}" />
+								</span>
+                            <span style="width: 300px;">
+									<label>Número de Matrícula: </label>
+									<apex:outputText style="width: 200px;" styleClass="campo" value="{!objContact2.Numero_de_Matricula__c}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 400px;">
+									<label>*Nome do Cargo: </label>
+									<apex:outputText style="width: 315px;" styleClass="campo" value="{!objContact2.Department}" />
+								</span>
+                            <span style="width: 300px;">
+									<label>*Localização Interna: </label>
+									<apex:outputText style="width: 200px;" styleClass="campo" value="{!objContact2.Localizacao_Interna__c}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 200px;">
+									<label>*Telefone Fixo: </label>
+									<apex:outputText style="width: 130px;" styleClass="campo" value="{!objContact2.DDD__c} {!objContact2.Telefone_Comercial__c}" />
+								</span>
+                            <span style="width: 100px;">
+									<label>Ramal: </label>
+									<apex:outputText style="width: 65px;" styleClass="campo" value="{!objContact2.Ramal__c}" />
+								</span>
+                            <span style="width: 220px;">
+									<label>Telefone Celular: </label>
+									<apex:outputText style="width: 140px;" styleClass="campo" value="{!objContact2.DDDCelular__c} {!objContact2.Telefone_Celular__c}" />
+								</span>
+                            <span style="width: 180px;">
+									<label>Fax: </label>
+									<apex:outputText style="width: 155px;" styleClass="campo" value="{!objContact2.dddfax__c} {!objContact2.Telefone_Fax__c}" />
+								</span>
+                        </p>
+                    </div>
+                    <div class="interlocutor-operacao2">
+                        <h3>Interlocutor de operação 2</h3>
+                        <p>
+								<span>
+									<label>*Nome Completo: </label>
+									<apex:outputText style="width: 610px;" styleClass="campo" value="{!objContact3.Name}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 200px;">
+									<label>*CPF: </label>
+									<apex:outputText style="width: 170px;" styleClass="campo" value="{!cpfContact3}" />
+								</span>
+                            <span style="width: 250px;">
+									<label>*Data de Nascimento: </label>
+									<apex:outputText style="width: 150px;" styleClass="campo" value="{0,date,dd/MM/yyyy}">
+										<apex:param value="{!objContact3.Data_de_Nascimento__c}" />
+									</apex:outputText>
+								</span>
+                            <span style="width: 50px;">
+									<label>*Sexo: </label>
+								</span>
+                            <span style="width: 100px;">
+									<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!IF(objContact3.Sexo__c!='Feminino',true,false)}" />
+									<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!IF(objContact3.Sexo__c=='Feminino',true,false)}" />
+							        <label>Feminino </label>
+							  	</span>
+                            <span style="width: 100px;">
+							        <apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!IF(objContact3.Sexo__c!='Masculino',true,false)}" />
+									<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!IF(objContact3.Sexo__c=='Masculino',true,false)}" />
+									<label>Masculino </label>
+								</span>
+                        </p>
+                        <p>
+								<span>
+									<label>*E-mail: </label>
+									<apex:outputText style="width: 665px;" styleClass="campo" value="{!objContact3.Email}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 400px;">
+									<label>*Nível Hierárquico: </label>
+									<apex:outputText style="width: 310px;" styleClass="campo" value="{!objContact3.Nivel_Hierarquico__c}" />
+								</span>
+                            <span style="width: 300px;">
+									<label>Número de Matrícula: </label>
+									<apex:outputText style="width: 200px;" styleClass="campo" value="{!objContact3.Numero_de_Matricula__c}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 400px;">
+									<label>*Nome do Cargo: </label>
+									<apex:outputText style="width: 315px;" styleClass="campo" value="{!objContact3.Department}" />
+								</span>
+                            <span style="width: 300px;">
+									<label>*Localização Interna: </label>
+									<apex:outputText style="width: 200px;" styleClass="campo" value="{!objContact3.Localizacao_Interna__c}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 200px;">
+									<label>*Telefone Fixo: </label>
+									<apex:outputText style="width: 130px;" styleClass="campo" value="{!objContact3.DDD__c} {!objContact3.Telefone_Comercial__c}" />
+								</span>
+                            <span style="width: 100px;">
+									<label>Ramal: </label>
+									<apex:outputText style="width: 65px;" styleClass="campo" value="{!objContact3.Ramal__c}" />
+								</span>
+                            <span style="width: 220px;">
+									<label>Telefone Celular: </label>
+									<apex:outputText style="width: 140px;" styleClass="campo" value="{!objContact3.DDDCelular__c} {!objContact3.Telefone_Celular__c}" />
+								</span>
+                            <span style="width: 180px;">
+									<label>Fax: </label>
+									<apex:outputText style="width: 155px;" styleClass="campo" value="{!objContact3.dddfax__c} {!objContact3.Telefone_Fax__c}" />
+								</span>
+                        </p>
+                    </div>
+                    <div class="interlocutor-operacao3">
+                        <h3>Interlocutor de operação 3</h3>
+                        <p>
+								<span>
+									<label>*Nome Completo: </label>
+									<apex:outputText style="width: 610px;" styleClass="campo" value="{!objContact4.Name}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 200px;">
+									<label>*CPF: </label>
+									<apex:outputText style="width: 170px;" styleClass="campo" value="{!cpfContact4}" />
+								</span>
+                            <span style="width: 250px;">
+									<label>*Data de Nascimento: </label>
+									<apex:outputText style="width: 150px;" styleClass="campo" value="{0,date,dd/MM/yyyy}">
+										<apex:param value="{!objContact4.Data_de_Nascimento__c}" />
+									</apex:outputText>
+								</span>
+                            <span style="width: 50px;">
+									<label>*Sexo: </label>
+								</span>
+                            <span style="width: 100px;">
+									<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!IF(objContact4.Sexo__c!='Feminino',true,false)}" />
+									<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!IF(objContact4.Sexo__c=='Feminino',true,false)}" />
+							        <label>Feminino </label>
+							  	</span>
+                            <span style="width: 100px;">
+							        <apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!IF(objContact4.Sexo__c!='Masculino',true,false)}" />
+									<apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!IF(objContact4.Sexo__c=='Masculino',true,false)}" />
+									<label>Masculino </label>
+								</span>
+                        </p>
+                        <p>
+								<span>
+									<label>*E-mail: </label>
+									<apex:outputText style="width: 665px;" styleClass="campo" value="{!objContact4.Email}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 400px;">
+									<label>*Nível Hierárquico: </label>
+									<apex:outputText style="width: 310px;" styleClass="campo" value="{!objContact4.Nivel_Hierarquico__c}" />
+								</span>
+                            <span style="width: 300px;">
+									<label>Número de Matrícula: </label>
+									<apex:outputText style="width: 200px;" styleClass="campo" value="{!objContact4.Numero_de_Matricula__c}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 400px;">
+									<label>*Nome do Cargo: </label>
+									<apex:outputText style="width: 315px;" styleClass="campo" value="{!objContact4.Department}" />
+								</span>
+                            <span style="width: 300px;">
+									<label>*Localização Interna: </label>
+									<apex:outputText style="width: 200px;" styleClass="campo" value="{!objContact4.Localizacao_Interna__c}" />
+								</span>
+                        </p>
+                        <p>
+								<span style="width: 200px;">
+									<label>*Telefone Fixo: </label>
+									<apex:outputText style="width: 130px;" styleClass="campo" value="{!objContact4.DDD__c} {!objContact4.Telefone_Comercial__c}" />
+								</span>
+                            <span style="width: 100px;">
+									<label>Ramal: </label>
+									<apex:outputText style="width: 65px;" styleClass="campo" value="{!objContact4.Ramal__c}" />
+								</span>
+                            <span style="width: 220px;">
+									<label>Telefone Celular: </label>
+									<apex:outputText style="width: 140px;" styleClass="campo" value="{!objContact4.DDDCelular__c} {!objContact4.Telefone_Celular__c}" />
+								</span>
+                            <span style="width: 180px;">
+									<label>Fax: </label>
+									<apex:outputText style="width: 155px;" styleClass="campo" value="{!objContact4.dddfax__c} {!objContact4.Telefone_Fax__c}" />
+								</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="interlocutor-operacao3">
+                    <h2>4. Produtos contratados*</h2>
+                    <table class="table-produtos">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>*Número de Filiais</th>
+                            <th>*Quantidade de Cartões</th>
+                            <th>Quantidade de Recarga Prevista</th>
+                            <th>*Valor de Carga Médio por Cartão</th>
+                            <th>*Taxa de Administração (%)</th>
+                            <th>*Quantidade de Franquia de Saque</th>
+                            <th>*Permitir que colaboradores solicitem reemissão de cartão</th>
+                            <th>*Permitir que colaboradores realizem saque</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <apex:repeat var="p" value="{!listaOpportunityProduct}">
+                            <tr>
+                                <td>{!p.Name}</td>
+                                <td><apex:outputText style="width: 50px;" value="{!p.Numero_de_Filiais__c}" /></td>
+                                <td><apex:outputText style="width: 50px;" value="{!p.Quantidade_de_Cartoes__c}" /></td>
+                                <td><apex:outputText style="width: 50px;" value="{!p.Quantidade_de_Recarga_Prevista__c}" /></td>
+                                <td><apex:outputText style="width: 100px;" value="{!p.Valor_Unitario__c}" /></td>
+                                <td><!-- <apex:outputText style="width: 50px;" value="{!p.Tarifas_Carrinho__c.Valor_Tarifa_Padrao__c}" /> -->
+                                    <apex:repeat var="tc" value="{!p.Tarifas_Carrinhos__r}">
+                                        {!IF(tc.Codigo_da_Tarifa__c==26.0, tc.Valor_Unitario_Prepax__c, '')}
+                                    </apex:repeat>
+                                </td>
+                                <td><apex:outputText style="width: 50px;" value="{!p.Quantidade_de_Franquia_de_Saque__c}" /></td>
+                                <td>
+                                    <apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!!p.Permitir_Reemissao_Usuario__c}" />
+                                    <apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!p.Permitir_Reemissao_Usuario__c}" />
+                                </td>
+                                <td>
+                                    <apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}" rendered="{!!p.Permitir_Colaboradores_realizem_saque__c}" />
+                                    <apex:image styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_yes.png')}" rendered="{!p.Permitir_Colaboradores_realizem_saque__c}" />
+                                </td>
+                            </tr>
+                        </apex:repeat>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="terceira-pagina page-break">
+                <div class="header">
+                    <span style="width: 100px;"><img class="header-logo" src="{!URLFOR($Resource.img_proposta, 'logo-ficha-prepax.png')}" width="70" /></span>
+                    <span style="width: 300px;"><strong>Ficha Proposta - Cartões Pré-Pagos</strong><br />Companhia Brasileira de Soluções e Serviços</span>
+                    <span style="width: 220px;"><br />CNPJ 04.740.876/0001-25</span>
+                    <span style="width: 70px;"><img class="header-prepax" src="{!URLFOR($Resource.img_proposta, 'prepax-ficha-prepax.png')}" width="70" /></span>
+                </div>
+                <div class="pagamento">
+                    <p>
+							<span style="width: 350px;">
+								<label>*Forma de Pagamento: </label>
+								<apex:outputText style="width: 240px;" styleClass="campo" value="Antecipado" />
+							</span>
+                        <span style="width: 350px;">
+								<label>*Negociação: </label>
+								<apex:outputText style="width: 280px;" styleClass="campo" value="VendaDireta" />
+							</span>
+                    </p>
+                    <p>
+							<span>
+								<label>Nome da Empresa para Gravação nos Cartões (Máximo 30 caracteres)</label>
+								<apex:outputText styleClass="campo" value="{!objOportunidade.Nome_no_cartao__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span class="observacao">
+								<strong>Dados Bancários</strong>
+								(será utilizado para ajustes financeiros e devoluções, se necessário)
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 100px;">
+								<label>*Banco: </label>
+								<apex:outputText style="width: 60px;" styleClass="campo" value="{!objOportunidade.Codigo_do_Banco__c}" />
+							</span>
+                        <span style="width: 170px;">
+								<label>*Agência/Dígito: </label>
+								<apex:outputText style="width: 90px;" styleClass="campo" value="{!objOportunidade.Numero_Agencia__c}" />
+							</span>
+                        <span style="width: 180px;">
+								<label>*Conta: </label>
+								<apex:outputText style="width: 140px;" styleClass="campo" value="{!objOportunidade.Conta__c}" />
+							</span>
+                    </p>
+                </div>
+                <div class="vendedor">
+                    <h2>5. Vendedor*</h2>
+                    <p>
+							<span style="width: 200px;">
+								<label>*Código Identificador do Vendedor</label><br />
+								<apex:outputText styleClass="campo" value="{!objOportunidade.Codigo_do_Vendedor__c}" />
+							</span>
+                        <span style="width: 500px;">
+								<label>*Nome do Vendedor</label><br />
+								<apex:outputText styleClass="campo" value="{!objOportunidade.NomedoVendedorPREPAGO__c}" />
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 200px;">
+								<label>*Telefone Fixo: </label>
+								<apex:outputText style="width: 120px;" styleClass="campo" value="{!objOportunidade.TelefoneVendedor__c}" />
+							</span>
+                    </p>
+                    <p>
+                    <table style="margin-top:30px;width:80%;">
+                        <tbody>
+                        <tr>
+                            <td colspan="7">
+                                <label>*Canal de Venda</label><br/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label>Consultor Prepax</label>
+                            </td>
+                            <td>
+                                <label>Central de Vendas</label>
+                            </td>
+                            <td colspan="4">
+                                <label>Parceiros</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td colspan="4">
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"></td>
+                            <td>
+                                <label>Pacto</label>
+                            </td>
+                            <td>
+                                <label>Vila Benefícios</label>
+                            </td>
+                            <td>
+                                <label>Admix</label>
+                            </td>
+                            <td>
+                                <label>DB13</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"></td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    </p>
+                    <p>
+                    <table style="margin-top:10px;width:100%;">
+                        <tbody>
+                        <tr>
+                            <td colspan="8">
+                                <label>*Liberação Interna</label><br/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label>TP</label>
+                            </td>
+                            <td>
+                                <label>1</label>
+                            </td>
+                            <td>
+                                <label>2</label>
+                            </td>
+                            <td>
+                                <label>3</label>
+                            </td>
+                            <td>
+                                <label>GP</label>
+                            </td>
+                            <td>
+                                <label>DP</label>
+                            </td>
+                            <td>
+                                <label>CP</label>
+                            </td>
+                            <td>
+                                <label>Promocional</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    </p>
+                    <p>
+                    <table style="margin-top:30px;width:100%;">
+                        <tbody>
+                        <tr>
+                            <td colspan="7">
+                                <label>*Canal de Indicação</label><br/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label>Bradesco</label>
+                            </td>
+                            <td>
+                                <label>Banco do Brasil</label>
+                            </td>
+                            <td>
+                                <label>Venda Direta</label>
+                            </td>
+                            <td>
+                                <label>Premium</label>
+                            </td>
+                            <td>
+                                <label>Middle</label>
+                            </td>
+                            <td>
+                                <label>Ecs</label>
+                            </td>
+                            <td colspan="2">
+                                <label>Varejo</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td colspan="2">
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="6"></td>
+                            <td>
+                                <label>Bradesco</label>
+                            </td>
+                            <td>
+                                <label>Relacionamento</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="6"></td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                            <td>
+                                <apex:image style="width: 13px;" styleClass="checkbox" value="{!URLFOR($Resource.img_proposta, 'checkbox_no.png')}"  />
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    </p>
+                    <br />
+                </div>
+                <div class="vendedor">
+                    <h2>6. Assinaturas*</h2>
+                    <p>
+							<span style="padding-bottom: 40px;">
+								“Ao assinar a FICHA PROPOSTA, e uma vez aprovado o cadastro pela Alelo, declaramo-nos vinculados às 
+								disposições contidas no contrato de prestação de serviços registrado no oficial de registro de 
+								títulos e documentos na comarca de Barueri, estado de São Paulo, referente ao produto descrito 
+								no item 4, do qual recebemos uma cópia, e declaramos ainda estar de pleno acordo com todas as 
+								suas cláusulas e condições”.
+							</span>
+                    </p>
+                    <p>
+							<span style="width: 350px; padding-bottom: 60px;">
+								<label>Local: </label>
+								<apex:outputText style="width: 320px;" styleClass="campo" value="" />
+							</span>
+                        <span style="width: 350px;">
+								<label>Data: </label>
+								<apex:outputText style="width: 320px;" styleClass="campo" value="{0,date,dd/MM/yyyy}">
+									<apex:param value="{!objOportunidade.CloseDate}" />
+								</apex:outputText>
+							</span>
+                    </p>
+                    <div class="representante-legal-assinatura">
+                        <div class="assinatura">
+                            <p>
+									<span class="assinatura">
+										<apex:outputText styleClass="campo" value="" />
+									</span>
+                                <span class="assinatura">
+										<font>Assinatura de Representante Legal da Empresa</font>
+									</span>
+                                <span style="padding-top: 30px;">
+										<label>Nome do Representante Legal da Empresa</label>
+										<apex:outputText styleClass="campo" value="" />
+									</span>
+                                <span>
+										<label>CPF: </label>
+										<apex:outputText style="width: 325px;" styleClass="campo" value="" />
+									</span>
+                            </p>
+                        </div>
+                        <div class="assinatura">
+                            <p>
+									<span class="assinatura">
+										<apex:outputText styleClass="campo" value="" />
+									</span>
+                                <span class="assinatura">
+										<font>Assinatura de Representante Legal da Alelo</font>
+									</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="testemunha-assinatura">
+                        <div class="assinatura">
+                            <p>
+									<span class="assinatura">
+										<apex:outputText styleClass="campo" value="" />
+									</span>
+                                <span class="assinatura">
+										<font>Testemunha 1</font>
+									</span>
+                                <span style="padding-top: 30px;">
+										<label>Nome: </label>
+										<apex:outputText style="width: 315px;" styleClass="campo" value="" />
+									</span>
+                                <span>
+										<label>CPF: </label>
+										<apex:outputText style="width: 325px;" styleClass="campo" value="" />
+									</span>
+                            </p>
+                        </div>
+                        <div class="assinatura">
+                            <p>
+									<span class="assinatura">
+										<apex:outputText styleClass="campo" value="" />
+									</span>
+                                <span class="assinatura">
+										<font>Testemunha 2</font>
+									</span>
+                                <span style="padding-top: 30px;">
+										<label>Nome: </label>
+										<apex:outputText style="width: 315px;" styleClass="campo" value="" />
+									</span>
+                                <span>
+										<label>CPF: </label>
+										<apex:outputText style="width: 325px;" styleClass="campo" value="" />
+									</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="quarta-pagina page-break">
+                <div class="cnae">
+                    <h2>CNAE - Descrição da Seção</h2>
+                    <table class="table-produtos">
+                        <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Seção</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>A</td>
+                            <td>Agricultura, Pecuária, Silvicultura e Exploração Florestal</td>
+                        </tr>
+                        <tr>
+                            <td>B</td>
+                            <td>Pesca</td>
+                        </tr>
+                        <tr>
+                            <td>C</td>
+                            <td>Indústrias Extrativas</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>Indústrias de Transformação</td>
+                        </tr>
+                        <tr>
+                            <td>E</td>
+                            <td>Produção e Distribuição de Eletricidade, Gás e Água</td>
+                        </tr>
+                        <tr>
+                            <td>F</td>
+                            <td>Construção</td>
+                        </tr>
+                        <tr>
+                            <td>G</td>
+                            <td>Comércio: Reparação de Veículos Automotores, Objetos Pessoais e Domésticos</td>
+                        </tr>
+                        <tr>
+                            <td>H</td>
+                            <td>Alojamento e Alimentação</td>
+                        </tr>
+                        <tr>
+                            <td>I</td>
+                            <td>Transporte, Armazenagem e Comunicações</td>
+                        </tr>
+                        <tr>
+                            <td>J</td>
+                            <td>Intermediação Financeira</td>
+                        </tr>
+                        <tr>
+                            <td>K</td>
+                            <td>Atividades Imobiliárias, Aluguéis e Serviços Prestados às Empresas</td>
+                        </tr>
+                        <tr>
+                            <td>L</td>
+                            <td>Administração Pública, Defesa e Seguridade Social</td>
+                        </tr>
+                        <tr>
+                            <td>M</td>
+                            <td>Educação</td>
+                        </tr>
+                        <tr>
+                            <td>N</td>
+                            <td>Saúde e Serviços Sociais</td>
+                        </tr>
+                        <tr>
+                            <td>O</td>
+                            <td>Outros Serviços Coletivos, Sociais e Pessoais</td>
+                        </tr>
+                        <tr>
+                            <td>P</td>
+                            <td>Serviços Domésticos</td>
+                        </tr>
+                        <tr>
+                            <td>Q</td>
+                            <td>Organismos Internacionais e outras Instituições Extraterritoriais</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="quarta-pagina page-break">
+                <div class="anexo-ramo-atividade">
+                    <h2>Anexo - Ramo de Atividade</h2>
+                    <table class="table-produtos">
+                        <thead>
+                        <tr>
+                            <th>Seção</th>
+                            <th>Divisão</th>
+                            <th>Descrição</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>A</td>
+                            <td>01</td>
+                            <td>Agricultura, Pecuária e Serviços Relacionados com essas Atividades</td>
+                        </tr>
+                        <tr>
+                            <td>A</td>
+                            <td>02</td>
+                            <td>Silvicultura, Exploração Florestal e Serviços relacionados com estas Atividades</td>
+                        </tr>
+                        <tr>
+                            <td>B</td>
+                            <td>05</td>
+                            <td>Pesca, Aquicultura e Atividades dos Serviços relacionados com estas Atividades</td>
+                        </tr>
+                        <tr>
+                            <td>C</td>
+                            <td>10</td>
+                            <td>Extração de Carvão Mineral</td>
+                        </tr>
+                        <tr>
+                            <td>C</td>
+                            <td>11</td>
+                            <td>Extração de Petróleo e Serviços Correlatos</td>
+                        </tr>
+                        <tr>
+                            <td>C</td>
+                            <td>13</td>
+                            <td>Extração de Minerais Metálicos</td>
+                        </tr>
+                        <tr>
+                            <td>C</td>
+                            <td>14</td>
+                            <td>Extração de Minerais Não Metálicos</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>15</td>
+                            <td>Fabricação de Produtos Alimentícios e Bebidas</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>16</td>
+                            <td>Fabricação de Produtos do Fumo</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>17</td>
+                            <td>Fabricação de Produtos Têxteis</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>18</td>
+                            <td>Confecção de Artigos do Vestuário e Acessórios</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>19</td>
+                            <td>Preparação de Couros e Fabricação de Artefatos de Couro, Artigos de Viagem e Calçado</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>20</td>
+                            <td>Fabricação de Produtos de Madeira</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>21</td>
+                            <td>Fabricação de Celulose, Papel e Produtos de Papel</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>22</td>
+                            <td>Edição, Impressão e Reprodução de Gravações</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>23</td>
+                            <td>Fabricação de Coque, Refino de Petróleo, Elaboração de Combustíveis Nucleares e Produção de Álcool</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>24</td>
+                            <td>Fabricação de Produtos Químicos</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>25</td>
+                            <td>Fabricação de Artigos de Borracha e Plástico</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>26</td>
+                            <td>Fabricação de Produtos de Minerais não Metálicos</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>27</td>
+                            <td>Metalurgia Básica</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>28</td>
+                            <td>Fabricação de Produtos de Metal - exclusive Máquinas e Equipamentos</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>29</td>
+                            <td>Fabricação de Máquinas e Equipamentos</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>30</td>
+                            <td>Fabricação de Máquinas para Escritório e Equipamentos de Informática</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>31</td>
+                            <td>Fabricação de Máquinas, Aparelhos e Materiais Elétricos</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>32</td>
+                            <td>Fabricação de Material Eletrônico e de Aparelhos e Equipamentos de Comunicações</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>33</td>
+                            <td>Fabric Equip Instrum Médico-Hospitalar, Instrum Precisão Ópticos, Equip p/ Autom Ind., Cronômetros, Relógios</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>34</td>
+                            <td>Fabricação e Montagem de Veículos Automotores, Reboques e Carrocerias</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>35</td>
+                            <td>Fabricação de Outros Equipamentos de Transporte</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>36</td>
+                            <td>Fabricação de Móveis e Indústrias Diversas</td>
+                        </tr>
+                        <tr>
+                            <td>D</td>
+                            <td>37</td>
+                            <td>Reciclagem</td>
+                        </tr>
+                        <tr>
+                            <td>E</td>
+                            <td>40</td>
+                            <td>Eletricidade, Gás e Água Quente</td>
+                        </tr>
+                        <tr>
+                            <td>E</td>
+                            <td>41</td>
+                            <td>Captação, Tratamento e Distribuição de Água</td>
+                        </tr>
+                        <tr>
+                            <td>F</td>
+                            <td>45</td>
+                            <td>Construção</td>
+                        </tr>
+                        <tr>
+                            <td>G</td>
+                            <td>50</td>
+                            <td>Comércio e Reparação de Veículos Automotores e Motocicletas e Comércio a Varejo de Combustíveis</td>
+                        </tr>
+                        <tr>
+                            <td>G</td>
+                            <td>51</td>
+                            <td>Comércio por Atacado e Intermediários de Comércio</td>
+                        </tr>
+                        <tr>
+                            <td>G</td>
+                            <td>52</td>
+                            <td>Comércio Varejista e Reparação de Objetos Pessoais e Domésticos</td>
+                        </tr>
+                        <tr>
+                            <td>H</td>
+                            <td>55</td>
+                            <td>Alojamento e Alimentação</td>
+                        </tr>
+                        <tr>
+                            <td>I</td>
+                            <td>60</td>
+                            <td>Transporte Terrestre</td>
+                        </tr>
+                        <tr>
+                            <td>I</td>
+                            <td>61</td>
+                            <td>Transporte Aquaviário</td>
+                        </tr>
+                        <tr>
+                            <td>J</td>
+                            <td>66</td>
+                            <td>Seguros e Previdência Privada</td>
+                        </tr>
+                        <tr>
+                            <td>J</td>
+                            <td>67</td>
+                            <td>Atividades Auxiliares da Intermediação Financeira</td>
+                        </tr>
+                        <tr>
+                            <td>K</td>
+                            <td>70</td>
+                            <td>Atividades imobiliárias</td>
+                        </tr>
+                        <tr>
+                            <td>K</td>
+                            <td>71</td>
+                            <td>Aluguel de Veículos, Máquinas e Equip sem condutores ou Operadores e de Objetos Pessoais e Domésticos</td>
+                        </tr>
+                        <tr>
+                            <td>K</td>
+                            <td>72</td>
+                            <td>Atividades de Informática e Conexas</td>
+                        </tr>
+                        <tr>
+                            <td>K</td>
+                            <td>73</td>
+                            <td>Pesquisa e Desenvolvimento</td>
+                        </tr>
+                        <tr>
+                            <td>K</td>
+                            <td>74</td>
+                            <td>Serviços Prestados principalmente às Empresas</td>
+                        </tr>
+                        <tr>
+                            <td>L</td>
+                            <td>75</td>
+                            <td>Administração Pública, Defesa e Seguridade Social</td>
+                        </tr>
+                        <tr>
+                            <td>M</td>
+                            <td>80</td>
+                            <td>Educação</td>
+                        </tr>
+                        <tr>
+                            <td>N</td>
+                            <td>85</td>
+                            <td>Saúde e Serviços Sociais</td>
+                        </tr>
+                        <tr>
+                            <td>O</td>
+                            <td>90</td>
+                            <td>Limpeza Urbana e Esgoto e Atividades Conexas</td>
+                        </tr>
+                        <tr>
+                            <td>O</td>
+                            <td>91</td>
+                            <td>Atividades Associativas</td>
+                        </tr>
+                        <tr>
+                            <td>O</td>
+                            <td>92</td>
+                            <td>Atividades Recreativas, Culturais e Desportivas</td>
+                        </tr>
+                        <tr>
+                            <td>O</td>
+                            <td>93</td>
+                            <td>Serviços Pessoais</td>
+                        </tr>
+                        <tr>
+                            <td>P</td>
+                            <td>95</td>
+                            <td>Serviços Domésticos</td>
+                        </tr>
+                        <tr>
+                            <td>Q</td>
+                            <td>99</td>
+                            <td>Organismos Internacionais e Outras Instituições Extraterritoriais</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </apex:form>
+    </body>
+    </html>
+</apex:page>

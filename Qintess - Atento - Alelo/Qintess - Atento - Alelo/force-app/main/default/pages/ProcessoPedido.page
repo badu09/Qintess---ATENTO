@@ -1,0 +1,113 @@
+<apex:page id="pProcessoPedido" StandardController="Order" extensions="CtrlProcessoPedido" >
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+    <apex:includeScript value="/support/console/37.0/integration.js"/>
+    <apex:includeScript value="/soap/ajax/37.0/connection.js" />
+    <apex:includeScript value="/soap/ajax/37.0/apex.js" />
+    <style type="text/css">
+
+    </style>
+    <script type="text/javascript">
+    var $j = jQuery.noConflict();
+
+    function blockPage(){
+         var timeoutPasscode;
+         $j.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+              css: {
+               border: 'none',
+               padding: '15px',
+               '-webkit-border-radius': '10px',
+               '-moz-border-radius': '10px',
+               opacity: .9
+              }
+            });
+      }
+
+    function unblockPage(){
+        $j.unblockUI();
+    }
+
+    $j(window).ready(function() {
+        carregarOportunidade();
+    });
+
+    var carregarOportunidade = function() {
+        blockPage();
+        var url = '/' + '{!Order.OpportunityId}';
+
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.CtrlProcessoPedido.implantar}',
+            '{!Order.Id}',
+            '{!Order.OpportunityId}',
+            function(result, event){
+                console.log('implantar event: ' + JSON.stringify(event));
+
+                unblockPage();
+
+                if (event.status) {
+                    console.log('implantar result: ' + JSON.stringify(result));
+
+                    if(result.sucesso) {
+                        if (sforce.console.isInConsole()) {
+                            sforce.console.getEnclosingPrimaryTabId(openOportunidade);
+                        }
+                        else {
+                            window.open(url, '_parent');
+                        }
+                    }
+                    else {
+                        alert(result.mensagemErro);
+                        if (sforce.console.isInConsole()) {
+                            sforce.console.getEnclosingPrimaryTabId(closeSubtab);
+                        }
+                    }
+                }
+            },
+            {escape: true}
+        );
+    }
+
+    var openOportunidade = function openOportunidade(result) {
+        //alert(result.id);
+        var url = '/' + '{!Order.OpportunityId}';
+        sforce.console.openSubtab(result.id , url, true, '{!Order.Opportunity.Name}', null, openSuccess);
+    }
+
+    var openSuccess = function openSuccess(result) {
+         //Report whether we succeeded in opening the subtab
+         if (result.success == true) {
+             console.log('subtab successfully opened');
+
+             dispararDiscagem();
+         } else {
+             console.log('subtab cannot be opened');
+         }
+     };
+
+     var callbackFireEvent = function(result) {
+         if (result.success) {
+            console.log('The custom event is fired!');
+         } else {
+            console.log('The custom event could not be fired!');
+         }
+     };
+
+     var closeSubtab = function closeSubtab(result) {
+         //Now that we have the tab ID, we can close it
+         var tabId = result.id;
+         sforce.console.closeTab(tabId);
+     };
+
+     function dispararDiscagem() {
+        //Fire an event of type 'OpportunityEvent'
+        sforce.console.fireEvent('OpportunityEvent', '{!Order.Id}', callbackFireEvent);
+     }
+</script>
+    <apex:actionStatus onstart="blockPage()" onstop="unblockPage();" id="blockUI"/>
+    <apex:form id="fProcessoImplantacao">
+        <apex:pageMessages id="pmMensagem" />
+        <apex:outputPanel id="opPrincipal">
+            <apex:detail id="dProcessoImplantacao" subject="{!Order.Id}" relatedList="true" title="true" />
+        </apex:outputPanel>
+    </apex:form>
+</apex:page>

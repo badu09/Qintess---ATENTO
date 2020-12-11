@@ -1,0 +1,270 @@
+<apex:page showHeader="false" sidebar="false" controller="CtrlPrecificacao" docType="html-5.0">
+<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.maskMoney.js')}" />
+<apex:includeScript value="/support/console/36.0/integration.js" />
+<apex:includeScript value="/soap/ajax/36.0/connection.js" />
+<apex:includeScript value="/soap/ajax/36.0/apex.js" />
+    <style type="text/css">
+    .mainTitle {
+        font-size: 14px!important;
+    }
+    .table-product-det {
+        width: auto !important;
+    }
+    .table-product-det tbody tr td {
+        padding: 0 20px 0 0;
+    }
+    </style>
+    <script type="text/javascript">
+        function blockPage(){
+            var timeoutPasscode;
+            $.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+                 css: {
+                  border: 'none',
+                  padding: '15px',
+                  '-webkit-border-radius': '10px',
+                  '-moz-border-radius': '10px',
+                  opacity: .9
+                 }
+               });
+         }
+
+        function unblockPage(){
+            $.unblockUI();
+        }
+
+        function selecionarLinha() {
+            var produto = $("input[type=radio][name=product]:checked").val();
+            selecionarProduto(produto);
+        }
+
+        function backToOpp() {
+            blockPage();
+            var sforceConsole = sforce.console; 
+            var urlOrg = '{!urlOrg}';
+            var idOportunidade = '{!oportunidade.Id}'; 
+            var url = urlOrg + '/' + idOportunidade;
+            
+            if (sforceConsole.isInConsole()) { 
+                var openOpp = function(result){sforce.console.openSubtab(result.id, url, true, 'Oportunidade', null)}; 
+                sforce.console.getEnclosingPrimaryTabId(openOpp); 
+            } else { 
+                window.open(url, '_parent');
+            }
+        }
+    </script>
+    <apex:actionStatus onstart="blockPage()" onstop="unblockPage(); window.scrollTo(0, 0);" id="blockUI"/>
+    <apex:pageMessages id="pmMensagem" />
+    <apex:form >
+        <apex:outputPanel id="opPrincipal">
+            <script type="text/javascript">
+                $(document).ready(function() {
+                    if('{!ProdutoSelecionado}' != '') {
+                        $("input[value={!ProdutoSelecionado}]").attr("checked", true);
+                    }
+                    $("[class$=currency]").maskMoney({prefix:'R$ ', allowNegative: false, thousands:'.', decimal:',', affixesStay: false, allowZero: true});
+                    $("[class$=percent]").maskMoney({suffix:'% ', allowNegative: false, decimal:'.', affixesStay: false, allowZero: true});
+                    
+                    $(".currencyText").each(function() {
+                        var inputTexto = $("<input type='text' />").val($(this).text().replace('.', ','));
+                        inputTexto.maskMoney({prefix:'R$ ', allowNegative: false, thousands:'.', decimal:',', affixesStay: false});
+                        inputTexto.maskMoney('mask');
+                        $(this).text(inputTexto.val());
+                    });
+                    
+                    $(".percentText").each(function() {
+                        var inputTexto = $("<input type='text' />").val($(this).text());
+                        inputTexto.maskMoney({suffix:'% ', allowNegative: false, decimal:'.', affixesStay: false});
+                        inputTexto.maskMoney('mask');
+                        $(this).text(inputTexto.val());
+                    });
+                });
+            </script>
+            <apex:actionFunction name="selecionarProduto" action="{!selecionarProduto}" status="blockUI" reRender="opPrincipal" >
+                <apex:param id="produto" name="idProduto" value="" />
+            </apex:actionFunction>
+            
+            <apex:pageBlock title="Itens Para Venda" rendered="{!MostraDetalhes==false}">
+                <apex:pageBlockButtons location="top">
+                    <apex:commandButton value="Cancelar" oncomplete="backToOpp();" rerender="none" status="blockUI"/>
+                </apex:pageBlockButtons>
+                <apex:pageBlockTable value="{!produtos}" var="prod">
+                    <apex:column title="" style="width: 25px;" >
+                        <input type="radio" name="product" value="{!produtos[prod].Id}" onchange="selecionarLinha();" />
+                    </apex:column>
+                    <apex:column style="width: 115px;" value="{!produtos[prod].PK_Atento__c}" headerValue="Cod. Atento" rendered="false" />
+                    <apex:column style="width: 115px;" value="{!produtos[prod].Codigo_Identificador__c}" headerValue="Cod. do Produto" />
+                    <apex:column value="{!produtos[prod].Descricao__c}" headerValue="Produto" />
+                </apex:pageBlockTable>
+            </apex:pageBlock>
+            
+            <apex:pageBlock id="pbDetalhes" title="Detalhes do Item Escolhido" rendered="{!MostraDetalhes}">
+                <table class="table-product-det">
+                    <tbody>
+                        <tr>
+                            <td colspan="4"><strong>{!ItemSelecionado.Produto.Descricao__c}</strong></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <apex:outputLabel value="Valor Médio Individual do Beneficio:" />
+                            </td>
+                            <td>
+                                <apex:inputText styleClass="currency" value="{!ValorMedioIndividualStr}" rendered="{!simulacao==false}" />
+                                <apex:outputText styleClass="currency" value="{!ValorMedioIndividualStr}" rendered="{!simulacao}" />
+                            </td>
+                            <td>
+                                <apex:outputLabel value="Banco:" />
+                            </td>
+                            <td>
+                                <apex:inputField value="{!produtosAlelo.Banco__c}" rendered="{!simulacao==false}" />
+                                <apex:outputField value="{!produtosAlelo.Banco__c}" rendered="{!simulacao}" />
+                            </td>
+                            <td>
+                                <apex:outputLabel value="Meio de Pagamento:" />
+                            </td>
+                            <td>
+                                <apex:inputField value="{!produtosAlelo.FormaPagamento__c}" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <apex:outputLabel value="Quantidade Total de Funcionários no Contrato:" />
+                            </td>
+                            <td>
+                                <apex:input type="number" value="{!Quantidade}" rendered="{!simulacao==false}" />
+                                <apex:outputLabel value="{!Quantidade}" rendered="{!simulacao}" />
+                            </td>
+                            <td>
+                                <apex:outputLabel value="Agência:" />
+                            </td>
+                            <td>
+                                <apex:inputField value="{!produtosAlelo.Agencia_Digito__c}" rendered="{!simulacao==false}" />
+                                <apex:outputField value="{!produtosAlelo.Agencia_Digito__c}" rendered="{!simulacao}" />
+                            </td>
+                            <td>
+                                <apex:outputLabel value="Digíto:" />
+                            </td>
+                            <td>
+                                <apex:inputField value="{!produtosAlelo.Digito__c}" rendered="{!simulacao==false}" />
+                                <apex:outputField value="{!produtosAlelo.Digito__c}" rendered="{!simulacao}" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <apex:outputLabel value="Nome da Empresa para Gravação do Cartão:" />
+                            </td>
+                            <td>
+                                <apex:inputText value="{!NomeEmpresa}" maxlength="19" rendered="{!simulacao==false}" />
+                                <apex:outputText value="{!NomeEmpresa}" rendered="{!simulacao}" />
+                            </td>
+                            <td>
+                                <apex:outputLabel value="Código CAB:" />
+                            </td>
+                            <td colspan="3">
+                                <apex:inputField value="{!produtosAlelo.Codigo_CAB__c}" rendered="{!simulacao==false}" />
+                                <apex:outputField value="{!produtosAlelo.Codigo_CAB__c}" rendered="{!simulacao}" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <apex:pageBlockTable value="{!Tarifas}" var="tar">
+                    <apex:variable value="{!0}" var="tarIndex" />
+                    <apex:column value="{!tar.PKAlelo}" headerValue="Cód. Alelo" />
+                    <apex:column value="{!tar.Tarifa.Codigo_da_Tarifa__c}" headerValue="Cód. Tarifa" />
+                    <apex:column value="{!tar.Tarifa.Nome_da_Tarifa__c}" headerValue="Nome Tarifa" />
+                    <apex:column value="{!tar.Tarifa.Qtd_Min__c}" headerValue="Qtd. Mínima" />
+                    <apex:column value="{!tar.Tarifa.Qtd_Max_Beneficios__c}" headerValue="Qtd. Máxima" />
+                    <!-- <apex:column value="{!tar.Tarifa.Valor_Medio_do_Beneficio__c}" headerValue="Valor Médio" /> -->
+                    <apex:column value="{!tar.Tarifa.Valor_Minimo__c}" headerValue="Valor Mínimo" />
+                    <apex:column value="{!tar.Tarifa.Valor_Maximo__c}" headerValue="Valor Máximo" />
+                    <apex:column headerValue="Valor da Tarifa/Taxa">
+                        <apex:outputLabel rendered="{!!tar.Tarifa.Percentual__c}" value="{!tar.Tarifa.Valor_Unitario__c}" styleClass="currencyText" />
+                        <apex:outputLabel rendered="{!tar.Tarifa.Percentual__c}" value="{!tar.Tarifa.Valor_Unitario_Prepax__c}" styleClass="percentText" />
+                    </apex:column>
+                    <apex:column headerValue="Nova Tarifa/Taxa">
+                        <apex:inputText rendered="{!!tar.Tarifa.Percentual__c}" value="{!tar.ValorTarifa}" styleClass="currency" />
+                        <apex:inputText rendered="{!tar.Tarifa.Percentual__c}" value="{!tar.ValorTarifa}" styleClass="percent" />
+                    </apex:column>
+                    <!-- <apex:column value="{!tar.nivel}" headerValue="Nível Alçada" rendered="{!validarNivelAlcada}" /> -->
+                    <apex:column rendered="{!!tar.Tarifa.Percentual__c}" headerValue="Nivel Alçada">
+                        <apex:outputLabel value="{!tar.nivel}" rendered="{!simulacao && validarNivelAlcada}" />
+<!--                        <apex:inputText value="{!tar.nivel}" rendered="{!simulacao && validarNivelAlcada && true == false}" /> -->
+                    </apex:column>
+                    <apex:column rendered="{!tar.Tarifa.Percentual__c && tar.Tarifa.Codigo_de_Produtos__c == '301'}" headerValue="Nivel Alçada">
+                        <apex:outputLabel value="{!tar.nivel}" rendered="{!simulacao && validarNivelAlcada}" />
+                    </apex:column>
+                    <apex:column headerValue="Ações">
+                        <apex:commandLink value="Excluir tarifa" action="{!removerTarifa}" title="{!tarIndex}">
+                            <apex:param name="indexTarifa" value="{!tarIndex}" assignTo="{!indexTarifa}" />
+                        </apex:commandLink>
+                        <apex:variable value="{!tarIndex + 1}" var="tarIndex" />
+                    </apex:column>
+
+                </apex:pageBlockTable>
+                <table style="width:100%;">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <apex:inputCheckbox value="{!EntregaCentralizada}"/>
+                                <apex:outputText value="Entrega Centralizada (Um Só Endereço de Entrega)" />
+                            </td>
+                            <td rowspan="3" style="border: 1px dashed black;text-align: center;">
+                                Valor Unit.<p />
+                                <apex:outputText styleClass="currencyText" value="{!ValorMedioIndividual}" />
+                                <p />
+                                Valor Total<p />
+                                <apex:outputText styleClass="currencyText" value="{!Quantidade * (ValorMedioIndividual)}" />
+                                <p />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <apex:inputCheckbox value="{!FaturamentoCentralizado}"/>
+                                <apex:outputText value="Faturamento Centralizado (Um Só Endereço de Faturamento)" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <apex:inputCheckbox value="{!SolicitacaoReemissao}"/>
+                                <apex:outputText value="Permitir Solicitações de Reemissão de Cartão e Senha pelo Usuário" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <apex:pageBlockButtons location="bottom">
+                    <apex:commandButton value="Simular" action="{!simular}" reRender="pmMensagem,opPrincipal" status="blockUI" rendered="{!simulacao==false}" />
+                    <apex:commandButton value="Simular Nível Alçada" action="{!simularNivelAlcada}" reRender="pmMensagem,opPrincipal" status="blockUI" rendered="{!simulacao && validarNivelAlcada}" />
+                    <apex:commandButton value="Voltar" action="{!limparSimulacao}" reRender="opPrincipal" status="blockUI" rendered="{!simulacao==false}" />
+                    <apex:commandButton value="Adicionar no Carrinho" action="{!adicionarCarrinho}" reRender="pmMensagem, opPrincipal" status="blockUI" rendered="{!simulacaoNivelAlcada || (simulacao == true && validarNivelAlcada==false) || false == true}" />
+                    <apex:commandButton value="Limpar Simulação" action="{!limparSimulacao}" reRender="pmMensagem,opPrincipal" status="blockUI" rendered="{!simulacao}" />
+                </apex:pageBlockButtons>
+            </apex:pageBlock>
+            
+            <apex:pageBlock title="Carrinho de Itens Escolhidos" rendered="{!Carrinho.size > 0}">
+                <apex:variable var="rowIndex" value="{!0}" />
+                <apex:pageBlockTable value="{!Carrinho}" var="car">
+                    <apex:column >
+                        <apex:commandLink value="Editar" action="{!editar}">
+                            <apex:param name="index" value="{!rowIndex}" />
+                        </apex:commandLink>
+                        <apex:outputLabel value=" | " />
+                        <apex:commandLink value="Excluir" action="{!excluir}">
+                            <apex:param name="index" value="{!rowIndex}" />
+                        </apex:commandLink>
+                    </apex:column>
+                    <apex:column value="{!car.Produto.Descricao__c}" headerValue="Nome Produto" />
+                    <apex:column value="{!car.Quantidade}" headerValue="Quantidade" />
+                    <apex:column styleClass="currencyText" value="{!car.ValorUnitario}" headerValue="Valor Unitário" />
+                    <apex:column styleClass="currencyText" value="{!car.ValorTotal}" headerValue="Valor Total" />
+                    <apex:variable var="rowIndex" value="{!rowIndex+1}" />
+                </apex:pageBlockTable>
+                <apex:pageBlockButtons location="bottom">
+                    <!-- <apex:commandButton value="Gerar Proposta" status="blockUI"/> -->
+                    <apex:commandButton value="Salvar" onclick="alert('Salvo com sucesso!');backToOpp();" status="blockUI"/>
+                </apex:pageBlockButtons>
+            </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:form>
+    <apex:relatedList subject="{!Oportunidade}" list="CombinedAttachments" />
+</apex:page>

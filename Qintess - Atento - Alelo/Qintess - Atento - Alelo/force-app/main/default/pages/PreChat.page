@@ -1,0 +1,244 @@
+<apex:page showHeader="false">
+<style type="text/css">
+    body{
+        font-family: "Helvetica Neue" , "Lucida Grande" , "Segoe UI" , Arial, Helvetica, Verdana, sans-serif;
+        font-size: 12px;  
+        color: #666;
+    }
+    
+    form {
+        margin: 0 auto;
+    }
+    
+    input {
+        font-size: 1em;
+        padding: 2px;
+        color: #052147;
+        background: #fff;
+        border-top: 1px solid #888;
+        border-left: 1px solid #888;
+        border-bottom: 1px solid #e4e4e4;
+        border-right: 1px solid #e4e4e4;
+    }
+    
+    button {
+        background: url('{!$Resource.Prechat_Enviar}');
+        width: 130px;
+        height: 35px;
+        margin: 10px auto 0px;
+        display: block;
+    }
+    
+    input.estiloLink {
+        background-color:#005e47;
+        font-weight: bold;
+        text-decoration: none !important;
+        color: #ffffff;
+        padding: 10px 30px 10px 30px;
+    }
+
+    input.estiloLink:hover {
+        background-color:#005e47;
+        font-weight: bold;
+        text-decoration: none !important;
+        color: #ffffff;
+        padding: 10px 30px 10px 30px;
+    }
+</style>
+<!-- This script takes the endpoint URL parameter passed from the deployment page and makes it the action for the form -->
+<script type='text/javascript'>
+
+	(
+		function() {
+			function handlePageLoad() {
+				var endpointMatcher = new RegExp("[\\?\\&]endpoint=([^&#]*)");
+				document.getElementById('prechatForm').setAttribute('action', decodeURIComponent(endpointMatcher.exec(document.location.search)[1]));
+			} 
+			
+			if (window.addEventListener) {
+				window.addEventListener('load', handlePageLoad, false); 
+			} 
+			else { 
+				window.attachEvent('onload', handlePageLoad, false);
+			}
+		}
+	)();
+
+    function configurarTela(idDiv) {            
+        
+        var dvInicial = document.getElementById("dvInicial");
+        var dvId = document.getElementById(idDiv);
+        
+        dvInicial.style.display = "none";      
+        dvId.style.display = "inline";
+    }
+
+
+</script>
+
+<body marginheight="0" marginwidth="0" leftmargin="0" bottommargin="0" rightmargin="0" topmargin="0">
+    <table height="100%" cellpadding="0" cellspacing="0" style="background-color: #FFFFFF;">
+        <tr>
+            <td style="text-align: center;">
+                <a href="#" title="Chat Empresas"><apex:image url="{!$Resource.Prechat_Header}" width="390"/></a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="dvNaoCliente">
+                    <form method='post' id='prechatForm'>
+                    	<table cellpadding="3" style="width: 100%">
+                            <tr> 
+                                <td style="padding-bottom: 20px; padding-left: 30px">
+                                    Empresa*:
+                                </td>
+                                <td style="width: 70%;">
+                                    <input type="text" name="liveagent.prechat:CaseCompany" id='company' width="80%"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-left: 30px">
+                                    CNPJ*:
+                                </td>
+                                <td> 
+                                    <input type='text' name='liveagent.prechat:CaseCNPJ' id='cnpj' class="cnpj" maxlength="14"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-left: 30px">
+                                    Contato*:
+                                </td>
+                                <td>
+                                    <input type='text' name='liveagent.prechat:CaseLastName' id='lastName' />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-left: 30px">
+                                    Email:
+                                </td>
+                                <td>
+                                    <input type='text' name='liveagent.prechat:CaseEmail' id='email' />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-left: 30px">
+                                    Telefone:
+                                </td>
+                                <td>
+                                    <input type='text' name='liveagent.prechat:CasePhone' id='phone' />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-left: 30px">
+                                    Assunto*:
+                                </td>
+                                <td>
+                                    <select name="liveagent.prechat:CaseSubject" id='subject'>
+                                        <option value="">Selecione um assunto</option> 
+                                        <option value="Dúvida Produto">Dúvida Produto</option>
+                                        <option value="Dúvida Tarifa">Dúvida Tarifa</option>
+                                        <option value="Dúvida Site">Dúvida Site</option>
+                                        <option value="Dúvida Negociação">Dúvida Negociação</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="padding-top: 20px; text-align: center;">
+                                    (*) Preenchimento obrigatório
+                                </td>
+                            </tr>
+							<tr>
+                                <td colspan="2" style="text-align: center;">
+                                    &nbsp;
+                                </td>
+                            </tr>
+                        </table>      
+
+                        <!-- Hidden fields used to set additional custom details -->
+                        <input type="hidden" name="liveagent.prechat:CaseStatus" value="Novo" /><br />
+                        <input type="hidden" name="liveagent.prechat:CaseType" value="Não Cliente" /><br />
+                        <input type="hidden" name="liveagent.prechat:CaseReason" id='reason' /><br />
+                            
+                        <!-- This example assumes that "Chat" was added as picklist value to the Case Origin field -->
+                        <input type="hidden" name="liveagent.prechat:CaseOrigin" value="Chat" /><br />
+                        
+                        <!-- This example will set the Case Record Type to a specific value for the record type configured on the org. Lookup the case record type's id on your org and set it here -->
+                        <!-- <input type="hidden" name="liveagent.prechat:CaseRecordType" value="012D00123456789" /> -->
+                        
+                        <!-- Used to set the visitor's name for the agent in the Console -->
+                        <input type="hidden" name="liveagent.prechat.name" id="prechat_field_name" />
+                    
+                        <!-- map: Use the data from prechat form to map it to the Salesforce record's fields -->
+                        <input type="hidden" name="liveagent.prechat.findorcreate.map:Case" value="Subject,CaseSubject;Status,CaseStatus;Type,CaseType;Reason,CaseReason;Origin,CaseOrigin;Contato__c,CaseLastName;Empresa__c,CaseCompany;CNPJ__c,CaseCNPJ;E_mail__c,CaseEmail;Telefone__c,CasePhone" />
+                    
+                        <!-- doCreate example for a Case: create a case to attach to the chat, set the Case Subject to the value provided by the customer and set the case's Status and Origin fields -->
+                        <input type="hidden" name="liveagent.prechat.findorcreate.map.doCreate:Case" value="Subject,true;Status,true;Type,true;Reason,true;Origin,true;Contato__c,true;Empresa__c,true;CNPJ__c,true;E_mail__c,true;Telefone__c,true" />
+                        
+                        <input type="hidden" name="liveagent.prechat.findorcreate.map:Lead" value="CNPJ__c,CaseCNPJ" />
+                        
+                        <input type="hidden" name="liveagent.prechat.findorcreate.map.doFind:Lead" value="CNPJ__c,true" />
+						<input type="hidden" name="liveagent.prechat.findorcreate.map.isExactMatch:Lead" value="CNPJ__c,true" />
+                        																					
+                        <input type="hidden" name="liveagent.prechat.findorcreate.linkToEntity:Lead" value="Case,Lead__c" />
+                        
+                        <!-- showOnCreate: Open the Contact and Case records as sub-tabs to the chat for the agent in the Console -->
+                        <input type="hidden" name="liveagent.prechat.findorcreate.showOnCreate:Case" value="true" />
+                        <input type="hidden" name="liveagent.prechat.findorcreate.showOnCreate:Lead" value="true" />
+                        
+                        <!-- saveToTranscript: Associates the records found / created, i.e. Contact and Case, to the Live Chat Transcript record. --> 
+                        <input type="hidden" name="liveagent.prechat.findorcreate.saveToTranscript:Case" value="CaseId" />
+                        <input type="hidden" name="liveagent.prechat.findorcreate.saveToTranscript:Lead" value="LeadId" /> 
+                    
+                        <!-- displayToAgent: Hides the case record type from the agent -->
+                        <!-- <input type="hidden" name="liveagent.prechat.findorcreate.displayToAgent:CaseRecordType" value="false" /> -->
+                    
+                        <!-- searchKnowledge: Searches knowledge article based on the text, this assumes that Knowledge is setup -->
+                        <!-- <input type="hidden" name="liveagent.prechat.knowledgeSearch:CaseSubject" value="true" /> -->
+                        
+                        <div style="width: 100%; text-align: center; padding-bottom: 30px;">
+                            <input type='submit' value='Enviar' id='prechat_submit' onclick="return validarNaoCliente()" class="estiloLink"/>  
+                        </div>
+                        
+                        <!-- Set the visitor's name for the agent in the Console to first and last name provided by the customer -->
+                        <script type="text/javascript">
+                            function validarNaoCliente() {
+                            	var contemErro = false;
+                            
+                                if(document.getElementById("company").value == '') {
+                                	contemErro = true;
+                                }
+                                else if(document.getElementById("cnpj").value == '') {
+                                	contemErro = true;
+                                }
+                                else if(document.getElementById("lastName").value == '') {
+                                	contemErro = true;
+                                }
+                                else if(document.getElementById("subject").value == '') {
+                                	contemErro = true;
+                                }
+                                
+                                if(!contemErro) {
+                                	document.getElementById("prechat_field_name").value = document.getElementById("lastName").value;
+                                	document.getElementById("reason").value = document.getElementById("subject").value;
+                                	
+                                	return true; 
+                                }
+                                else {
+                                	alert('Campo(s) obrigatório(s) não preenchido(s)');
+                                	
+                                	return false;
+                                }
+                            }
+                        </script> 
+                    </form>
+                </div>                
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: center;">
+                <apex:image url="{!$Resource.Prechat_Footer}" width="442" />
+            </td>
+        </tr>
+    </table>
+</body>
+</apex:page>

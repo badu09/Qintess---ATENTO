@@ -1,0 +1,60 @@
+<apex:page id="pageSegmentacaoDistribuicao" sideBar="true" controller="CtrlSegmentacaoDistribuicao" showHeader="true">
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'meiomask.js')}" />
+	<script type="text/javascript">
+		function blockPage(){
+    	
+	    	$.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+	             css: {
+	              border: 'none',   
+	              padding: '15px',   
+	              '-webkit-border-radius': '10px',   
+	              '-moz-border-radius': '10px',    
+	              opacity: .9 
+	             }   
+	           }); 
+	     }  
+
+	    function unblockPage(){
+	    	$.unblockUI();  
+	    }
+	</script>
+	<apex:sectionHeader id="shCabecalho" title="Edição" subtitle="Mailing Distribution"/>
+	<apex:form >
+		<apex:outputPanel id="opPrincipal" >
+			<apex:pageMessages id="pmMensagem" />
+			<apex:actionStatus onstart="blockPage()" onstop="unblockPage()" id="blockUI"/>
+			<apex:pageBlock >
+				<apex:variable var="index" value="{!0}"/>
+				<apex:pageBlockTable id="pbtLista" value="{!lMailingDistribution}" var="md">
+					<apex:column value="{!md.Id_Campanha__c}" />
+					<apex:column headerValue="Campanha" value="{!md.Name}" />
+					<apex:column headerValue="Fila" >
+						<apex:selectList value="{!md.Fila__c}" multiselect="false" size="1">
+							<apex:selectOptions value="{!items}" />
+						</apex:selectList>
+					</apex:column>
+					<apex:column headerValue="Fila" >
+						<apex:commandButton action="{!save}" value="Salvar" reRender="opPrincipal" status="blockUI" rendered="{!md.Status_Fila__c != 'Em processamento'}">	
+							<apex:param value="{!index}" assignTo="{!linha}" name="indice"/>
+						</apex:commandButton>
+					</apex:column>
+					<apex:column headerValue="Status Fila" value="{!md.Status_Fila__c}" />
+					<apex:column value="{!md.Habilita_Discador__c}" />
+					<apex:column headerValue="Olos" >
+						<apex:commandButton action="{!enviarMailing}" value="Enviar" reRender="opPrincipal" status="blockUI" rendered="{!md.Habilita_Discador__c && md.Status_Discador__c != 'Finalizado' && md.Status_Fila__c == 'Finalizado'}">	
+							<apex:param value="{!index}" assignTo="{!linha}" name="indice"/>
+						</apex:commandButton>
+						<apex:variable var="index" value="{!index + 1}"/>
+					</apex:column>
+					<apex:column value="{!md.Status_Discador__c}" />
+					<apex:column value="{!md.Retorno_Discador__c}" />
+				</apex:pageBlockTable>
+				<apex:pageBlockButtons >
+                    <apex:commandButton value="Atualizar Status" action="{!atualizarMailing}" reRender="opPrincipal" status="blockUI"/>
+                </apex:pageBlockButtons>
+			</apex:pageBlock>
+		</apex:outputPanel>
+	</apex:form>
+</apex:page>

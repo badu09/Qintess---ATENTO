@@ -1,0 +1,1697 @@
+<apex:page id="pageModeloPropostaPDF" standardController="Opportunity" renderAs="PDF" extensions="CtrlModeloPropostaPDF"  showheader="false" applyhtmltag="false" language="pt_BR">
+    <html>
+    <head>
+        <style type="text/css">
+             @page{
+                @bottom-right {
+                   z-index: 3;
+                   color: #A9A9A9;
+                   font-family:"Arial";
+                   font-size:7.5pt;
+                }
+                size: A4 portrait;
+                margin-top:0.0cm;
+                margin-left:0.0cm;
+                margin-right:0.0cm;
+                margin-bottom:0.0cm;
+            }
+            body{
+                font-family: "Helvetica Neue" , "Lucida Grande" , "Segoe UI" , Arial, Helvetica, Verdana, sans-serif;
+                font-size: 11px;
+                color:black;
+            }
+            div {
+                width: 100%;
+                text-align: left;
+                margin-top: 10px;
+                padding: 10px 0px 10px 0px;
+            }
+            div p {
+                width: 100%;
+                text-align: left;
+                margin:0;
+                padding: 2px 0px 0px 0px;
+                display: table;
+                float: left;
+            }
+            div p.subtitulo {
+                width: 100%;
+                background-color: #CCC;
+                text-align: left;
+                font-size: 12px;
+                margin-bottom: 2px;
+                padding: 2px 0px 2px 0px;
+            }
+            div p.subtitulo strong {
+                width: 100%;
+                background-color: #CCC;
+                text-align: left;
+                font-size: 12px;
+                margin-bottom: 10px;
+                padding: 0px 5px 0px 5px;
+            }
+            div p.texto {
+                width: 100%;
+                text-align: justify;
+                font-size: 16px;
+                margin-bottom: 2px;
+                padding: 2px 0px 20px 0px;
+                display: table;
+                float: left;
+            }
+            div p.texto-simples {
+                width: 90%;
+                text-align: justify;
+                font-size: 16px;
+                margin-bottom: 2px;
+                padding: 2px 0px 5px 0px;
+                display: table;
+                float: left;
+            }
+            div.pagina {
+                width: 100%;
+                display: table;
+                float: left;
+                padding: 30px 30px 0px 30px;
+            }
+            div.pagina div.texto {
+                width: 740px;
+                height: auto !important;
+                padding: 0 50px 0 50px;
+                margin: 0 0 10px 0;
+                display: table;
+                float: left;
+            }
+            h2 {
+                width: 100%;
+                text-transform: uppercase;
+                color: #006400;
+                display: table;
+                float: left;
+                margin-left: 10px;
+            }
+            h2.normal {
+                width: 100%;
+                text-transform: capitalize;
+                color: #006400;
+                display: table;
+                float: left;
+            }
+            h3 {
+                width: 100%;
+                color: #006400;
+                display: table;
+                float: left;
+            }
+            div.pagina div.central-venda {
+                width: 100%;
+                margin: 200px 0 0 0;
+                display: table;
+                float: left;
+            }
+            div.pagina div.topo p {
+                width: 100%;
+                height: 224px;
+                background: #FFFFFF url("{!URLFOR($Resource.img_proposta, IF(objOpportunity.RecordType.DeveloperName!='Vendas_PREPAX', 'proposta-principal-topo.png', 'proposta-prepax-principal-topo.png'))}") no-repeat left top;
+            }
+            div.pagina div.centro p {
+                width: 100%;
+                height: 705px;
+                background: #FFFFFF url("{!URLFOR($Resource.img_proposta, IF(objOpportunity.RecordType.DeveloperName!='Vendas_PREPAX', IF(temAuto, 'proposta-principal-centro.png', 'proposta-principal-centro2.png'), 'proposta-prepax-principal-centro.png'))}") no-repeat left top;
+            }
+            div.pagina div.rodape-principal p {
+                width: 100%;
+                height: 159px;
+                background: #FFFFFF url("{!URLFOR($Resource.img_proposta, IF(objOpportunity.RecordType.DeveloperName!='Vendas_PREPAX', 'rodape-principal.png', 'proposta-prepax-principal-rodape.png'))}") no-repeat left top;
+            }
+            div.pagina div.rodape-principal-classico p {
+                width: 100%;
+                height: 159px;
+                background: #FFFFFF url("{!URLFOR($Resource.img_proposta, 'rodape-principal.png')}") no-repeat left top;
+            }
+            div.pagina div.rodape-principal, div.pagina div.rodape {
+                page-break-after: always;
+            }
+            div.pagina div.rodape p a {
+                margin: 30px 0 0 0;
+                float: left;
+            }
+            div.pagina div.rodape p img {
+                float: right;
+            }
+            div.pagina div.texto div.cartao-descricao {
+                width: 640px;
+                height: auto !important;
+                margin: 10px 0 0 0;
+                padding: 0;
+                display: table;
+                float: left;
+            }
+            div.pagina div.texto div.cartao-descricao img {
+                top: 0px;
+                margin: 0 0 0 0;
+            }
+            div.pagina div.texto div.cartao-descricao div {
+                width: 470px;
+                height: auto !important;
+                margin: 0 0 0 0;
+                display: table;
+                float: right;
+                vertical-align: top;
+            }
+            div.pagina div.texto div.cartao-descricao div h3 {
+                padding: 0;
+                margin: 0 0 10px 0;
+            }
+            div.pagina div.texto div.cartao-descricao div p {
+                margin: 0;
+                padding: 0;
+            }
+
+            div.condicao-comercial {
+                width: 100%;
+                height: auto !important;
+                margin: 10px 0 10px 0;
+                display: table;
+                float: left;
+            }
+            div.condicao-comercial {
+                width: 100%;
+                min-height: 490px;
+                height: auto !important;
+                margin: 10px 0 10px 0;
+                display: table;
+                float: left;
+            }
+            div.condicao-comercial div.cartao-valor {
+                width: 310px;
+                margin: 10px 25px 10px 25px;
+                display: table;
+                float: left;
+            }
+            .table-produtos {
+                margin-left: 80px;
+                width: 80%;
+                display: table;
+                float: left;
+                border-collapse: collapse;
+                border: 1px solid #CCC;
+            }
+            .table-produtos th {
+                background-color: #CDCDCD;
+                color: #000;
+                padding: 3px 5px 3px 5px;
+                text-align: center;
+                border: 1px solid #DDD;
+            }
+            .table-produtos tr td {
+                background-color: #FFFFFF;
+                padding: 3px 5px 3px 5px;
+                border: 1px solid #CCC;
+            }
+            .table-produtos tr.alternar-cor td {
+                background-color: #EEE5DE;
+            }
+            td.number {
+                text-align: right;
+            }
+            td.date {
+                width: 120px;
+                text-align: center;
+            }
+            .assinatura {
+                text-align: center;
+            }
+            div.pagina div.portal-gestao {
+                width: 100%;
+                height: 244px;
+                background: #FFFFFF url("{!URLFOR($Resource.img_proposta, 'proposta-prepax-portal-gestao.png')}") no-repeat center top;
+                float: left;
+                dipslay: table;
+            }
+            div.pagina div.capa{
+                width: 100%;
+                height: 900px;
+                background: url("{!URLFOR($Resource.img_proposta, 'proposta-capa.png')}") no-repeat center top;
+            }
+            div.pagina div.capa-logo{
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+                width: 60%;
+                height: 224px;
+                background: url("{!URLFOR($Resource.img_proposta, 'proposta-capa-logo-frase.png')}") no-repeat right top;
+            }
+            div.pagina div.img2{
+                width: 100%;
+                height: 900px;
+                background: #FFFFFF url("{!URLFOR($Resource.img_proposta, 'img-pag-2.png')}") no-repeat center bottom;
+            }
+            div.pagina div.img3{
+                width: 100%;
+                height: 488px;
+                background-size: cover;
+                background: #FFFFFF url("{!URLFOR($Resource.img_proposta, 'img-pag-3.png')}") no-repeat center top;
+            }
+            div.pagina div.img4{
+                width: 100%;
+                height: 284px;
+                background-size: cover;
+                background: #FFFFFF url("{!URLFOR($Resource.img_proposta, 'img-pag-4-topo.png')}") no-repeat center top;
+            }
+            div.pagina div.img4principal{
+                width: 100%;
+                height: 495px;
+                background-size: cover;
+                background: #FFFFFF url("{!URLFOR($Resource.cartoesprepax, 'cartoesprepax.png')}") no-repeat center top;
+            }
+
+            div.pagina div.img4principal2{
+                width: 100%;
+                height: 495px;
+                background-size: cover;
+                background: #FFFFFF url("{!URLFOR($Resource.cartoesprepax2, 'Pagina4-2.png')}") no-repeat center top;
+            }
+            div.pagina div.img4cartaomultibeneficios{
+                width: 100%;
+                height: 134px;
+                margin-left: 52px;
+                background: #FFFFFF url("{!URLFOR($Resource.img_proposta, 'img-pag-4-cartaomultibeneficios.png')}") no-repeat left top;
+            }
+            div.pagina div.img5topo{
+                width: 100%;
+                height: 284px;
+                background: #FFFFFF url("{!URLFOR($Resource.img_proposta, 'img-pag-5-topo.png')}") no-repeat center top;
+            }
+            .table-resgate {
+                width: 100%;
+                display: table;
+                float: left;
+                border: 0px;
+                margin-bottom: 20px;
+                font-size: 14px;
+            }
+            p.igual{
+                font-weight: bold;
+            }
+            p.titulo{
+                font-size: 18px;
+                font-weight: bold;
+                color: #079279;
+            }
+            p.observacao{
+                font-size: 10px;
+                color: #595959>
+                margin-left: 20px;
+            }
+            div.row {
+                content: "";
+                clear: both;
+                display: table;
+                font-size: 14px;
+                text-align: left;
+            }
+            div.column1 {
+                float: left;
+                width: 23%;
+                height: 180px;
+                padding: 5px;
+            }
+            div.column2 {
+                float: left;
+                width: 23%;
+                height: 350px;
+                padding: 5px;
+                border-right-style: solid;
+                border-right-color: #90b02d;
+            }
+            div.column3 {
+                float: left;
+                width: 45%;
+                height: 80px;
+                padding: 5px;
+            }
+            p.tituloLine {
+                font-size: 18px;
+                font-weight: bold;
+                color: #079279;
+                border-color:#079279;
+                border-top-style: solid;
+                border-bottom-style: solid;
+            }
+            p.tituloLine2 {
+                font-size: 20px;
+                font-weight: bold;
+                color: #079279;
+                border-color:#079279;
+                border-top-style: solid;
+                border-bottom-style: solid;
+                text-align: center;
+                padding-bottom: 30px;
+                padding-top: 30px;
+                margin-bottom: 30px;
+            }
+            #fontsmall
+            {
+                 font-size: 14px;
+            }
+
+        </style>
+    </head>
+
+    <body>
+    <apex:form id="frmProposta" rendered="{!objOpportunity.RecordType.DeveloperName!='Vendas_PREPAX'}">
+        <!-- página 1 capa -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1100px;">
+            <div class="capa"><p></p></div>
+            <div class="capa-logo"><p></p></div>
+        </div>
+        <!-- página 2 Agradecimento -->
+        <div class="pagina" style="padding: 0; margin-top: 20px;height: 1110px;">
+            <div class="texto">
+                <p class="texto" style="margin-top: 30px;">São Paulo,&nbsp;{!dataExtenso}</p>
+                <!--<apex:outputText value="{0,date,dd ' de ' MMMMM ' de ' yyyy}" style="width:110px;">
+                        <apex:param value="{!NOW()}" />
+                    </apex:outputText></h3><br /> -->
+                <p class="texto">{!objOpportunity.Account.Razao_Social__c}</p>
+                <p class="texto">{!objOpportunity.Account.Name}</p>
+                <!--<p class="texto">{!contatoOppName}</p>-->
+                <p class="texto">Agradecemos seu interesse em nossos produtos e serviços.</p>
+                <p class="texto">Com mais de 15 anos de experiência, somos líderes em cartões de benefícios e gestão de despesas corporativas para empresas de todos os tamanhos.</p>
+                <p class="texto">Temos um portfólio completo de soluções simples e inovadoras que tornam a gestão de sua empresa mais fácil e a vida dos seus colaboradores mais prática e eficiente.</p>
+                <p class="texto">Presentes no dia a dia de tantas empresas e pessoas, somos movidos pelo sentimento de oferecer o mais importante de todos os benefícios: a qualidade de vida. Afinal, quem vive bem trabalha melhor.</p>
+
+                <p class="texto">Conte com a Alelo. A gente trabalha em seu benefício.</p>
+
+                <p class="texto">Atenciosamente,</p>
+
+                <div class="row">
+                    <div class="column1" style="width: 35%; ">
+                        <p class="texto" style="padding-top: 0px; padding-bottom: 0px;">Central de Vendas</p>
+                        <p class="texto" style="padding-top: 0px; padding-bottom: 0px;">Telefone: 55 11 {!objOpportunity.Canal_Propostas_Receptivo__c}</p>
+                        <p class="texto" style="padding-top: 0px; padding-bottom: 0px;"><a href="mailto:vendasalelo@alelo.com.br">vendasalelo@alelo.com.br</a></p>
+                        <p class="texto" style="padding-top: 0px; padding-bottom: 0px;"><a href="www.alelo.com.br">www.alelo.com.br</a></p>
+                    </div>
+                    <div class="column1">
+                        <apex:image style="display:{!IF(objOpportunity.Codigo_do_Banco__c == '237', '', 'none')}" url="{!URLFOR($Resource.Bradesco)}" width="110" />
+                        <apex:image style="display:{!IF(objOpportunity.Codigo_do_Banco__c == '1', '', 'none')}" url="{!URLFOR($Resource.BB)}" width="110" />
+                        <apex:image style="display:{!IF(objOpportunity.Codigo_do_Banco__c == '33', '', 'none')}" url="{!URLFOR($Resource.Santander)}" width="110" />
+                        <!-- <p style="display:{!IF(AND(objOpportunity.Codigo_do_Banco__c != '237', objOpportunity.Codigo_do_Banco__c != '1', objOpportunity.Codigo_do_Banco__c != '33'), '', 'none')}"></p> -->
+                    </div>
+                </div>
+
+            </div>
+            <div class="img2"></div>
+        </div>
+        <!-- página 3 POR QUE ALELO? -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1120px;">
+            <div class="img3"></div>
+            <div class="texto" style="margin-bottom: 200px;">
+                <p class="titulo">POR QUE ALELO?</p>
+                <div class="cartao-descricao" style="margin-top: 40px;">
+                    <img src="{!URLFOR($Resource.img_proposta, 'presenca.png')}" style="padding-left: 60px; height: 90px;" />
+                    <div>
+                        <p class="titulo">PRESENÇA</p>
+                        <p class="texto">Temos a maior rede de aceitação do Brasil, com presença em 100%
+                            dos municípios – mais de 550 mil estabelecimentos credenciados.</p>
+                    </div>
+                </div>
+                <div class="cartao-descricao">
+                    <img src="{!URLFOR($Resource.img_proposta, 'gestao.png')}" style="padding-left: 60px; height: 90px;"/>
+                    <div>
+                        <p class="titulo">GESTÃO</p>
+                        <p class="texto">Informações que fazem a diferença: índice Alelo de Preço Médio de
+                            Refeição, Valores Mínimos de Refeição, Alimentação e relatórios
+                            gerenciais para mais controle.</p>
+                    </div>
+                </div>
+                <div class="cartao-descricao">
+                    <img src="{!URLFOR($Resource.img_proposta, 'fococliente.png')}" style="padding-left: 60px; height: 90px;"/>
+                    <div>
+                        <p class="titulo">FOCO NO CLIENTE</p>
+                        <p class="texto">Excelência em atendimento que garante mais de 90% de satisfação
+                            às empresas atendidas, graças a um time de consultores e canais de atendimento exclusivos.</p>
+                    </div>
+                </div>
+
+                <!--
+                <div class="cartao-descricao">
+                    <img src="{!URLFOR($Resource.img_proposta, 'cartao-alelo-refeicao.png')}" />
+                    <div>
+                        <h3>Alelo Refeição</h3>
+                        <p class="texto">Comodidade para escolher o que e onde almoçar em restaurantes,
+                            lanchonetes e similares, na maior rede de aceitação do Brasil.</p>
+                    </div>
+                </div>
+                <div class="cartao-descricao">
+                    <img src="{!URLFOR($Resource.img_proposta, 'cartao-alelo-alimentacao.png')}" />
+                    <div>
+                        <h3>Alelo Alimentação</h3>
+                        <p class="texto">Um mundo de opções para uma lista de compras mais saudável.
+                            Aceito na maior rede credenciada de supermercados do Brasil.</p>
+                    </div>
+                </div>
+                <div class="cartao-descricao">
+                    <img src="{!URLFOR($Resource.img_proposta, 'cartao-alelo-natal-alimentacao.png')}" />
+                    <div>
+                        <h3>Alelo Natal Alimentação</h3>
+                        <p class="texto">Substitui a cesta física, proporcionando liberdade para o funcionário
+                            compor a sua ceia de natal com os produtos que desejar.</p>
+                    </div>
+                </div>
+                <div class="cartao-descricao">
+                    <img src="{!URLFOR($Resource.img_proposta, 'cartao-alelo-cultura.png')}" />
+                    <div>
+                        <h3>Alelo Cultura</h3>
+                        <p class="texto">Mais conhecimento e lazer para a sua equipe.
+                            Com o crédito de R$50 mensais, seus colaboradores têm acesso a cinemas,
+                            teatros, shows, livrarias e ainda ganham descontos exclusivos.</p>
+                    </div>
+                </div>
+                <div class="cartao-descricao">
+                    <img src="{!URLFOR($Resource.img_proposta, 'cartao-alelo-vale-transporte.png')}" width="150" />
+                    <div>
+                        <h3>Alelo Vale-Transporte</h3>
+                        <p class="texto">A melhor alternativa para a gestão completa do vale-transporte,
+                            o seu pedido é feito por meio de um site rápido, simples e seguro,
+                            e ainda conta com recursos e serviços exclusivos. Realizamos aquisição e o
+                            gerenciamento com operadoras de todo Brasil.</p>
+                    </div>
+                </div>
+                <div class="cartao-descricao" style="{!if(temAuto,'display:block', 'display:none')}">
+                    <img src="{!URLFOR($Resource.img_proposta, 'cartao-alelo-flex-car.png')}" />
+                    <div>
+                        <h3>Alelo Flex Car</h3>
+                        <p class="texto">Praticidade no pagamento de despesas automotivas como combustível,
+                            acessórios, manutenção, lavagem e estacionamento. Elimina os processos de reembolso e
+                            possibilita administrar os gastos dos cartões com extratos detalhados.</p>
+                    </div>
+                </div>
+                <div class="cartao-descricao" style="{!if(temAuto,'display:none', 'display:block')}">
+                    <img src="{!URLFOR($Resource.img_proposta, 'cartao-alelo-mobilidade.png')}" />
+                    <div>
+                        <h3>Alelo Mobilidade</h3>
+                        <p class="texto" id="fontsmall">Seguindo as tendências mundiais de mobilidade urbana, a Alelo traz uma solução inovadora que valoriza as escolhas dos seus colaboradores. Com Alelo Mobilidade os pagamentos das despesas para ir e vir do trabalho pode ser feito de múltiplas formas: em postos de combustível e serviços automotivos para despesas do próprio veículo, e também é aceito na rede de mobilidade urbana das grandes metrópoles!</p>
+                    </div>
+                </div>
+                -->
+            </div>
+            <!--
+            <div class="rodape">
+                <p>
+                    <a href="www.alelo.com.br">www.alelo.com.br</a>
+                    <img src="{!URLFOR($Resource.img_proposta, 'logo.png')}" width="80" />
+                </p>
+            </div>
+            -->
+        </div>
+        <!-- página 4 Cartões -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1120px;">
+            <div class="img4"></div>
+            <div class="img4principal"></div>
+            <div class="img4cartaomultibeneficios"></div>
+            <div style="height: 70px;"></div>
+        </div>
+        <!-- página 5 Novidades -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1120px;">
+            <div class="img5topo"></div>
+            <p class="titulo">O QUE VOCÊ GANHA COM ESTA NOVIDADE?</p>
+            <div class="row">
+                <div class="column1">
+                    <apex:image url="{!URLFOR($Resource.img_proposta, 'nov-img-calendar.png')}" width="73" height="65"/>
+                    <p><strong>Conveniência</strong></p>
+                    <p>Você faz o pedido e paga em até 40 dias².</p>
+                </div>
+                <div class="column1" style="border-color: white;">
+                    <apex:image url="{!URLFOR($Resource.img_proposta, 'nov-img-livelo.png')}" width="66" height="65" />
+                    <p><strong>Acumule pontos</strong></p>
+                    <p>Faça mensalmente seus pedidos com a Alelo, ganhe pontos Livelo e troque por vantagens.</p>
+                </div>
+                <div class="column1" style="border-color: white;">
+                    <apex:image url="{!URLFOR($Resource.img_proposta, 'nov-img-nobill.png')}" width="66" height="65" />
+                    <p><strong>Elimine os boletos</strong></p>
+                    <p>Reduz o controle operacional de pagamento do boleto.</p>
+                </div>
+                <div class="column1" style="border-color: white;">
+                    <apex:image url="{!URLFOR($Resource.img_proposta, 'nov-img-cel.png')}" width="44" height="65" />
+                    <p><strong>Agilidade</strong></p>
+                    <p>O pagamento é realizado em segundos e confirmado por SMS, online.</p>
+                </div>
+            </div>
+            <p class="titulo">Veja como é fácil!</p>
+            <div class="row" style="height: 500px;">
+                <div class="column2">
+                    <apex:image url="{!URLFOR($Resource.img_proposta, 'facil-img-maos.png')}" width="85" height="65" />
+                    <p class="titulo">1.</p>
+                    <p>Você adquire nossas soluções em benefício.</p>
+                    <apex:image url="{!URLFOR($Resource.img_proposta, 'facil-img-cartoes.png')}" width="136" height="187" style="float:left"/>
+                </div>
+                <div class="column2">
+                    <apex:image url="{!URLFOR($Resource.img_proposta, 'facil-img-dias.png')}" width="66" height="65" />
+                    <p class="titulo">2.</p>
+                    <p>Realiza o pagamento dos pedidos mensais por meios do seu cartão empresarial Elo.</p>
+                    <apex:image url="{!URLFOR($Resource.img_proposta, 'facil-img-cartoesempresarial.png')}" width="148" height="148" style="float:left"/>
+                </div>
+                <div class="column2">
+                    <apex:image url="{!URLFOR($Resource.img_proposta, 'facil-img-note.png')}" width="66" height="65" />
+                    <p class="titulo">3.</p>
+                    <p>O que ganha?</p>
+                    <p> </p>
+                    <p>• Até 40 dias de prazo¹.</p>
+                    <p> </p>
+                    <p>• Agilidade na compra e no pagamento.</p>
+                    <p> </p>
+                    <p>• Sem impressão de papel. Tudo online.</p>
+                </div>
+                <div class="column2" style="border-right-color: white;">
+                    <apex:image url="{!URLFOR($Resource.img_proposta, 'facil-img-presente.png')}" width="66" height="65" />
+                    <p class="titulo">4.</p>
+                    <p>Troca seus pontos por produtos e viagens!</p>
+                </div>
+            </div>
+        </div>
+        <!-- página 6 RESGATES -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1120px;">
+            <div class="texto" >
+                <div style="margin-top: 30px;">
+                    <p class="titulo">QUER SABER O QUE PODERIA RESGATAR COM OS PONTOS LIVELO?</p>
+                    <table class="table-resgate" style="margin-top: 20px;">
+                        <tbody>
+                        <tr>
+                            <td>• Passagens aéreas</td>
+                            <td>• Aluguel de veículos</td>
+                            <td>• Eletrônicos</td>
+                        </tr>
+                        <tr>
+                            <td>• Recargas de celular</td>
+                            <td>• Assinatura de revistas</td>
+                            <td>• E muito mais!</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <p class="titulo" style="margin-bottom: 30px;">Veja algumas opções de resgate com pontos Livelo*</p>
+                    <table class="table-resgate" style="margin-bottom: 70px; border-spacing: 10px 30px;">
+                        <tbody>
+                        <tr style="border: 1px solid red">
+                            <td><apex:image url="{!URLFOR($Resource.img_proposta, 'resgate-img-3colab.png')}" width="66" height="65" /></td>
+                            <td>Você tem <b>3 colaboradores</b> que recebem <b>R$ 350 mensais</b> no Alelo Alimentação.</td>
+                            <td><b>=</b></td>
+                            <td><apex:image url="{!URLFOR($Resource.img_proposta, 'resgate-img-cel.png')}" width="66" height="65" /></td>
+                            <td>Em apenas <b>1 ano</b>, é possível realizar <b>duas recargas de celular</b> e até mesmo fazer <b>uma viagem nacional</b>.⁴</td>
+                        </tr>
+                        <tr>
+                            <td><apex:image url="{!URLFOR($Resource.img_proposta, 'resgate-img-10colab.png')}" width="66" height="65" /></td>
+                            <td>Você tem <b>10 colaboradores</b> que recebem <b>R$ 350 mensais</b> no Alelo Alimentação.</td>
+                            <td><b>=</b></td>
+                            <td><apex:image url="{!URLFOR($Resource.img_proposta, 'resgate-img-aviao.png')}" width="66" height="65" /></td>
+                            <td>Em <b>2 anos</b>, você resgata até <b>8 viagens nacionais</b>.⁴</td>
+                        </tr>
+                        <tr>
+                            <td><apex:image url="{!URLFOR($Resource.img_proposta, 'resgate-img-20colab.png')}" width="66" height="65" /></td>
+                            <td>Com <b>20 funcionários</b> recebendo benefício mensal de <b>R$ 350</b>, seus prêmios são ainda maiores.</td>
+                            <td><b>=</b></td>
+                            <td><apex:image url="{!URLFOR($Resource.img_proposta, 'resgate-img-planeta.png')}" width="66" height="65" /></td>
+                            <td>Em <b>1 ano</b>, você ganha <b>1 viagem internacional</b>. Em <b>2 anos</b>, é possível resgatar <b>1 Smart TV Full HD</b>.⁴</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <p class="tituloLine2" >Não perca a oportunidade! Feche com a gente agora mesmo!</p>
+                </div>
+                <p class="observacao">¹ Oferta restrita ao pagamento com os cartões corporativos Elo e para pagamento dos produtos Alelo Alimentação, Alelo Cultura, Alelo Natal e Alelo Refeição.</p>
+                <p class="observacao">² De acordo com o fechamento da sua fatura.</p>
+                <p class="observacao">³ Consulte as ofertas de pontos Livelo do seu contrato com seu gerente ou pelo site www.livelo.com.br.</p>
+                <p class="observacao">⁴ Simulação meramente ilustrativa. Os valores podem mudar de acordo com a variação de câmbio. As opções de resgate estão baseadas nas ofertas Livelo em vigor em janeiro/2018.</p>
+            </div>
+        </div>
+        <!-- página 7 PRODUTOS REGULAMENTADOS -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1120px;">
+            <div class="texto" style="margin-top: 30px;">
+                <p class="titulo" >PRODUTOS REGULAMENTADOS</p><br />
+                <p class="texto">Os cartões <strong>Alelo Refeição, Alelo Alimentação e Alelo Cultura</strong>
+                    são regulamentados por uma lei federal de incentivo e para que a sua empresa possa usufruir dos
+                    benefícios fiscais destes programas <strong>é obrigatório</strong> que ela esteja devidamente registrada.
+                    Para se cadastrar é muito fácil:</p>
+                <div style="margin-bottom: 30px;">
+                    <p class="texto"><strong>•  Cadastre-se no Programa de Alimentação do Trabalhador: </strong>
+                        acesse <a href="http://portal.mte.gov.br/pat/">http://portal.mte.gov.br/pat/</a>
+                        e registre a Alelo como a sua fornecedora sob o Nº de registro: <strong>080002736</strong>.</p>
+                    <p class="texto"><strong>•  Cadastre-se no Programa Vale Cultura: </strong>
+                        acesse <a href="http://vale.cultura.gov.br/">http://vale.cultura.gov.br/</a>
+                        e selecione a Alelo como sua operadora.</p>
+                </div>
+
+                <p class="titulo">LEI DO VALE-TRANSPORTE</p><br />
+
+                <p class="texto">O vale-transporte é um benefício assegurado por lei, de concessão obrigatória desde 1987.
+                    Foi criado pela Lei 7.418/85 e regulamentado pelo Decreto 95.247/87.
+                    Desde então os empregadores devem adquirir os vales e cartões e entregá-los aos empregados
+                    para deslocamento residência-trabalho e vice-versa.</p>
+                <p class="texto">Para mais informações acesse:
+                    <a href="www.planalto.gov.br/ccivil_03/LEIS/L7418.htm">www.planalto.gov.br/ccivil_03/LEIS/L7418.htm</a></p>
+            </div>
+        </div>
+        <!-- página 8 Tabelas de Condições Comerciais -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1120px;">
+            <div class="texto">
+                <p class="titulo" style="margin-top: 30px;">CONDIÇÕES COMERCIAIS</p>
+                <div class="condicao-comercial" style="display: none;">
+                    <apex:repeat var="pd" value="{!listaOpportunityProduct}">
+                        <div class="cartao-valor" style="display:{!IF(pd.Nome_do_Produto__c=='Alelo RefeiçãoD' || pd.Nome_do_Produto__c=='Alelo AlimentaçãoD' || pd.Nome_do_Produto__c=='Alelo Natal AlimentaçãoD', '', 'none')}">
+                            <h3>{!pd.Nome_do_Produto__c}</h3>
+                            <table class="table-produtos" border="0">
+                                <tbody>
+                                <tr>
+                                    <td>Quantidade de cartões</td>
+                                    <td><apex:outputField value="{!pd.Quantidade_de_Cartoes__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Valor Mensal por Cartão</td>
+                                    <td><apex:outputField value="{!pd.Valor_Unitario__c}" /></td>
+                                </tr>
+
+                                <tr>
+                                    <td>Tarifa de emissão de cartão</td>
+                                    <td><apex:outputField value="{!pd.Tarifa_de_emissao_de_cartao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de reemissão</td>
+                                    <td><apex:outputField value="{!pd.Tarifa_de_reemissao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de entrega</td>
+                                    <td><apex:outputField value="{!pd.Tarifa_de_entrega__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de disponibilização mensal por cartão</td>
+                                    <td><apex:outputField value="{!pd.Tarifa_disponibili_mensal_por_cartao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de manutenção mensal por cartão</td>
+                                    <td><apex:outputField value="{!pd.Tarifa_de_manutencao_mensal_por_cartao__c}" /></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </apex:repeat>
+                </div>
+                <div class="condicao-comercial" style="margin-bottom: 10px;">
+                    <div class="cartao-valor" style="{!IF(AND(aleloRefeicao.Quantidade_de_Cartoes__c != null, aleloRefeicao.Quantidade_de_Cartoes__c > 0), '', 'display:none;')}">
+                        <h3>Alelo Refeição</h3>
+                        <table class="table-produtos">
+                            <tbody>
+                            <tr>
+                                <td>Quantidade de cartões</td>
+                                <td><apex:outputField value="{!aleloRefeicao.Quantidade_de_Cartoes__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Valor Mensal por Cartão</td>
+                                <td><apex:outputField value="{!aleloRefeicao.Valor_Unitario__c}" /></td>
+                            </tr>
+                            <apex:repeat var="tc" value="{!aleloRefeicao.Tarifas_Carrinhos__r}">
+                                <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==5.0 ||
+                                        tc.Codigo_da_Tarifa__c==7.0 ||
+                                        tc.Codigo_da_Tarifa__c==1.0 ||
+                                        tc.Codigo_da_Tarifa__c==4.0 ||
+                                        tc.Codigo_da_Tarifa__c==2.0 ||
+                                        tc.Codigo_da_Tarifa__c==45.0,
+                                        OR(tc.Codigo_da_Tarifa__c==4.0,
+                                                tc.Codigo_da_Tarifa__c==2.0,
+                                                AND(tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0),
+                                                AND(tc.Valor_Unitario_Prepax__c != null, tc.Valor_Unitario_Prepax__c > 0))), '', 'none')}">
+                                    <td>{!tc.Nome_da_Tarifa__c}</td>
+                                    <td>
+                                        <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                        <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                            <!--<tr>
+                                    <td>Tarifa de emissão de cartão</td>
+                                    <td><apex:outputField value="{!aleloRefeicao.Tarifa_de_emissao_de_cartao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de reemissão</td>
+                                    <td><apex:outputField value="{!aleloRefeicao.Tarifa_de_reemissao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de entrega</td>
+                                    <td><apex:outputField value="{!aleloRefeicao.Tarifa_de_entrega__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de disponibilização mensal por cartão</td>
+                                    <td><apex:outputField value="{!aleloRefeicao.Tarifa_disponibili_mensal_por_cartao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de manutenção mensal por cartão</td>
+                                    <td><apex:outputField value="{!aleloRefeicao.Tarifa_de_manutencao_mensal_por_cartao__c}" /></td>
+                                </tr>  -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cartao-valor" style="{!IF(AND(aleloAlimentacao.Quantidade_de_Cartoes__c != null, aleloAlimentacao.Quantidade_de_Cartoes__c > 0), '', 'display:none;')}">
+                        <h3>Alelo Alimentação</h3>
+                        <table class="table-produtos">
+                            <tbody>
+                            <tr>
+                                <td>Quantidade de cartões</td>
+                                <td><apex:outputField value="{!aleloAlimentacao.Quantidade_de_Cartoes__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Valor Mensal por Cartão</td>
+                                <td><apex:outputField value="{!aleloAlimentacao.Valor_Unitario__c}" /></td>
+                            </tr>
+                            <apex:repeat var="tc" value="{!aleloAlimentacao.Tarifas_Carrinhos__r}">
+                                <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==5.0 ||
+                                        tc.Codigo_da_Tarifa__c==7.0 ||
+                                        tc.Codigo_da_Tarifa__c==1.0 ||
+                                        tc.Codigo_da_Tarifa__c==4.0 ||
+                                        tc.Codigo_da_Tarifa__c==2.0 ||
+                                        tc.Codigo_da_Tarifa__c==45.0,
+                                        OR(tc.Codigo_da_Tarifa__c==4.0,
+                                                tc.Codigo_da_Tarifa__c==2.0,
+                                                AND(tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0),
+                                                AND(tc.Valor_Unitario_Prepax__c != null, tc.Valor_Unitario_Prepax__c > 0))), '', 'none')}">
+                                    <td>{!tc.Nome_da_Tarifa__c}</td>
+                                    <td>
+                                        <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                        <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                            <!--<tr>
+                                    <td>Tarifa de emissão de cartão</td>
+                                    <td><apex:outputField value="{!aleloAlimentacao.Tarifa_de_emissao_de_cartao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de reemissão</td>
+                                    <td><apex:outputField value="{!aleloAlimentacao.Tarifa_de_reemissao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de entrega</td>
+                                    <td><apex:outputField value="{!aleloAlimentacao.Tarifa_de_entrega__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de disponibilização mensal por cartão</td>
+                                    <td><apex:outputField value="{!aleloAlimentacao.Tarifa_disponibili_mensal_por_cartao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de manutenção mensal por cartão</td>
+                                    <td><apex:outputField value="{!aleloAlimentacao.Tarifa_de_manutencao_mensal_por_cartao__c}" /></td>
+                                </tr>  -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cartao-valor" style="{!IF(AND(aleloNatalAlimentacao.Quantidade_de_Cartoes__c != null, aleloNatalAlimentacao.Quantidade_de_Cartoes__c > 0), '', 'display:none;')}">
+                        <h3>Alelo Natal Alimentação</h3>
+                        <table class="table-produtos">
+                            <tbody>
+                            <tr>
+                                <td>Quantidade de cartões</td>
+                                <td><apex:outputField value="{!aleloNatalAlimentacao.Quantidade_de_Cartoes__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Valor Mensal por Cartão</td>
+                                <td><apex:outputField value="{!aleloNatalAlimentacao.Valor_Unitario__c}" /></td>
+                            </tr>
+                            <apex:repeat var="tc" value="{!aleloNatalAlimentacao.Tarifas_Carrinhos__r}">
+                                <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==5.0 ||
+                                        tc.Codigo_da_Tarifa__c==7.0 ||
+                                        tc.Codigo_da_Tarifa__c==1.0 ||
+                                        tc.Codigo_da_Tarifa__c==4.0 ||
+                                        tc.Codigo_da_Tarifa__c==2.0 ||
+                                        tc.Codigo_da_Tarifa__c==45.0,
+                                        OR(tc.Codigo_da_Tarifa__c==4.0,
+                                                tc.Codigo_da_Tarifa__c==2.0,
+                                                AND(tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0),
+                                                AND(tc.Valor_Unitario_Prepax__c != null, tc.Valor_Unitario_Prepax__c > 0))), '', 'none')}">
+                                    <td>{!tc.Nome_da_Tarifa__c}</td>
+                                    <td>
+                                        <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                        <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                            <!--<tr>
+                                    <td>Tarifa de emissão de cartão</td>
+                                    <td><apex:outputField value="{!aleloNatalAlimentacao.Tarifa_de_emissao_de_cartao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de reemissão</td>
+                                    <td><apex:outputField value="{!aleloNatalAlimentacao.Tarifa_de_reemissao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de entrega</td>
+                                    <td><apex:outputField value="{!aleloNatalAlimentacao.Tarifa_de_entrega__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de disponibilização mensal por cartão</td>
+                                    <td><apex:outputField value="{!aleloNatalAlimentacao.Tarifa_disponibili_mensal_por_cartao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de manutenção mensal por cartão</td>
+                                    <td><apex:outputField value="{!aleloNatalAlimentacao.Tarifa_de_manutencao_mensal_por_cartao__c}" /></td>
+                                </tr>-->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cartao-valor" style="{!IF(AND(aleloValeTransporte.Quantidade_de_Cartoes__c != null, aleloValeTransporte.Quantidade_de_Cartoes__c > 0), '', 'display:none;')}">
+                        <h3>Alelo Vale-Transporte*</h3>
+                        <table class="table-produtos">
+                            <tbody>
+                            <tr>
+                                <td>Quantidade de usuários VT papel</td>
+                                <td><apex:outputField value="{!aleloValeTransporte.Quantidade_de_usuarios_VT_papel__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Quantidade de usuários VT cartão</td>
+                                <td><apex:outputField value="{!aleloValeTransporte.Quantidade_de_usuarios_VT_cartao__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Valor médio mensal de compra</td>
+                                <td><apex:outputField value="{!aleloValeTransporte.Valor_medio_mensal_de_compra__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Quantidade de pontos de entrega</td>
+                                <td><apex:outputField value="{!aleloValeTransporte.Quantidade_de_pontos_de_entrega__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Taxa de serviço</td>
+                                <td><apex:outputField value="{!aleloValeTransporte.Taxa_de_servico__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Tarifa de atendimento por unidade</td>
+                                <td><apex:outputField value="{!aleloValeTransporte.Tarifa_de_atendimento__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Tarifa de Gerenciamento</td>
+                                <td><apex:outputField value="{!aleloValeTransporte.Tarifa_de_Gerenciamento__c}" /></td>
+                            </tr>
+                            <tr style="display:{!IF((aleloValeTransporte.Recarga_Certa__c != null), '', 'none')}"  >
+                                <td>Recarga certa (s/n)</td>
+                                <td>Sim</td>
+                            </tr>
+                            <tr style="display:{!IF((aleloValeTransporte.Recarga_Certa__c == null), '', 'none')}"  >
+                                <td>Recarga certa (s/n)</td>
+                                <td>Não</td>
+                            </tr>
+                            <tr style="display:{!IF((aleloValeTransporte.Recarga_Certa__c != null), '', 'none')}">
+                                <td>% Taxa recarga certa sobre a economia</td>
+                                <td><apex:outputField value="{!aleloValeTransporte.Recarga_Certa__c}" />%</td>
+                            </tr>
+
+                            <apex:repeat var="tc" value="{!aleloValeTransporte.Tarifas_Carrinhos__r}">
+                                <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==5.0 ||
+                                        tc.Codigo_da_Tarifa__c==2.0 ||
+                                        tc.Codigo_da_Tarifa__c==45.0,
+                                        OR(AND(tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0),
+                                                AND(tc.Valor_Unitario_Prepax__c != null, tc.Valor_Unitario_Prepax__c > 0))), '', 'none')}">
+                                    <td>{!tc.Nome_da_Tarifa__c}</td>
+                                    <td>
+                                        <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                        <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                            <!--<tr>
+                                    <td>Taxa de serviço</td>
+                                    <td><apex:outputField value="{!aleloValeTransporte.Taxa_de_servico__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de atendimento por unidade</td>
+                                    <td><apex:outputField value="{!aleloValeTransporte.Tarifa_de_atendimento_por_unidade__c}" /></td>
+                                </tr>-->
+                            </tbody>
+                        </table>
+                        <p>* Verificar condições comerciais específicas no anexo.</p>
+                    </div>
+                    <div class="cartao-valor" style="{!IF(AND(aleloFlexCar.Quantidade_de_Cartoes__c != null, aleloFlexCar.Quantidade_de_Cartoes__c > 0), '', 'display:none;')}">
+                        <h3>Alelo Flex Car</h3>
+                        <table class="table-produtos">
+                            <tbody>
+                            <tr>
+                                <td>Quantidade de cartões</td>
+                                <td><apex:outputField value="{!aleloFlexCar.Quantidade_de_Cartoes__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Valor Mensal por Cartão</td>
+                                <td><apex:outputField value="{!aleloFlexCar.Valor_Unitario__c}" /></td>
+                            </tr>
+                            <apex:repeat var="tc" value="{!aleloFlexCar.Tarifas_Carrinhos__r}">
+                                <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==5.0 ||
+                                        tc.Codigo_da_Tarifa__c==7.0 ||
+                                        tc.Codigo_da_Tarifa__c==14.0 ||
+                                        tc.Codigo_da_Tarifa__c==45.0,
+                                        OR(AND(tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0),
+                                                AND(tc.Valor_Unitario_Prepax__c != null, tc.Valor_Unitario_Prepax__c > 0))), '', 'none')}">
+                                    <td>{!tc.Nome_da_Tarifa__c}</td>
+                                    <td>
+                                        <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                        <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                    </td>
+                                </tr>
+                                <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==3.0,
+                                        tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0), '', 'none')}">
+                                    <td>{!tc.Nome_da_Tarifa__c}</td>
+                                    <td>
+                                            {!tc.Valor_Unitario__c}
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                            <!--<tr>
+                                    <td>Tarifa de emissão de cartão</td>
+                                    <td><apex:outputField value="{!aleloFlexCar.Tarifa_de_emissao_de_cartao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de reemissão</td>
+                                    <td><apex:outputField value="{!aleloFlexCar.Tarifa_de_reemissao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de comissão de administração</td>
+                                    <td><apex:outputField value="{!aleloFlexCar.Tarifa_de_comissao_de_administracao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de Rescisão de Contrato</td>
+                                    <td><apex:outputField value="{!aleloFlexCar.Tarifa_de_Rescisao_de_Contrato__c}" /></td>
+                                </tr>-->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cartao-valor" style="{!IF(AND(aleloCultura.Quantidade_de_Cartoes__c != null, aleloCultura.Quantidade_de_Cartoes__c > 0), '', 'display:none;')}">
+                        <h3>Alelo Cultura</h3>
+                        <table class="table-produtos">
+                            <tbody>
+                            <tr>
+                                <td>Quantidade de cartões</td>
+                                <td><apex:outputField value="{!aleloCultura.Quantidade_de_Cartoes__c}" /></td>
+                            </tr>
+                            <tr style="{!IF(AND(aleloCultura.Disponibilizacao_mensal__c != null, aleloCultura.Disponibilizacao_mensal__c > 0), '', 'display:none;')}">
+                                <td>Valor Mensal do Cartão</td>
+                                <td><apex:outputField value="{!aleloCultura.Disponibilizacao_mensal__c}" /></td>
+                            </tr>
+                            <apex:repeat var="tc" value="{!aleloCultura.Tarifas_Carrinhos__r}">
+                                <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==5.0 ||
+                                        tc.Codigo_da_Tarifa__c==7.0 ||
+                                        tc.Codigo_da_Tarifa__c==4.0 ||
+                                        tc.Codigo_da_Tarifa__c==2.0 ||
+                                        tc.Codigo_da_Tarifa__c==45.0,
+                                        OR(tc.Codigo_da_Tarifa__c==4.0,
+                                                tc.Codigo_da_Tarifa__c==2.0,
+                                                AND(tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0),
+                                                AND(tc.Valor_Unitario_Prepax__c != null, tc.Valor_Unitario_Prepax__c > 0))), '', 'none')}">
+                                    <td>{!tc.Nome_da_Tarifa__c}</td>
+                                    <td>
+                                        <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                        <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+
+
+                            <!--<tr>
+                                    <td>Tarifa de emissão de cartão</td>
+                                    <td><apex:outputField value="{!aleloCultura.Tarifa_de_emissao_de_cartao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de reemissão</td>
+                                    <td><apex:outputField value="{!aleloCultura.Tarifa_de_reemissao__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Tarifa de entrega</td>
+                                    <td><apex:outputField value="{!aleloCultura.Tarifa_de_entrega__c}" /></td>
+                                </tr> -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cartao-valor" style="{!IF(AND(aleloMobilidade.Quantidade_de_Cartoes__c != null, aleloMobilidade.Quantidade_de_Cartoes__c > 0), '', 'display:none;')}">
+                        <h3>Alelo Mobilidade</h3>
+                        <table class="table-produtos">
+                            <tbody>
+                            <tr>
+                                <td>Quantidade de cartões</td>
+                                <td><apex:outputField value="{!aleloMobilidade.Quantidade_de_Cartoes__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Valor Mensal por Cartão</td>
+                                <td><apex:outputField value="{!aleloMobilidade.Valor_Unitario__c}" /></td>
+                            </tr>
+                            <apex:repeat var="tc" value="{!aleloMobilidade.Tarifas_Carrinhos__r}">
+                                <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==5.0 ||
+                                        tc.Codigo_da_Tarifa__c==7.0 ||
+                                        tc.Codigo_da_Tarifa__c==14.0,
+                                        OR(AND(tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0),
+                                                AND(tc.Valor_Unitario_Prepax__c != null, tc.Valor_Unitario_Prepax__c > 0))), '', 'none')}">
+                                    <td>{!tc.Nome_da_Tarifa__c}</td>
+                                    <td>
+                                        <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                        <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                    </td>
+                                </tr>
+                                <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==3.0,
+                                        tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0), '', 'none')}">
+                                    <td>{!tc.Nome_da_Tarifa__c}</td>
+                                    <td>
+                                            {!tc.Valor_Unitario__c}
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cartao-valor" style="{!IF(AND(aleloAuto.Quantidade_de_Cartoes__c != null, aleloAuto.Quantidade_de_Cartoes__c > 0), '', 'display:none;')}">
+                        <h3>Alelo Auto</h3>
+                        <table class="table-produtos">
+                            <tbody>
+                            <tr>
+                                <td>Quantidade de cartões</td>
+                                <td><apex:outputField value="{!aleloAuto.Quantidade_de_Cartoes__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td>Valor Mensal por Cartão</td>
+                                <td><apex:outputField value="{!aleloAuto.Disponibilizacao_mensal__c}" /></td>
+                            </tr>
+                            <apex:repeat var="tc" value="{!aleloAuto.Tarifas_Carrinhos__r}">
+                                <tr style="display:{!IF(AND(tc.Nome_da_Tarifa__c!=null), '', 'none')}">
+                                    <td>{!tc.Nome_da_Tarifa__c}</td>
+                                    <td>
+                                        <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                        <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="texto">
+                    <p class="texto-simples">•  Validade da proposta: 15 dias úteis</p>
+                    <p class="texto-simples">•  Prazo para pagamento: Antecipado</p>
+                    <p class="texto-simples">•  Prazo de entrega dos cartões: São Paulo e Grande São Paulo
+                        em até 7 dias úteis e Demais regiões em até 10 dias úteis.</p>
+                </div>
+                <div class="central-venda" style="margin: 275px 0 0 0;">
+                    <p class="titulo">CENTRAL DE VENDAS</p>
+                    <p class="texto">Telefone 55 11 {!objOpportunity.Canal_Propostas_Receptivo__c} | <a href="mailto:vendasalelo@alelo.com.br">vendasalelo@alelo.com.br</a> | <a href="www.alelo.com.br">www.alelo.com.br</a></p>
+                    <!--                     <p style="display:{!IF(objOpportunity.Codigo_do_Banco__c == '237', '', 'none')}">55 11 4003-3225 Telefone</p> -->
+                    <!--                     <p style="display:{!IF(objOpportunity.Codigo_do_Banco__c == '1', '', 'none')}">55 11 4003-3665 Telefone</p> -->
+                    <!--                     <p style="display:{!IF(objOpportunity.Codigo_do_Banco__c == '33', '', 'none')}">55 11 4003-3775 Telefone</p> -->
+                    <!--                     <p style="display:{!IF(AND(objOpportunity.Codigo_do_Banco__c != '237', objOpportunity.Codigo_do_Banco__c != '1', objOpportunity.Codigo_do_Banco__c != '33'), '', 'none')}">55 11 4003-3663 Telefone</p> -->
+                    <!--                     <p><a href="mailto:vendasalelo@alelo.com.br">vendasalelo@alelo.com.br</a></p> -->
+                    <!--                     <p><a href="www.alelo.com.br">www.alelo.com.br</a></p> -->
+                </div>
+            </div>
+        </div>
+        <!-- página 9 Anexo Vale Transporte -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1120px;">
+            <div class="texto" style="margin-top: 30px; padding-bottom: 0px;">
+                <p class="titulo">*ALELO VALE-TRANSPORTE</p>
+                <p class="texto" style="padding-bottom: 0px;">CONDIÇÕES COMERCIAIS</p>
+            </div>
+            <div style="color:#595959;">
+                <div class="row" style="padding: 0px; margin-left: 45px;">
+                    <div class="column3">
+                        <p><strong>Razão Social:</strong></p>
+                        <p>{!objOpportunity.Account.Razao_Social__c}</p>
+                    </div>
+                    <div class="column3">
+                        <p><strong>CNPJ:</strong></p>
+                        <p>{!objOpportunity.Account.CPF_CNPJ__c}</p>
+                        <p><strong>Consultor:</strong></p>
+                        <p class="titulo" style="font-size: 14px;">Central de Vendas</p>
+                    </div>
+                </div>
+                <div class="texto" style="height: 70px;">
+                    <p class="texto" style="font-size: 14px; border-bottom: 2px solid #CCC;">
+                        Aprovamos e cadastramos em nosso sistema uma condição especial para o atendimento
+                        a sua empresa, que será considerada em cada pedido, e aplica-se às características de atendimento informadas durante as tratativas de contratação, conforme registrado abaixo:
+                    </p>
+                </div>
+                <div class="texto">
+                    <p class="titulo">A - Prazo de entrega</p>
+                </div>
+                <div class="texto">
+                    <table class="table-resgate" style="font-size:11px; border-bottom: 2px solid #CCC;">
+                        <tr>
+                            <td><strong>SÃO PAULO</strong></td>
+                            <td><strong>RIO DE JANEIRO</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Entrega Papel: <strong>5 dias úteis</strong></td>
+                            <td>Entrega Papel: <strong>7 dias úteis</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Entrega Recarga: <strong>5 dias úteis</strong></td>
+                            <td>Entrega Recarga: <strong>5 dias úteis</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Entrega Cartão Novo: <strong>8 dias úteis</strong></td>
+                            <td>Entrega Cartão Novo: <strong>8 dias úteis</strong></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><strong>PARANÁ</strong></td>
+                            <td><strong>OUTRAS REGIÕES</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Entrega Papel: <strong>8 dias úteis</strong></td>
+                            <td>Entrega Papel: <strong>10 dias úteis</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Entrega Recarga: <strong>5 dias úteis</strong></td>
+                            <td>Entrega Recarga: <strong>5 dias úteis</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Entrega Cartão Novo: <strong>8 dias úteis</strong></td>
+                            <td>Entrega Cartão Novo: <strong>10 dias úteis</strong></td>
+                        </tr>
+
+                    </table>
+                </div>
+                <div class="texto"  >
+                    <p class="titulo">B - Notas</p>
+                    <p class="texto" style="font-size: 14px; border-bottom: 2px solid #CCC;">
+                        Esta condição comercial se refere à média mensal de compra mencionada na proposta acima. No caso de aceite, se este volume de faturamento não for alcançado dentro do período de 90 dias, a Alelo se reserva ao direito de rever as taxas e tarifas apresentadas.
+                        Se determinados fornecedores ou emissores dos benefícios adotarem taxas compulsórias para emissão de cartões ou recarga, os valores serão também acrescidos ao pedido do cliente e repassados integralmente aos operadores. Tal procedimento, caso exista, ocorrerá com total transparência para o cliente, sendo discriminados os valores no boleto de pagamento e nota fiscal.</p>
+
+                    <p class="texto" style="font-size: 14px; font-style: italic;"><strong>Os serviços abaixo são cobrados quando o cliente optar por utilizá-los</strong></p>
+
+                    <p class="texto" style="font-size: 14px; text-align: left"><strong>Rota Inteligente - Trace os melhores trajetos para seu colaborador</strong><br/>
+                    Ferramenta que sugere o melhor trajeto da casa para o trabalho, de acordo com a necessidade de cada colaborador, com informações detalhadas sobre as opções de transporte e linhas em todo Brasil.
+                    <strong>Economia Média de 15% com Vale-Transporte.</strong></p>
+
+                    <p class="texto" style="font-size: 14px; text-align: left"><strong>Recarga Certa – Controle dos gastos do benefício</strong><br/>
+                    Otimização dos seus pedidos e controle dos gastos com o valor mais adequado de recarga para cada colaborador, sem desperdício, com base na utilização do benéfico. Economia de até 35% no seu pedido mensal.
+                    <strong>Economia de até 35% no seu pedido mensal.</strong></p>
+
+                    <p class="texto" style="font-size: 14px; text-align: left"><strong>Depósito em conta - Garanto o benefício desde o primeiro dia de trabalho</strong><br/>
+                        A Alelo garante a disponibilização do benefício dos colaboradores na admissão em caso de impossibilidade de compra nas operadoras.</p>
+
+                    <p class="texto" style="font-size: 14px; text-align: left; border-bottom: 2px solid #CCC;"><strong>Portal do Usuário</strong><br/>
+                        Seus colaboradores acompanham o status e saldo do VT, o dia da próxima recarga, conseguem pesquisar o itinerário, consultar pedidos e pedir a segunda via do cartão.</p>
+
+                </div>
+            </div>
+        </div>
+    </apex:form>
+
+    <apex:form id="frmPropostaPrepax" rendered="{!objOpportunity.RecordType.DeveloperName=='Vendas_PREPAX'}">
+        <!-- página 1 capa -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1100px;">
+            <div class="capa"><p></p></div>
+            <div class="capa-logo-pequeno">
+                <img style="margin-left: 275px" width="30%" src="{!URLFOR($Resource.img_proposta, 'proposta-capa-logo-frase.png')}"/>
+            </div>
+        </div>
+        <!-- página 2 Agradecimento -->
+        <div class="pagina" style="padding: 0; margin-top: 20px;height: 1110px;">
+            <div class="texto">
+                <p class="texto" style="margin-top: 30px; text-align: center;">São Paulo,&nbsp;{!dataExtenso}</p>
+                <p class="texto">Agradecemos seu interesse em nossos produtos e serviços.</p>
+                <p class="texto">Com mais de 15 anos de experiência, somos líderes em cartões de benefícios e gestão de despesas corporativas para empresas de todos os tamanhos.</p>
+                <p class="texto">Temos um portfólio completo de soluções simples e inovadoras que tornam a gestão de sua empresa mais fácil e a vida dos seus colaboradores mais prática e eficiente.</p>
+                <p class="texto">Presentes no dia a dia de tantas empresas e pessoas, somos movidos pelo sentimento de oferecer o mais importante de todos os benefícios: a qualidade de vida. Afinal, quem vive bem trabalha melhor.</p>
+
+                <p class="texto">Conte com a Alelo. A gente trabalha em seu benefício.</p>
+
+                <p class="texto">Atenciosamente,</p>
+
+                <div class="row">
+                    <div class="column1" style="width: 35%; ">
+                        <p class="texto" style="padding-top: 0px; padding-bottom: 0px; font-weight: bold;">{!objOpportunity.Nome_do_Vendedor__c}</p>
+                        <p class="texto" style="padding-top: 0px; padding-bottom: 0px;">Venda Especializada</p>
+                        <p class="texto" style="padding-top: 0px; padding-bottom: 0px;">{!objOpportunity.Contato_da_oportunidade__r.Department}</p>
+                        <p class="texto" style="padding-top: 10px; padding-bottom: 0px;">{!objOpportunity.Contato_da_oportunidade__r.Celular__c}</p>
+                        <p class="texto" style="padding-top: 0px; padding-bottom: 0px;">{!objOpportunity.Contato_da_oportunidade__r.Email}</p>
+                        <p class="texto" style="padding-top: 0px; padding-bottom: 0px;"><a href="www.alelo.com.br">www.alelo.com.br</a></p>
+                    </div>
+                </div>
+
+            </div>
+            <div class="img2"></div>
+        </div>
+        <!-- página 3 POR QUE ALELO? -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1120px;">
+            <div class="img3"></div>
+            <div class="texto" style="margin-bottom: 200px;">
+                <p class="titulo">POR QUE ALELO?</p>
+                <div class="cartao-descricao" style="margin-top: 40px;">
+                    <img src="{!URLFOR($Resource.img_proposta, 'presenca.png')}" style="padding-left: 60px; height: 90px;" />
+                    <div>
+                        <p class="titulo">PRESENÇA</p>
+                        <p class="texto">Temos a maior rede de aceitação do Brasil, com presença em 100%
+                            dos municípios – mais de 550 mil estabelecimentos credenciados.</p>
+                    </div>
+                </div>
+                <div class="cartao-descricao">
+                    <img src="{!URLFOR($Resource.img_proposta, 'gestao.png')}" style="padding-left: 60px; height: 90px;"/>
+                    <div>
+                        <p class="titulo">GESTÃO</p>
+                        <p class="texto">Informações que fazem a diferença: índice Alelo de Preço Médio de
+                            Refeição, Valores Mínimos de Refeição, Alimentação e relatórios
+                            gerenciais para mais controle.</p>
+                    </div>
+                </div>
+                <div class="cartao-descricao">
+                    <img src="{!URLFOR($Resource.img_proposta, 'fococliente.png')}" style="padding-left: 60px; height: 90px;"/>
+                    <div>
+                        <p class="titulo">FOCO NO CLIENTE</p>
+                        <p class="texto">Excelência em atendimento que garante mais de 90% de satisfação
+                            às empresas atendidas, graças a um time de consultores e canais de atendimento exclusivos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- página 4 Cartões -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1120px;">
+            <div >
+                <img src="{!URLFOR($Resource.cartoesprepax2, 'Pagina4-1.jpg')}" width="100%"/>
+            </div>
+            <div class="img4principal2"></div>
+            <div style="height: 70px;"></div>
+        </div>
+        <!-- página 4 Cartões -->
+        <div class="pagina" style="padding: 0; margin: 0; height: 1120px;">
+            <div class="img4"></div>
+            <div class="img4principal"></div>
+            <div style="height: 70px;"></div>
+        </div>
+        <!-- página 5 -->
+        <div class="">
+           <!-- TODO: Produtos -->
+            <div class="condicao-comercial" style="min-height: 330px; margin-bottom: 10px;">
+                <apex:repeat var="p" value="{!listaOpportunityProduct}">
+
+                    <div class="pagina" style="padding: 0; margin: 0; height: 1120px; display: {! If(p.Codigo_de_Produtos__c=='700' ,'block','none') }"> <!-- Div Alelo Despesas -->
+                        <h2 style="float: none;">{!p.Nome_do_Produto__c}</h2>
+                        <img src="{!URLFOR($Resource.cartoesprepax, 'despesas.png')}"/>
+
+                        <br/>
+                        <br/>
+                        <div>
+                            <h2><strong>Condições Comerciais</strong></h2>
+                            <br/>
+                            <table class="table-produtos">
+                                <tbody>
+                                <tr>
+                                    <td><strong>Quantidade média de cartões </strong><br /></td>
+                                    <td><apex:outputField value="{!p.Quantidade_de_Cartoes__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Valor médio por cartão</strong><br /></td>
+                                    <td><apex:outputField value="{!p.Valor_Unitario__c}" /></td>
+                                </tr>
+                                <apex:repeat var="tc" value="{!p.Tarifas_Carrinhos__r}">
+                                    <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==26.0 ||
+                                            tc.Codigo_da_Tarifa__c==7.0 ||
+                                            tc.Codigo_da_Tarifa__c==1.0 ||
+                                            tc.Codigo_da_Tarifa__c==4.0 ||
+                                            tc.Codigo_da_Tarifa__c==2.0 ||
+                                            tc.Codigo_da_Tarifa__c==45.0,
+                                            OR(AND(tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0),
+                                                    AND(tc.Valor_Unitario_Prepax__c != null, tc.Valor_Unitario_Prepax__c > 0))), '', 'none')}">
+                                        <td><strong>Gerenciamento do produto</strong></td>
+                                        <td>
+                                            <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                            <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                            sobre os valores de carga do cartão
+                                        </td>
+                                    </tr>
+                                </apex:repeat>
+
+                                <tr>
+                                    <td><strong>Tarifa de emissão de cartão</strong><br /></td>
+                                    <td>R$0,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de reemissão (2º via)</strong><br /></td>
+                                    <td>R$20,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de entrega**</strong><br /></td>
+                                    <td>R$0,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de disponibilização mensal por cartão</strong><br /></td>
+                                    <td>Isento</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de Inatividade**</strong><br /></td>
+                                    <td>R$5,00 abatido do saldo do cartão</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de Saque</strong><br /></td>
+                                    <td>R$6,90 abatido do saldo do cartão</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Rede de Saque</strong><br /></td>
+                                    <td><img src="{!URLFOR($Resource.banco24h, 'banco24h.png')}" width="80" /></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Limite de Saque</strong><br /></td>
+                                    <td>Limite de saque diário até R$ 2.000,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Forma de Pagamento</strong><br /></td>
+                                    <td>Boleto</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="observacao">
+                            <h2>OBSERVAÇÕES</h2>
+                            <div style="margin-left: 50px">
+                                <p class="texto-simples">•  Prazo de entrega: até 10 dias úteis após a identificação do pagamento do pedido.</p>
+                                <p class="texto-simples">•  **Tarifa de Inatividade: Cobrado dos cartões caso os mesmos fiquem dois (2) meses sem CARGA, RECARGA e sem realizar TRANSAÇÕES </p>
+                                <p class="texto-simples">•  Volumetrias acima mencionadas e que deverão constar em contrato.</p>
+                            </div>
+                        </div>
+                    </div> <!-- Div Alelo Despesas -->
+                    <br/>
+                    <br/>
+                    <br/>
+                    <div class="pagina" style="padding: 0; margin: 0; height: 1120px; display: {! If(p.Codigo_de_Produtos__c=='701' ,'block','none') }"> <!-- Div Alelo Pagamentos -->
+                        <h2 style="float: none">Alelo Pagamentos</h2>
+                        <img src="{!URLFOR($Resource.cartoesprepax, 'pagamentos.png')}" width="100%" />
+                    <br/>
+                    <br/>
+                    <div>
+                        <h2><strong>Condições Comerciais</strong></h2>
+                        <br/>
+                        <table class="table-produtos">
+                            <tbody>
+                            <tr>
+                                <td><strong>Quantidade média de cartões </strong><br /></td>
+                                <td><apex:outputField value="{!p.Quantidade_de_Cartoes__c}" /></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Valor mensal por cartão</strong><br /></td>
+                                <td><apex:outputField value="{!p.Valor_Unitario__c}" /></td>
+                            </tr>
+                            <apex:repeat var="tc" value="{!p.Tarifas_Carrinhos__r}">
+                                    <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==26.0 ||
+                                            tc.Codigo_da_Tarifa__c==7.0 ||
+                                            tc.Codigo_da_Tarifa__c==1.0 ||
+                                            tc.Codigo_da_Tarifa__c==4.0 ||
+                                            tc.Codigo_da_Tarifa__c==2.0 ||
+                                            tc.Codigo_da_Tarifa__c==45.0,
+                                            OR(AND(tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0),
+                                                    AND(tc.Valor_Unitario_Prepax__c != null, tc.Valor_Unitario_Prepax__c > 0))), '', 'none')}">
+                                        <td><strong>Gerenciamento do produto</strong></td>
+                                        <td>
+                                            <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                            <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                            sobre os valores de carga do cartão
+                                        </td>
+                                    </tr>
+                                </apex:repeat>
+
+                            <tr>
+                                <td><strong>Tarifa de emissão de cartão</strong><br /></td>
+                                <td>R$0,00</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tarifa de reemissão (2º via)</strong><br /></td>
+                                <td>R$ 20,00</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tarifa de entrega**</strong><br /></td>
+                                <td>R$0,00</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tarifa de disponibilização mensal por cartão</strong><br /></td>
+                                <td>Isento</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tarifa de Inatividade**</strong><br /></td>
+                                <td>R$5,00 abatido do saldo do cartão</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tarifa de Saque</strong><br /></td>
+                                <td>R$6,90 abatido do saldo do cartão</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Rede de Saque</strong><br /></td>
+                                <td><img src="{!URLFOR($Resource.banco24h, 'banco24h.png')}" width="80" /></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Limite de Saque</strong><br /></td>
+                                <td>Limite de saque diário até R$ 2.000,00</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Forma de Pagamento</strong><br /></td>
+                                <td>Boleto</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="observacao">
+                        <h2>OBSERVAÇÕES</h2>
+                        <div style="margin-left: 50px">
+                            <p class="texto-simples">•  Prazo de entrega: até 10 dias úteis.</p>
+                            <p class="texto-simples">•  Tarifa de manutenção: Cobrado dos cartões caso os mesmos fiquem seis (6) meses sem CARGA, RECARGA e sem realizar TRANSAÇÕES </p>
+                            <p class="texto-simples">•  Validade da proposta: 15 dias.</p>
+                        </div>
+                    </div>
+                </div> <!-- Div Alelo Pagamentos -->
+                    <br/>
+                    <br/>
+                    <br/>
+
+                    <div class="pagina" style="padding: 0; margin: 0; height: 1120px; display: {! If(p.Codigo_de_Produtos__c=='701' ,'none','none') }"> <!-- Div Alelo Pagamentos + Multi -->
+                        <h2 style="float: none">Alelo Pagamentos</h2>
+                        <img src="{!URLFOR($Resource.cartoesprepax, 'multibeneficios.png')}"/>
+
+                        <br/>
+                        <br/>
+                        <div>
+                            <h2><strong>Condições Comerciais</strong></h2>
+                            <br/>
+                            <table class="table-produtos">
+                                <tbody>
+                                <tr>
+                                    <td><strong>Quantidade de cartões </strong><br /></td>
+                                    <td><apex:outputField value="{!p.Quantidade_de_Cartoes__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Valor mensal total</strong><br /></td>
+                                    <td><apex:outputField value="{!p.F_Valor_Total__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de emissão de cartão</strong><br /></td>
+                                    <td>R$0,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de reemissão (2º via)</strong><br /></td>
+                                    <td>R$20,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de entrega**</strong><br /></td>
+                                    <td>R$0,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de Rescisão</strong><br /></td>
+                                    <td>Isento</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de Inatividade**</strong><br /></td>
+                                    <td>Isento</td>
+                                </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="observacao">
+                            <h2>OBSERVAÇÕES</h2>
+                            <div style="margin-left: 50px">
+                                <p class="texto-simples">•  Prazo de entrega: até 10 dias úteis.</p>
+                                <p class="texto-simples">•  Produto sujeito a análise de credito </p>
+                                <p class="texto-simples">•  Validade da proposta: 15 dias.</p>
+                            </div>
+                        </div>
+                    </div> <!-- Div Alelo Pagamentos + Multi -->
+                    <br/>
+                    <br/>
+                    <br/>
+
+                    <div class="pagina" style="padding: 0; margin: 0; height: 1120px; display: {! If(p.Codigo_de_Produtos__c=='703' ,'block','none') }"> <!-- Div Alelo Premiação Carga Unica -->
+                        <h2 style="float: none">Alelo Premiação Carga Unica</h2>
+                        <img src="{!URLFOR($Resource.cartoesprepax, 'premiacaounica.png')}"/>
+
+                        <br/>
+                        <br/>
+                        <div>
+                            <h2><strong>Condições Comerciais</strong></h2>
+                            <br/>
+                            <table class="table-produtos">
+                                <tbody>
+                                <tr>
+                                    <td><strong>Quantidade média de cartões </strong><br /></td>
+                                    <td><apex:outputField value="{!p.Quantidade_de_Cartoes__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Valor médio por cartão</strong><br /></td>
+                                    <td><apex:outputField value="{!p.Valor_Unitario__c}" /></td>
+                                </tr>
+                                <apex:repeat var="tc" value="{!p.Tarifas_Carrinhos__r}">
+                                    <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==26.0 ||
+                                            tc.Codigo_da_Tarifa__c==7.0 ||
+                                            tc.Codigo_da_Tarifa__c==1.0 ||
+                                            tc.Codigo_da_Tarifa__c==4.0 ||
+                                            tc.Codigo_da_Tarifa__c==2.0 ||
+                                            tc.Codigo_da_Tarifa__c==45.0,
+                                            OR(AND(tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0),
+                                                    AND(tc.Valor_Unitario_Prepax__c != null, tc.Valor_Unitario_Prepax__c > 0))), '', 'none')}">
+                                        <td><strong>Gerenciamento do produto</strong></td>
+                                        <td>
+                                            <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                            <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                            sobre os valores de carga do cartão
+                                        </td>
+                                    </tr>
+                                </apex:repeat>
+                                <tr>
+                                    <td><strong>Tarifa de emissão de cartão</strong><br /></td>
+                                    <td>R$0,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de reemissão (2º via)</strong><br /></td>
+                                    <td>R$20,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de entrega**</strong><br /></td>
+                                    <td>R$0,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de disponibilização mensal por cartão</strong><br /></td>
+                                    <td>Isento</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de Inatividade**</strong><br /></td>
+                                    <td>R$5,00 abatido do saldo do cartão</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de Saque</strong><br /></td>
+                                    <td>R$6,90 abatido do saldo do cartão</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Rede de Saque</strong><br /></td>
+                                    <td><img src="{!URLFOR($Resource.banco24h, 'banco24h.png')}" width="80" /></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Limite de Saque</strong><br /></td>
+                                    <td>Limite de saque diário até R$ 2.000,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Forma de Pagamento</strong><br /></td>
+                                    <td>Boleto</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="observacao">
+                            <h2>OBSERVAÇÕES</h2>
+                            <div style="margin-left: 50px">
+                                <p class="texto-simples">•  Prazo de entrega: até 10 dias úteis.</p>
+                                <p class="texto-simples">•  Tarifa de manutenção: Cobrada mensalmente dos cartões Alelo Premiação Carga Única, após 60 dias da data da carga </p>
+                                <p class="texto-simples">•  Validade da proposta: 15 dias.</p>
+                            </div>
+                        </div>
+                    </div> <!-- Div Alelo Premiação Carga Unica  -->
+                    <br/>
+                    <br/>
+                    <br/>
+                    <div class="pagina" style="padding: 0; margin: 0; height: 1120px; display: {! If(p.Codigo_de_Produtos__c=='702' ,'block','none') }"> <!-- Div Alelo Premiação Recarregavel -->
+                        <h2 style="float: none">Alelo Premiação Recarregavel</h2>
+                        <img src="{!URLFOR($Resource.cartoesprepax, 'premiacaorecarregavel.png')}"  />
+
+                        <br/>
+                        <br/>
+                        <div>
+                            <h2><strong>Condições Comerciais</strong></h2>
+                            <br/>
+                            <table class="table-produtos">
+                                <tbody>
+                                <tr>
+                                    <td><strong>Quantidade média de cartões </strong><br /></td>
+                                    <td><apex:outputField value="{!p.Quantidade_de_Cartoes__c}" /></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Valor médio por cartão</strong><br /></td>
+                                    <td><apex:outputField value="{!p.Valor_Unitario__c}" /></td>
+                                </tr>
+                                <apex:repeat var="tc" value="{!p.Tarifas_Carrinhos__r}">
+                                    <tr style="display:{!IF(AND(tc.Codigo_da_Tarifa__c==26.0 ||
+                                            tc.Codigo_da_Tarifa__c==7.0 ||
+                                            tc.Codigo_da_Tarifa__c==1.0 ||
+                                            tc.Codigo_da_Tarifa__c==4.0 ||
+                                            tc.Codigo_da_Tarifa__c==2.0 ||
+                                            tc.Codigo_da_Tarifa__c==45.0,
+                                            OR(AND(tc.Valor_Unitario__c != null, tc.Valor_Unitario__c > 0),
+                                                    AND(tc.Valor_Unitario_Prepax__c != null, tc.Valor_Unitario_Prepax__c > 0))), '', 'none')}">
+                                        <td><strong>Gerenciamento do produto</strong></td>
+                                        <td>
+                                            <apex:outputField rendered="{!!tc.Percentual__c}" value="{!tc.Valor_Unitario__c}" />
+                                            <apex:outputField rendered="{!tc.Percentual__c}" value="{!tc.Valor_Unitario_Prepax__c}" />
+                                            sobre os valores de carga do cartão
+                                        </td>
+                                    </tr>
+                                </apex:repeat>
+                                <tr>
+                                    <td><strong>Tarifa de emissão de cartão</strong><br /></td>
+                                    <td>R$0,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de reemissão (2º via)</strong><br /></td>
+                                    <td>R$20,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de entrega**</strong><br /></td>
+                                    <td>R$0,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de disponibilização mensal por cartão</strong><br /></td>
+                                    <td>Isento</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de Inatividade**</strong><br /></td>
+                                    <td>R$5,00 abatido do saldo do cartão</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tarifa de Saque</strong><br /></td>
+                                    <td>R$6,90 abatido do saldo do cartão</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Rede de Saque</strong><br /></td>
+                                    <td><img src="{!URLFOR($Resource.banco24h, 'banco24h.png')}" width="80" /></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Limite de Saque</strong><br /></td>
+                                    <td>Limite de saque diário até R$ 2.000,00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Forma de Pagamento</strong><br /></td>
+                                    <td>Boleto</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="observacao">
+                            <h2>OBSERVAÇÕES</h2>
+                            <div style="margin-left: 50px">
+                                <p class="texto-simples">•  Prazo de entrega: até 10 dias úteis.</p>
+                                <p class="texto-simples">•  Tarifa de manutenção: Cobrada mensalmente dos cartões Alelo Premiação Recarregável, após 120 dias da data da carga</p>
+                                <p class="texto-simples">•  Validade da proposta: 15 dias.</p>
+                            </div>
+                        </div>
+                    </div> <!-- Div Alelo Premiação Recarregavel -->
+                </apex:repeat>
+            </div>
+        </div>
+    </apex:form>
+    </body>
+    </html>
+</apex:page>

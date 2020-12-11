@@ -1,0 +1,176 @@
+<apex:page standardcontroller="Opportunity" extensions="CtrlTabulaOportunidade">
+    <apex:slds />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}"/>
+    <apex:includeScript value="/support/console/37.0/integration.js"/>
+    <apex:includeScript value="/soap/ajax/37.0/connection.js"/>
+    <apex:includeScript value="/soap/ajax/37.0/apex.js"/>
+    <script type="text/javascript">
+        var ATUALIZOU{!oportunidade.Id} = 'ATUALIZOU{!oportunidade.Id}';
+        var $j = jQuery.noConflict();
+        var tabId;
+        var ON_CALL = "onCall";
+        var CALL_NUMBER = "calledNumber";
+
+        function blockPage(){
+             var timeoutPasscode;
+             $j.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+                  css: {
+                   border: 'none',
+                   padding: '15px',
+                   '-webkit-border-radius': '10px',
+                   '-moz-border-radius': '10px',
+                   opacity: .9
+                  }
+                });
+          }
+
+        function unblockPage(){
+            $j.unblockUI();
+        }
+
+        var refreshSuccess = function refreshSuccess(result) {
+            if (result.success == true) {
+                console.log('Subtab refreshed successfully');
+            } else {
+                console.log('Subtab did not refresh');
+            }
+        };
+
+        var verificaBloqueioGuia = function(result) {
+            debugger;
+            tabId = result.id;
+            debugger;
+            if(localStorage.getItem(ATUALIZOU{!oportunidade.Id}) != true && localStorage.getItem(ATUALIZOU{!oportunidade.Id}) != 'true') {
+                sforce.console.disableTabClose(true, false, displayResultsCallback);
+                // sforce.console.refreshPrimaryTabById(tabId, true, refreshSuccess);
+                //location.reload();
+            }
+        }
+
+        var displayResultsCallback = function displayResultsCallback(result){
+            // console.log('displayResultsCallback: ' + JSON.stringify(result));
+        }
+
+        var callbackCTIMessage = function callbackCTIMessage(result) {
+            console.log('callbackCTIMessage: ' + result.success);
+            if (result.success == true) {
+                sforce.console.disableTabClose(false, false, displayResultsCallback);
+            }
+        };
+
+        function carregarRegistro(message){
+            console.log('CTIMessage: ' + message);
+            if(message != '') {
+                sforce.console.cti.sendCTIMessage(message, callbackCTIMessage);
+            }
+        }
+
+        $j(window).ready(function() {
+            if(localStorage.getItem(ATUALIZOU{!oportunidade.Id}) != true && localStorage.getItem(ATUALIZOU{!oportunidade.Id}) != 'true') {
+                dispararDiscagem();
+            }
+            else {
+                sforce.console.disableTabClose(false, false, displayResultsCallback);
+            }
+            var verificaLigacao = function() {
+                if(localStorage.getItem(ON_CALL) == 'true') {
+                    $j("[id$=telefoneDiscado]").val(localStorage.getItem(CALL_NUMBER));
+                    $j("[id$=telefoneDiscadoLabel]").text(localStorage.getItem(CALL_NUMBER));
+                    // sforce.console.disableTabClose(true, false, displayResultsCallback);
+                }
+                else {
+                    $j("[id$=telefoneDiscado]").val("");
+                    $j("[id$=telefoneDiscadoLabel]").text("");
+                    // sforce.console.disableTabClose(false, false, displayResultsCallback);
+                }
+            }
+
+            setInterval(verificaLigacao, 1000);
+        });
+
+        function dispararDiscagem() {
+            sforce.console.fireEvent('OpportunityEvent', '{!Opportunity.Id}', callbackFireEvent);
+         }
+
+        var callbackFireEvent = function(result) {
+            if (result.success) {
+                console.log('The custom event is fired!');
+            } else {
+                console.log('The custom event could not be fired!');
+            }
+        };
+    </script>
+    <apex:form >
+        <apex:actionfunction name="selecionarTabulacao" action="{!selecionarTabulacao}" rerender="opPrincipal" status="blockUI" />
+        <apex:actionStatus onstart="blockPage()" onstop="unblockPage();" id="blockUI"/>
+        <apex:sectionHeader id="shCabecalho" title="Tabulação" subtitle="Oportunidade"/>
+        <apex:outputpanel id="opPrincipal">
+            <script type="text/javascript">
+            $j(window).ready(function() {
+                debugger;
+                var listener = function() {
+                    localStorage.removeItem(ATUALIZOU{!oportunidade.Id});
+                }
+                sforce.console.addEventListener(sforce.console.ConsoleEvent.CLOSE_TAB, listener);
+
+
+                if (sforce.console.isInConsole()) {
+                    if('{!salvo}' == 'true') {
+                        localStorage.setItem(ATUALIZOU{!oportunidade.Id}, true);
+                        sforce.console.disableTabClose(false, false, displayResultsCallback);
+                        sforce.console.refreshPrimaryTabById(tabId, true, refreshSuccess);
+                    }
+                    console.log('isInConsole: in console');
+                    // sforce.console.disableTabClose(true, false, displayResultsCallback);
+                    sforce.console.getFocusedPrimaryTabId(verificaBloqueioGuia);
+                }
+                else {
+                    console.log('isInConsole: not  in console');
+                }
+            });
+
+            </script>
+            <apex:pageMessages id="pmMensagem"/>
+            <apex:pageblock >
+                <apex:inputhidden value="{!telefone}" id="telefoneDiscado" />
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <apex:outputLabel style="font-weight:bold;" value="Telefone:"/>
+                        </td>
+                        <td>
+                            <apex:outputLabel id="telefoneDiscadoLabel" value=""/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <apex:outputLabel rendered="{!OR(Opportunity.Telefone_Decisor__c != null && Opportunity.Telefone_Decisor__c != '', Opportunity.Telefone_Operacional__c != null && Opportunity.Telefone_Operacional__c != '')}"
+                                              style="font-weight:bold;" value="Tabulação Oportunidade:"/>
+                        </td>
+                        <td>
+                            <apex:selectlist onchange="selecionarTabulacao();" rendered="{!OR(Opportunity.Telefone_Decisor__c != null && Opportunity.Telefone_Decisor__c != '', Opportunity.Telefone_Operacional__c != null && Opportunity.Telefone_Operacional__c != '')}" size="1"
+                                             multiselect="false" value="{!tabulacao1}">
+                                <apex:selectoptions value="{!tabulacoes}"/>
+                            </apex:selectlist>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <apex:outputLabel rendered="{!(tab1 != null && tab1.Agendamento__c)}" style="font-weight:bold;" value="Data do Agendamento:"/>
+                        </td>
+                        <td>
+                            <apex:inputfield rendered="{!(tab1 != null && tab1.Agendamento__c)}" value="{!fakeOportunidade.Agendamento_Retorno__c}" />
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <apex:pageblockbuttons location="bottom">
+                    <apex:commandbutton value="Salvar" action="{!salvar}" rendered="{!OR(Opportunity.Telefone_Decisor__c != null && Opportunity.Telefone_Decisor__c != '', Opportunity.Telefone_Operacional__c != null && Opportunity.Telefone_Operacional__c != '')}" oncomplete="carregarRegistro('{!ctiMessage}');" status="blockUI" rerender="opPrincipal"/>
+                </apex:pageblockbuttons>
+            </apex:pageblock>
+        </apex:outputpanel>
+    </apex:form>
+</apex:page>

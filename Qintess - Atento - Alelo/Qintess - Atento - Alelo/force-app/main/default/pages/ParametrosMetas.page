@@ -1,0 +1,205 @@
+<apex:page id="pParametrosMetas" controller="CtrlParametrosMetas" title="Parâmetros de Metas">
+    <html>
+        <head>
+            <apex:includeScript value="/support/console/37.0/integration.js"/>
+            <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}"/>
+            <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}"/>
+            <apex:includeScript value="{!URLFOR($Resource.jQuery, 'meiomask.js')}"/>
+            <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.maskMoney.js')}" />
+            <style type="text/css">
+                table#cadastroParametroMetas td.label label {
+                    font-weight: bold;
+                }
+
+                table#cadastroParametroMetas td.label {
+                    text-align: right;
+                }
+
+                table#cadastroParametroMetas td.field {
+                    padding-left: 5px;
+                }
+
+               tr.dataRow {
+                   background-color:white;
+               }
+
+               tr.dataRow:hover {
+                    background-color: #e3f3ff;
+               }
+               
+               .year {
+               		width: 45px !important;
+               }
+            </style>
+            <script type="text/javascript">
+                function blockPage(){
+
+                   	$.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+                            css: {
+                             border: 'none',
+                             padding: '15px',
+                             '-webkit-border-radius': '10px',
+                             '-moz-border-radius': '10px',
+                             opacity: .9
+                            }
+                          });
+                    }
+
+                   function unblockPage(){
+                   	$.unblockUI();
+                   }
+
+                   function totaliza() {
+                        debugger;
+                        if($("#totalizador").length > 0) {
+                            var total = 0;
+                            $("[class$=percentualDesdobramento]").each(function() {
+                                var valor = $(this).val().replace(/%/g, "");
+                                if(!isNaN(parseFloat(valor))){
+                                    total += parseFloat(valor);
+                                }
+                            })
+
+                            $("[class$=lblPercentualDesdobramento]").each(function() {
+                                var valor = $(this).text().replace(/%/g, "").replace(",", ".");
+                                if(!isNaN(parseFloat(valor))){
+                                    total += parseFloat(valor);
+                                }
+                            })
+
+                            $("#totalizador").text(total.toFixed(2) + " %");
+                        }
+                        else {
+                            $("[id$=tabelaDesdobramentos] tbody").append("<tr><td class=\"field\">Total:</td><td colspan=\"3\"><label id=\"totalizador\"></label></td></tr>");
+                            var total = 0;
+                            $("[class$=percentualDesdobramento]").each(function() {
+                                var valor = $(this).val().replace(/%/g, "");
+                                if(!isNaN(parseFloat(valor))){
+                                    total += parseFloat(valor);
+                                }
+                            })
+
+                            $("[class$=lblPercentualDesdobramento]").each(function() {
+                                var valor = $(this).text().replace(/%/g, "").replace(",", ".");
+                                if(!isNaN(parseFloat(valor))){
+                                    total += parseFloat(valor);
+                                }
+                            })
+
+                            $("#totalizador").text(total.toFixed(2) + " %");
+                        }
+                   }
+            </script>
+        </head>
+        <body>
+            <apex:sectionHeader id="shCabecalho" title="Cadastro" subtitle="Parâmetros de Metas"/>
+            <apex:form id="fPrincipal">
+                <apex:outputPanel id="opPrincipal">
+                    <script type="text/javascript">
+                        $(document).ready(function() {
+                            try {
+                                $("[id$=ifDataReferencia]").change(function() {
+                                    if($(this).val() == null || $(this).val().match(/^01/g) == null || $(this).val().match(/^01/g).size() <= 0) {
+                                        $(this).val($(this).val().replace(/^../g, '01'));
+                                    }
+                                });
+
+                                $("[class$=currency]").maskMoney({prefix:'R$ ', allowNegative: false, thousands:'.', decimal:',', affixesStay: false, allowZero: true});
+                                $("[class$=percentual]").setMask({mask:'99.999', type:'reverse', defaultValue: '000'});
+                                $("[class$=year]").setMask({mask:'9999'});
+                                $("[class$=quantidade]").setMask({mask:'9999999999'});
+
+                                totaliza();
+                            }
+                            catch(err) {
+                                console.warn(err);
+                            }
+                        });
+                    </script>
+                    <apex:pageMessages id="pmMensagem"/>
+                    <apex:actionStatus onstart="blockPage()" onstop="unblockPage()" id="blockUI"/>
+                    <apex:actionfunction name="obterParametros" action="{!obterParametros}" rerender="opPrincipal"  status="blockUI" />
+                    <apex:outputPanel id="opCadastroParametroMetas">
+                        <apex:pageblock >
+                            <div>
+                                <table id="cadastroParametroMetas" style="margin-bottom: 15px;">
+                                    <tbody>
+                                        <tr>
+                                            <td class="label">
+                                                <apex:outputlabel value="Mês Referência:"/>
+                                            </td>
+                                            <td class="field">
+                                                <apex:selectlist value="{!mes}" size="1" multiselect="false" onchange="obterParametros()">
+                                                    <apex:selectoptions value="{!meses}" />
+                                                </apex:selectlist>
+                                            </td>
+                                            <td class="label">
+                                                <apex:outputlabel value="Ano:"/>
+                                            </td>
+                                            <td class="field">
+                                                <apex:inputtext styleclass="year" maxlength="4" value="{!ano}" onchange="obterParametros()"/>
+                                            </td>
+                                            <td class="label">
+                                                <apex:outputlabel value="Tipo de Registro:"/>
+                                            </td>
+                                            <td class="field">
+                                                <apex:selectlist value="{!areaSelecionada}" size="1" multiselect="false" onchange="obterParametros()">
+                                                    <apex:selectoptions value="{!areas}" />
+                                                </apex:selectlist>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="label">
+                                                <apex:outputlabel value="Meta Global:"/>
+                                            </td>
+                                            <td class="field" colspan="3">
+                                                <apex:inputtext value="{!metaGlobalStr}" maxlength="21" styleclass="currency" disabled="{!!permiteAlteracao}"/>
+                                            </td>
+                                            <td class="label">
+                                                <apex:outputlabel value="Qtd. de Contratos"/>
+                                            </td>
+                                            <td class="field">
+                                                <apex:inputtext value="{!qtdContrato}" maxlength="15" styleclass="quantidade" disabled="{!!permiteAlteracao}"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                 <apex:outputlabel styleclass="label" value="Divisão de Meta x Desdobramento" />
+                                 <apex:pageblocktable id="tabelaDesdobramentos" value="{!lParametroMeta}" var="para">
+                                    <apex:column headervalue="Desdobramento" value="{!para.Desdobramento__r.Name}" />
+                                    <apex:column headervalue="Percentual" >
+                                        <apex:inputfield styleclass="percentualDesdobramento" onchange="totaliza()" required="false" value="{!para.Representacao__c}" rendered="{!permiteAlteracao}" />
+                                        <apex:outputlabel styleclass="lblPercentualDesdobramento" value="{!para.Representacao__c}" rendered="{!!permiteAlteracao}" />
+                                    </apex:column>
+                                    <apex:column headervalue="Qtd. de Supervisores" value="{!para.Qtd_Supervisor__c}" />
+                                    <apex:column headervalue="Qtd. de Operadores" value="{!para.Qtd_de_Operador__c}" />
+                                </apex:pageblocktable>
+                                <apex:pageblockbuttons location="bottom">
+                                    <apex:commandbutton value="Salvar" action="{!salvar}" rendered="{!permiteAlteracao && salvarParametroMeta}" />
+                                    <apex:commandbutton value="Simular" action="{!simular}" rendered="{!permiteAlteracao}" />
+                                    <apex:commandbutton value="Limpar" action="{!limpar}" />
+                                </apex:pageblockbuttons>
+                            </div>
+                        </apex:pageblock>
+                    </apex:outputPanel>
+                    <apex:outputPanel id="opCalculos" rendered="{!lCalculo != null && lCalculo.size > 0 && permiteAlteracao}">
+                        <apex:pageblock >
+                            <apex:pageblocktable style="margin-top: 15px;" value="{!lCalculo}" var="d" >
+                                <apex:column headervalue="Supervisor" value="{!d.supervisor.Name}" />
+                                <apex:column headervalue="Desdobramento" value="{!d.parametroMeta.Desdobramento__r.Name}" />
+                                <apex:column headervalue="Meta Supervisor / Desdobramento" value="{!d.metaSupervisorDesdobramento}" />
+                                <apex:column headervalue="Meta por Operador" value="{!d.metaOperador}" />
+                                <apex:column headervalue="Meta Geral Supervisor" value="{!d.metaGeralSupervisor}" />
+                                <apex:column headervalue="Qtd. Contratos Supervisor" value="{!d.qtdContratoSupervisor}" />
+                                <apex:column headervalue="Qtd. Contratos Operador" value="{!d.qtdContratoOperador}" />
+                            </apex:pageblocktable>
+                            <apex:pageblockbuttons location="bottom">
+                                <apex:commandbutton action="{!ativar}" value="Ativar" status="blockUI" rendered="{!ativarParametroMeta}" rerender="opPrincipal"/>
+                            </apex:pageblockbuttons>
+                        </apex:pageblock>
+                        </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:form>
+        </body>
+    </html>
+</apex:page>

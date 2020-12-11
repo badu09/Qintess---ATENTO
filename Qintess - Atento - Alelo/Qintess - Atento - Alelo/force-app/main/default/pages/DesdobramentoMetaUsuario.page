@@ -1,0 +1,114 @@
+<apex:page standardcontroller="Desdobramento__c" extensions="CtrlDesdobramentoMetaUsuario" title="Desdobramento X Usuário">
+    <apex:includeScript value="/support/console/37.0/integration.js"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'meiomask.js')}"/>
+    <style type="text/css">
+        table td.label label {
+            font-weight: bold;
+        }
+
+        table td.label {
+            text-align: right;
+            padding: 0 5px 5px 0;
+        }
+
+        table td.field {
+            padding-left: 5px;
+        }
+
+    </style>
+    <script type="text/javascript">
+		function blockPage(){
+
+	    	$.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+	             css: {
+	              border: 'none',
+	              padding: '15px',
+	              '-webkit-border-radius': '10px',
+	              '-moz-border-radius': '10px',
+	              opacity: .9
+	             }
+	           });
+	     }
+
+	    function unblockPage(){
+	    	$.unblockUI();
+	    }
+    </script>
+    <apex:sectionHeader id="shCabecalho" title="Vincular" subtitle="Desdobramento de Meta X Usuário"/>
+    <apex:form >
+        <apex:outputPanel id="opPrincipal">
+            <apex:pageMessages id="pmMensagem"/>
+            <apex:actionStatus onstart="blockPage()" onstop="unblockPage()" id="blockUI"/>
+            <apex:actionFunction name="selecionaSupervisor" action="{!loadUser}" rerender="mpUser, opListaSupervisor" status="blockUI" />
+            <apex:outputPanel id="opCadastroDesdobramento">
+                <apex:pageBlock id="pbFiltro" title="Vincular Usuários" mode="view">
+                	<table id="cadastroDesdobramentoUsuario" style="widht:100%; border-collapse: collapse; margin: 0 0 20px 0;">
+                        <tbody>
+	                        <tr>
+	                            <td class="label">
+	                                <apex:outputLabel value="Nome do Desdobramento:"/>
+	                            </td>
+	                            <td class="field">
+	                                <apex:outputText id="nomeDesdobramento" value="{!desdobramento.Name}"/>
+	                            </td>
+	                        </tr>
+	                        <tr>
+	                            <td class="label">
+	                                <apex:outputlabel value="Área:"/>
+	                            </td>
+	                            <td class="field">
+	                                <apex:outputText id="area" value="{!desdobramento.Area__c}" />
+	                            </td>
+	                        </tr>
+	                        <tr>
+	                            <td class="label">
+	                                <apex:outputlabel value="Supervisor:"/>
+	                            </td>
+	                            <td class="field">
+	                                <apex:selectlist multiselect="false" size="1" value="{!idSupervisor}" onchange="selecionaSupervisor();">
+			                            <apex:selectoptions value="{!selectOptionSupervisor}"/>
+			                        </apex:selectlist>
+	                            </td>
+	                        </tr>
+                        </tbody>
+                    </table>
+                    
+                    <!-- Componente Salesforce -->
+					<c:MultiselectPicklist id="mpUser" leftLabel="Usuários Disponíveis" leftOption="{!allUsers}"
+			                rightLabel="Usuários Selecionados" rightOption="{!selectedUsers}" size="10" width="450px"/>
+			                
+					<apex:pageblockbuttons location="bottom">
+                        <apex:commandbutton action="{!salvar}" value="Salvar" status="blockUI" rerender="opPrincipal, opListaDesdobramento" />
+                        <apex:commandbutton action="{!voltar}" value="Voltar" status="blockUI" />
+                    </apex:pageblockbuttons>
+				</apex:pageBlock>
+					
+            </apex:outputPanel>
+            
+            <apex:outputPanel id="opListaDesdobramento">
+                <apex:pageblock id="pbDesdobramento" title="Vinculado ao Desdobramento" mode="view">
+                    <apex:pageblocktable value="{!listDesdobramentoUsuarioDesdobramento}" var="d">
+                        <apex:column headerValue="Supervisor" value="{!d.Supervisor__r.Name}"/>
+                        <apex:column headerValue="Operador" value="{!d.Operador__r.Name}"/>
+                        <apex:column headerValue="Data de Criação" value="{!d.CreatedDate}"/>
+                    </apex:pageblocktable>
+                </apex:pageblock>
+            </apex:outputPanel>
+            
+            <apex:outputPanel id="opListaSupervisor">
+                <apex:pageblock id="pbSupervisor" title="Vinculado ao Supervisor" mode="view">
+                    <apex:pageblocktable value="{!listDesdobramentoUsuarioSupervisor}" var="d">
+                        <apex:column headerValue="Desdobramento" value="{!d.Desdobramento__r.Name}"/>
+                        <apex:column headerValue="Área" value="{!d.Desdobramento__r.Area__c}"/>
+                        <apex:column headerValue="Supervisor" value="{!d.Supervisor__r.Name}"/>
+                        <apex:column headerValue="Operador" value="{!d.Operador__r.Name}"/>
+                        <apex:column headerValue="Data de Criação" value="{!d.CreatedDate}"/>
+                    </apex:pageblocktable>
+                </apex:pageblock>
+            </apex:outputPanel>
+            
+        </apex:outputPanel>
+    </apex:form>
+</apex:page>

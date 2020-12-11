@@ -1,0 +1,24 @@
+<apex:page >
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'meiomask.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jquery_ui, 'jquery-ui.js')}" />
+	<apex:stylesheet value="{!URLFOR($Resource.jquery_ui, 'jquery-ui.min.css')}"/>
+	<script type="text/javascript">
+	  $( function() {
+	    $( "#tabs" ).tabs();
+	  } );
+	  </script>
+<!-- 	<div id="tabs"> -->
+<!--  		<ul> -->
+<!-- 			<li><a href="#tabs-1">Mailing Distribution Externo</a></li> -->
+<!-- 			<li><a href="#tabs-2">Mailing Distribution Interno</a></li> -->
+<!-- 		</ul> -->
+<!-- 		<div id="tabs-1"> -->
+			<c:MailingDistributionExterno id="comMailingDistributionExterno" />
+<!-- 		</div> -->
+<!-- 		<div id="tabs-2"> -->
+<!-- 			<c:MailingDistributionInterno id="comMailingDistributionInterno" /> -->
+<!-- 		</div> -->
+<!-- 	</div> -->
+</apex:page>

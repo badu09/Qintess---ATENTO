@@ -1,0 +1,540 @@
+<aura:component 
+    controller="TabuladorAleloController"
+    implements="flexipage:availableForAllPageTypes" 
+    access="global" >  
+    
+    <aura:attribute name="groupIdText" type="String" />
+    <aura:attribute name="accountList" type="String" />
+    <aura:attribute name="accountCNPJ" type="String" />
+    <aura:attribute name="accountRazaoSocial" type="List" />
+    <aura:attribute name="valuesFolhaDePagto" type="List" />
+    <aura:attribute name="interlocutor" type="String" />
+    
+    <aura:attribute name="dataUltimoContato" type="String" />
+    <aura:attribute name="dataAgendProxContato" type="String" />
+    <aura:attribute name="valuesRisco" type="List" />
+    <aura:attribute name="valuesMesdeRetencao" type="List" />
+    <aura:attribute name="valuesPrazodeBlindagem" type="List" />
+    
+    <aura:attribute name="valuesStatusdoGrupo" type="List" />
+    <aura:attribute name="valuesFatordeRisco" type="List" />
+    <aura:attribute name="valuesStatusdeRisco" type="List" />
+    <aura:attribute name="valuesAcaoPosPerda" type="List" />
+    <aura:attribute name="valuesMesPosPerda" type="List" />
+    
+    <aura:attribute name="contaPhone" type="String" />
+    <aura:attribute name="contaEmail" type="String" />
+    <aura:attribute name="consultorInterno" type="String" />
+    
+    <aura:attribute name="valuesFornAtualAlimentacao" type="List" />
+    <aura:attribute name="valuesFornAtualRefeicao" type="List" />
+    <aura:attribute name="valuesFornAtualTransporte" type="List" />
+    <aura:attribute name="valuesFornAtualCombustivel" type="List" />
+    
+    <aura:attribute name="statusValuesFornAtualAlimentacao" type="List" />
+    <aura:attribute name="statusValuesFornAtualRefeicao" type="List" />
+    <aura:attribute name="statusValuesFornAtualTransporte" type="List" />
+    <aura:attribute name="statusValuesFornAtualCombustivel" type="List" />
+    
+    <aura:attribute name="valuesFornAtualNatal" type="List" />
+    <aura:attribute name="valuesFornAtualPremiacao" type="List" />
+    <aura:attribute name="valuesFornAtualDespesas" type="List" />
+    <aura:attribute name="valuesFornAtualPagamentos" type="List" />
+    
+    <aura:attribute name="statusValuesFornAtualNatal" type="List" />
+    <aura:attribute name="statusValuesFornAtualPremiacao" type="List" />
+    <aura:attribute name="statusValuesFornAtualDespesas" type="List" />
+    <aura:attribute name="statusValuesFornAtualPagamentos" type="List" />
+    
+    <!-- attributes -->
+    <aura:attribute name="dataTable" type="Object"/>
+    <aura:attribute name="tableColumns" type="List"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.myAction}" />
+    
+    <lightning:tabset  selectedTabId="Consultor Remoto">
+        <lightning:tab class="todo1" label="Consultor Remoto" id="consultorTab">
+            <lightning:card class="todo2" iconName="standard:survey" title="" >
+                <div id="titulo">
+                    <h1>Consultor Remoto</h1> 
+                </div>    
+                <div class="container">
+                    <!--Primeira linha-->
+                    <div class="slds-form-element slds-gutters row">
+                        <div class="slds-grid">
+                            <div class="slds-col slds-size_1-of-6" id="id" >
+                                <lightning:input aura:id="groupIdText" name="v.groupIdText" label="Id" placeholder="Selecione um ID" onchange="{!c.getGroupId}"/>
+                            </div>
+                            <div class="slds-col slds-size_2-of-6" id="grupoRel">
+                                <lightning:select aura:id="select"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Grupo_Rel"
+                                  onchange="{!c.getAccountId}"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.accountList}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                        </div>
+                    </div>
+                    <!--Segunda linha-->
+                    <div class="slds-form-element slds-gutters row">
+                        <label class="slds-form-element__label" for="select-01"></label>
+                        <div class="slds-grid">
+                            <div class="slds-col slds-size_1-of-6">
+                                <lightning:textarea
+                                    aura:id="textAccountCNPJ"
+                                    name="input2"
+                                    label="CNPJ"
+                                    value=""
+                                />
+                            </div>
+                            <div class="slds-col slds-size_2-of-6">
+                                <lightning:textarea
+                                    aura:id="textAccountRazaoSocial"
+                                    name="input2"
+                                    label="Razão Social"
+                                    value=""
+                                />
+                            </div>
+                            <div class="slds-col slds-size_1-of-6" id="folha">
+                                <lightning:select
+                                  aura:id="select"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Folha de Pagamento"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesFolhaDePagto}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-col slds-size_1-of-6">
+                                <lightning:textarea
+                                    aura:id="interlocutor"
+                                    name="input2"
+                                    label="Interlocutor"
+                                    value=""
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <!--Terceira linha-->
+                    <div class="slds-form-element slds-gutters row">
+                        <label class="slds-form-element__label" for="select-01"></label>
+                        <div class="slds-grid">
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:input type="date"
+                                    aura:id="dataUltimoContato"
+                                    name="input2"
+                                    label="Data Ultimo Contato"
+                                    value=""
+                                />
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:input type="date"
+                                    aura:id="dataAgendProxContato"
+                                    name="input2"
+                                    label="Data Agendamento prox. Contato"
+                                    value=""
+                                />
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:select
+                                  aura:id="risco"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Risco"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesRisco}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:input type="date"
+                                  aura:id="mesRetencao"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Mês de Retenção"
+                                 />
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:select
+                                  aura:id="prazodeBlindagem"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Prazo de blindagem"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesPrazodeBlindagem}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <!--Quarta linha-->
+                    <div class="slds-form-element slds-gutters row">
+                        <label class="slds-form-element__label" for="select-01"></label>
+                        <div class="slds-grid">
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:select
+                                  aura:id="statusdoGrupo"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Status do grupo"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesStatusdoGrupo}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+        
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:select
+                                  aura:id="fatordeRisco"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Fator de Risco"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesRisco}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+        
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:select
+                                  aura:id="statusdeRisco"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Status de Risco"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesStatusdeRisco}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:select
+                                  aura:id="statusdeRisco"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Ação Pós Perda"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesAcaoPosPerda}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:input type="date"
+                                  aura:id="mesPosPerda"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Mês Pós Perda"
+                                 />
+                            </div>                    
+                        </div>
+                    </div>
+                    <!--Quinta linha-->
+                    <div class="slds-form-element slds-gutters row">
+                        <label class="slds-form-element__label" for="select-01"></label>
+                        <div class="slds-grid">
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:textarea
+                                    aura:id="textTelefone"
+                                    name="input2"
+                                    label="Telefone"
+                                    value=""
+                                />
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_2-of-6">
+                                <lightning:textarea
+                                    aura:id="textEmail"
+                                    name="input2"
+                                    label="Email"
+                                    value=""/>
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_2-of-6">
+                                <lightning:textarea
+                                    aura:id="textConsultorAtento"
+                                    name="input2"
+                                    label="Obs. Consultor Atento"
+                                    value=""/>
+                            </div>                                       
+                        </div>
+                    </div>
+                    <!--Sexta linha-->
+                    <div class="slds-form-element slds-gutters row">
+                        <label class="slds-form-element__label" for="select-01"></label>
+                        <div class="slds-grid">
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="fornAtualAlimentacao"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Forn. Atual de alimentação"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                        <aura:iteration items="{!v.valuesFornAtualAlimentacao}" var="item">
+                                            <option text="{!item.label}" value="{!item.value}"/>
+                                        </aura:iteration>
+                                </lightning:select>
+                            </div>
+        
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="fornAtualRefeicao"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Forn. Atual de Transporte"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesFornAtualRefeicao}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+        
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="fornAtualTransporte"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Forn. Atual de Transporte"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesFornAtualTransporte}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="fornAtualCombustivel"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Forn. Atual de Combustível"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesFornAtualCombustivel}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>                   
+                        </div>
+                    </div>
+                    
+                    <!--Setima linha-->
+                    <div class="slds-form-element slds-gutters row">
+                        <label class="slds-form-element__label" for="select-01"></label>
+                        <div class="slds-grid">
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="statusFornAtualAlimentacao"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Status de Negociação"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.statusValuesFornAtualAlimentacao}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+        
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="statusFornAtualRefeicao"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Status de Negociação"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.statusValuesFornAtualRefeicao}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+        
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="statusFornAtualTransporte"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Status de Negociação"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.statusValuesFornAtualTransporte}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="statusFornAtualCombustivel"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Status de Negociação"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.statusValuesFornAtualCombustivel}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>                   
+                        </div>
+                    </div>
+                    
+                    <!--Oitava linha-->
+                    <div class="slds-form-element slds-gutters row">
+                        <label class="slds-form-element__label" for="select-01"></label>
+                        <div class="slds-grid">
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="fornAtualNatal"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Forn. Atual de Natal"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesFornAtualNatal}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+        
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="fornAtualPremiacao"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Forn. Atual de Premiação"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesFornAtualPremiacao}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+        
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="fornAtualDespesas"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Forn. Atual de Despesas"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesFornAtualDespesas}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="fornAtualPagamentos"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Forn. Atual de Pagamentos"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesFornAtualPagamentos}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>                   
+                        </div>
+                    </div>
+                    
+                    <!--Nona linha-->
+                    <div class="slds-form-element slds-gutters row">
+                        <label class="slds-form-element__label" for="select-01"></label>
+                        <div class="slds-grid">
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="statusFornAtualNatal"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Status de Negociação"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.statusValuesFornAtualNatal}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+        
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="statusFornAtualPremiacao"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Status de Negociação"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.statusValuesFornAtualPremiacao}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+        
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="statusFornAtualDespesas"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Status de Negociação"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.statusValuesFornAtualDespesas}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-4">
+                                <lightning:select
+                                  aura:id="statusFornAtualPagamentos"
+                                  name="selectItem"
+                                  value="1"
+                                  label="Status de Negociação"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.statusValuesFornAtualPagamentos}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>                   
+                        </div>
+                    </div>
+                    
+                </div>
+            </lightning:card>
+        </lightning:tab>
+        <lightning:tab class="todo" label="Base Detalhada" id="baseTab">
+            <lightning:card class="todob" iconName="standard:survey" title="">
+                <div style="height: 300px">
+                    <lightning:datatable
+                            keyField="tableid"
+                            data="{! v.dataTable }"
+                            columns="{! v.tableColumns }"
+                            hideCheckboxColumn="true"/>
+                </div>
+            </lightning:card>
+        </lightning:tab>
+    </lightning:tabset>
+    <lightning:tabset selectedTabId="Consultor Remoto">
+    </lightning:tabset>
+</aura:component>

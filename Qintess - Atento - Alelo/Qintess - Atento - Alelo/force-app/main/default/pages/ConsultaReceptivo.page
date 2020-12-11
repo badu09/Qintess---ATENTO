@@ -1,0 +1,132 @@
+<apex:page id="pConsultaReceptivo" controller="CtrlConsultaReceptivo" tabStyle="Lead" >
+	<apex:includeScript value="/support/console/37.0/integration.js"/>
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'meiomask.js')}" /> 
+	<script type="text/javascript">
+		function blockPage(){
+    	 
+	    	$.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+	             css: {
+	              border: 'none',   
+	              padding: '15px',   
+	              '-webkit-border-radius': '10px',   
+	              '-moz-border-radius': '10px',    
+	              opacity: .9 
+	             }   
+	           });  
+	     }  
+
+	    function unblockPage(){
+	    	$.unblockUI();  
+	    }
+	    
+	    function carregarRegistro(id){
+            if(id != null && id != undefined && id != '') {
+                var message = '{"Tipo":"Consulta","Id":"' + id + '"}';
+
+                sforce.console.cti.sendCTIMessage(message, callbackCTIMessage);
+            }
+        }
+	    
+	    var callbackCTIMessage = function callbackCTIMessage(result) {
+	    	if (result.success == true) {
+	    		sforce.console.getEnclosingTabId(closeSubtab);
+	    	}
+	    };
+	    
+	    var closeSubtab = function closeSubtab(result) {
+		    sforce.console.closeTab(result.id);
+		};
+	    
+	</script>
+	<apex:sectionHeader id="shCabecalho" title="Consultar" subtitle="Cliente/Lead"/>
+	<apex:form >
+		<apex:outputPanel id="opPrincipal" >
+			<apex:pageMessages id="pmMensagem" />
+			<apex:actionStatus onstart="blockPage()" onstop="unblockPage()" id="blockUI"/>
+			<apex:outputPanel id="opConsulta" rendered="{!exibirConsulta}">
+				<apex:pageBlock >
+					<table cellpadding="2">
+						<tr>
+							<td> 
+								<apex:outputLabel value="CNPJ/CPF" style="font-weight: bold;"/>		
+							</td>
+							<td>
+								<apex:inputText label="CNPJ/CPF" value="{!cnpjCpf}" />		
+							</td>
+							<td>
+								<apex:commandButton value="Pesquisar" action="{!consultar}" reRender="opPrincipal" status="blockUI"/>		
+							</td>
+						</tr>
+					</table>
+				</apex:pageBlock>
+			</apex:outputPanel>
+			<apex:outputPanel id="opPossuiRegistro" rendered="{!possuiRegistro}">
+				<apex:pageBlock title="Oportunidades" >
+					<apex:pageBlockTable id="pbtOportunidade" value="{!lOportunidade}" var="o">
+						<apex:column >
+							<apex:commandLink id="olSelecionar" onclick="carregarRegistro('{!o.Id}');" 
+								rerender="none" rendered="{!o.StageName != 'Implantação Concluída'}">Selecionar</apex:commandLink>
+						</apex:column>
+						<apex:column value="{!o.Name}" />
+						<apex:column value="{!o.Account.Name}" />
+						<apex:column value="{!o.Contato_da_oportunidade__r.Name}" />
+						<apex:column value="{!o.StageName}" />
+						<apex:column value="{!o.CloseDate}" />
+						<apex:column value="{!o.Owner.Name}" />
+						<apex:column value="{!o.Campanha__c}" />
+					</apex:pageBlockTable>					
+				</apex:pageBlock>
+				<apex:outputPanel id="opExibirCliente" rendered="{!exibirCliente}">
+					<apex:pageBlock title="Clientes" >
+						<apex:pageBlockTable id="pbtCliente" value="{!lCliente}" var="c">
+							<apex:column >
+								<apex:commandLink id="olSelecionar" onclick="carregarRegistro('{!c.Id}');" 
+									rerender="none">Selecionar</apex:commandLink>
+							</apex:column>
+							<apex:column value="{!c.CPF_CNPJ__c}" />
+							<apex:column value="{!c.Name}" />
+						</apex:pageBlockTable>					
+					</apex:pageBlock>
+				</apex:outputPanel>
+				<apex:pageBlock title="Leads" >
+					<apex:pageBlockTable id="pbtLead" value="{!lLead}" var="l">
+						<apex:column >
+							<apex:commandLink id="olSelecionar" onclick="carregarRegistro('{!l.Id}');" 
+								rerender="none" rendered="{!l.Status != 'NÃO TEM INTERESSE (005)'}">Selecionar</apex:commandLink>
+						</apex:column>
+						<apex:column value="{!l.CNPJ__c}" />
+						<apex:column value="{!l.Name}" />
+						<apex:column value="{!l.Nome_da_Campanha__c}" />
+						<apex:column value="{!l.Status}" />
+					</apex:pageBlockTable>
+					<apex:pageBlockButtons id="pbbLead"> 
+		            	<apex:commandButton id="cbNovo" value="Novo" action="{!novoLead}" reRender="opPrincipal" status="blockUI"/>
+		         	</apex:pageBlockButtons>
+				</apex:pageBlock>	
+			</apex:outputPanel> 
+			<apex:outputPanel id="opGerarLead" rendered="{!gerarLead}">
+				<apex:pageBlock title="Gerar Lead">
+					<apex:pageBlockSection title="Informações do lead" columns="2">
+						<apex:inputField value="{!lead.CNPJ__c}"/>
+						<apex:inputField value="{!lead.Company}"/>
+						<apex:inputField label="Nome do Interlocutor" value="{!lead.lastName}"/>
+						<apex:inputField value="{!lead.Email}"/>						 
+					</apex:pageBlockSection>
+					<apex:pageBlockSection title="Telefones" columns="2">
+						<apex:inputField value="{!lead.Phone}" required="true"/>
+						<apex:inputField value="{!lead.Telefone2__c}"/>
+						<apex:inputField value="{!lead.Telefone3__c}"/>
+						<apex:inputField value="{!lead.Telefone4__c}"/> 
+						<apex:inputField value="{!lead.Telefone5__c}"/>
+					</apex:pageBlockSection>
+					<apex:pageBlockButtons id="pbbGerarLead"> 
+					 	<apex:commandButton id="cbVoltar" value="Cancelar" action="{!cancelar}" reRender="opPrincipal" status="blockUI" immediate="true"/>
+		            	<apex:commandButton id="cbSalvar" value="Salvar" action="{!gravarLead}" oncomplete="carregarRegistro('{!lead.Id}');" reRender="opPrincipal, pmMensagem" status="blockUI"/>
+		         	</apex:pageBlockButtons>
+				</apex:pageBlock>
+			</apex:outputPanel>		
+		</apex:outputPanel>
+	</apex:form>
+</apex:page>

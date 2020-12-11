@@ -1,0 +1,284 @@
+<apex:page standardController="Estrategia_Implantacao__c" recordSetVar="record" extensions="CtrlGestaoEstrategiaImplantacao" docType="html-5.0"
+           action="{!init}">
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'meiomask.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jquery_ui, 'jquery-ui.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.jquery_ui, 'jquery-ui.min.css')}"/>
+    <script type="text/javascript">
+    
+    
+    $( function() {
+        $( "#tabs" ).tabs();
+    } );
+    
+    function blockPage(){
+        
+        $.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+                   css: {
+                       border: 'none',   
+                       padding: '15px',   
+                       '-webkit-border-radius': '10px',   
+                       '-moz-border-radius': '10px',    
+                       opacity: .9 
+                   }   
+                  }); 
+    }  
+    
+    function unblockPage(){
+        $.unblockUI();  
+    }
+    
+    function success() {
+        window.location.reload(true);
+    }
+    
+    function botaoSome(){
+        $("#botaoDesativa").hide();
+    }
+    
+    
+    
+    
+    
+    </script>
+    
+    <apex:sectionHeader id="shCabecalho" title="Edição" subtitle="Gestão da Estratégia de Implantação"/>
+    
+    <apex:form >
+        
+        <apex:outputPanel id="opPrincipal" >
+            
+            <apex:actionStatus onstart="blockPage()" onstop="unblockPage()" id="blockUI"/>
+            <apex:pageBlock id="listGestao">
+                
+                <!-- MODAL BOTAO ATIVADO -->
+                <apex:pageBlock id="theDialog" >      
+                    <apex:outputPanel id="theDialog" rendered="{!displayModalAtivado}" >
+                        <c:ComponenteImplantacaoUsuarios DisplayModal1="{!displayModalAtivado}"
+                                                         Estrategia="{!idEstrategia}"/>       
+                    </apex:outputPanel>
+                </apex:pageBlock>
+                
+                Filtro: 
+                <apex:selectList value="{! filterId }" size="1">
+                    <apex:selectOptions value="{! listViewOptions }"/>
+                    <apex:actionSupport event="onchange" reRender="listGestao"/>
+                </apex:selectList>
+               
+                <!-- MODAL NOVA ESTRATEGIA -->
+                <apex:commandButton value="Nova Estratégia" action="{!showModalNova}" rerender="modalNova"/>
+                <apex:outputPanel id="modalNova">
+                    
+                    <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayModalNova}"/>
+                    <apex:outputPanel styleClass="custModalNova" layout="block" rendered="{!displayModalNova}">
+                        
+                        <apex:pageBlocksection columns="1">
+                            <apex:pageMessages id="pmMensagem" />
+                           
+                            
+                            <apex:selectList label="Relatório " value="{!relSelecionado}" multiselect="false" size="1" disabled="{!verificaDataInicio}">
+                                <apex:selectOptions value="{!listaRelatorios}"/>
+                            </apex:selectList>
+                            
+                            
+                            <apex:pageBlockSectionItem rendered="{!camposObrigatorios}">
+                                <apex:outputLabel value="Data Início da Vigência"/>                        
+                                <apex:inputField value="{!Estrategia_Implantacao__c.Data_Inicio_Vigencia__c}" required="false" id="dataIn" />
+                            </apex:pageBlockSectionItem>
+                             
+                            <apex:pageBlockSectionItem rendered="{!verificaDataInicio}">  
+                                <apex:outputLabel value="Data Início da Vigência"/>                    
+                                <apex:inputText id="dataIn" value="{!dataInicio}" disabled="true"/>
+                            </apex:pageBlockSectionItem>
+                            
+                            <apex:inputField value="{!Estrategia_Implantacao__c.Data_Fim_Vigencia__c}" required="false" id="dataFim"/>
+                            
+                            
+                            <apex:pageBlockSectionItem rendered="{!camposObrigatorios}">
+                                <apex:outputLabel value="Quantidade Máxima de Tentativas"/>                        
+                                <apex:inputField value="{!Estrategia_Implantacao__c.Quantidade_Maxima_Tentativas__c}" required="false" id="qtdMax" />
+                            </apex:pageBlockSectionItem>
+                            
+                            <apex:pageBlockSectionItem rendered="{!verificaDataInicio}">  
+                                <apex:outputLabel value="Quantidade Máxima de Tentativas"/>                    
+                                <apex:inputText id="qtdMax" value="{!quantidadeMaximaTentativas}" disabled="true"/>
+                            </apex:pageBlockSectionItem>
+                            
+                            <apex:pageBlockSectionItem rendered="{!validacaoFidelizacao}">
+                                <apex:outputLabel value="Implantação Fidelizada"/>                        
+                                <apex:inputField value="{!Estrategia_Implantacao__c.Implantacao_Fidelizada__c}" required="false" id="fidel"/>
+                            </apex:pageBlockSectionItem>
+                            
+                            <apex:pageBlockSectionItem rendered="{!isNotValidacaoFidelizacao}">  
+                                <apex:outputLabel value="Implantação Fidelizada"/>                    
+                                <apex:inputText id="fidel" value="{!Estrategia_Implantacao__c.Implantacao_Fidelizada__c}" disabled="true"/>
+                            </apex:pageBlockSectionItem>
+                            
+                            
+                        </apex:pageBlocksection> 
+                        
+                        <apex:commandButton value="Save" action="{!save}" onclick="success"/>
+                        <apex:commandButton value="Cancelar" action="{!closeModalNova}" rerender="modalNova">
+                            
+                        </apex:commandButton>
+                        
+                        
+                    </apex:outputPanel>
+                </apex:outputPanel>                
+                
+                <apex:pageBlockTable value="{! record }" var="rc" >
+                    
+                    <apex:column value="{! rc.Nome_Relatorio_Estrategia__c }"/>
+                    <apex:column headerValue="Data Início Vigência" value="{! rc.Data_Inicio_Vigencia__c }" styleClass="dataInicio"/>
+                    <apex:column headerValue="Data Fim Vigência" value="{! rc.Data_Fim_Vigencia__c }" styleClass="dataFim"/>
+                    <apex:column value="{! rc.Implantacao_Fidelizada__c }"/>
+                    <apex:column headerValue="Qtde Tentativas" value="{! rc.Quantidade_Maxima_Tentativas__c }" />
+                    <apex:column headerValue="Qtde Renitências" value="{! rc.Quantidade_Renitencias__c }"/>
+                    <apex:column value="{! rc.Ativado__c}" rendered="false"/>
+                   
+                    <apex:column headerValue="Status" style="background-color:{!IF(!rc.Ativado__c == true,'#FF4D4D','#65DA65')}">  
+                        <apex:outputText value="Ativo" rendered="{!rc.Ativado__c}">
+                            <apex:param name="h" value="{!rc.id}" assignTo="{!idEstrategia}" /> 
+                        </apex:outputText>
+                        
+                        <apex:outputText value="Inativo" rendered="{!NOT(rc.Ativado__c)}">
+                            <apex:param name="h" value="{!rc.id}" assignTo="{!idDesativado}" /> 
+                        </apex:outputText>
+                    </apex:column>
+                    
+                    <apex:column headerValue="Ativar">  
+                        <apex:commandButton value="Ativar" action="{!Ativar}" reRender="theDialog" rendered="{!NOT(rc.Ativado__c)}" >
+                            <apex:param name="h" value="{!rc.id}" assignTo="{!idEstrategia}" />
+                        </apex:commandButton> 
+                        
+                        <apex:commandButton value="Desativar" action="{!Desativar}" rerender="opPrincipal" rendered="{!rc.Ativado__c}" >
+                            <apex:param name="h" value="{!rc.id}" assignTo="{!idDesativado}" />
+                        </apex:commandButton>
+                    </apex:column>
+                    
+                    <apex:column headerValue="Resubmeter">
+                        <apex:commandButton value="Resubmeter" action="{!Resubmeter}" rerender="opPrincipal">
+                            <apex:param name="h" value="{!rc.id}" assignTo="{!idRenitencia}" />
+                        </apex:commandButton>
+                    </apex:column>
+                    
+                    <apex:column headerValue="Data Criação" value="{! rc.CreatedDate }"/>
+                    <apex:column headerValue="Data última Modificação" value="{! rc.LastModifiedDate }"/>
+                    
+                    <apex:column > <apex:commandLink action="{!auxiliarModal}" value="Editar" rerender="modalNova">
+                        <apex:param name="h" value="{!rc.id}" assignTo="{!fieldsRequired}"/>
+                        </apex:commandLink></apex:column>
+                    
+                </apex:pageBlockTable>
+                
+                <!-- Pagination -->
+                <table style="width: 100%"><tr>
+                    
+                    <td>
+                        Página: <apex:outputText value=" {!PageNumber} de {! CEILING(ResultSize / PageSize) }"/>
+                    </td>    
+ 
+                    
+                    <td align="center">
+                        <!-- Previous page -->
+                        <!-- active -->
+                        <apex:commandLink action="{! First }" value="« Primeira"
+                                          rendered="{! HasPrevious }"/>
+                        <!-- inactive (no earlier pages) -->
+                        <apex:outputText style="color: #ccc;" value="« Primeira"
+                                         rendered="{! NOT(HasPrevious) }"/> 
+                                         &nbsp;&nbsp; 
+
+
+                        <apex:commandLink action="{! Previous }" value="« Anterior"
+                                          rendered="{! HasPrevious }"/>
+                        <!-- inactive (no earlier pages) -->
+                        <apex:outputText style="color: #ccc;" value="« Anterior"
+                                         rendered="{! NOT(HasPrevious) }"/>
+                        
+                                          &nbsp;&nbsp;
+                        
+                        <!-- Next page -->
+                        <!-- active -->
+                        <apex:commandLink action="{! Next }" value="Próxima »"
+                                          rendered="{! HasNext }"/>
+                        <!-- inactive (no more pages) -->
+                        <apex:outputText style="color: #ccc;" value="Próxima »"
+                                         rendered="{! NOT(HasNext) }"/>    
+
+                                          &nbsp;&nbsp;
+
+
+                         <apex:commandLink action="{! Last }" value="Ultima »"
+                                          rendered="{! HasNext }"/>
+
+                                         
+                        
+                        <apex:outputText style="color: #ccc;" value="Ultima »"
+                                         rendered="{! NOT(HasNext) }"/>  
+    
+
+                    </td>
+
+                    <td align="center">
+
+                  
+
+                                             
+
+ 
+                     
+                     </td>      
+
+                     <td align="right">
+
+                        Registros por página:
+                        <apex:selectList value="{! PageSize }" size="1">
+                            <apex:selectOption itemValue="5" itemLabel="5"/>
+                            <apex:selectOption itemValue="20" itemLabel="20"/>
+                            <apex:actionSupport event="onchange" reRender="listGestao"/>
+                        </apex:selectList>
+                    </td>
+                    
+                    </tr>
+                </table>
+                
+            </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:form>
+    
+    <style type="text/css">
+        .custModalNova{
+        background-color: white;
+        border-width: 2px;
+        border-style: solid;
+        z-index: 50;
+        left: 50%;
+        padding:10px;
+        position: absolute;
+        /* These are the 3 css properties you will need to change so the popup 
+        displays in the center of the screen. First set the width. Then set 
+        margin-left to negative half of what the width is. You can add 
+        the height property for a fixed size pop up if you want.*/
+        width: 500px;
+        margin-left: -250px;
+        top:100px;
+        }
+        .popupBackground{
+        background-color:black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 40;
+        } 
+        
+        
+        
+    </style>    
+    
+</apex:page>

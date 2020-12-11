@@ -1,0 +1,233 @@
+<apex:page standardcontroller="Lead" extensions="CtrlTabulaLead">
+    <apex:slds />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}"/>
+    <apex:includeScript value="/support/console/37.0/integration.js"/>
+    <apex:includeScript value="/soap/ajax/37.0/connection.js"/>
+    <apex:includeScript value="/soap/ajax/37.0/apex.js"/>
+    <script type="text/javascript">
+        var ATUALIZOULEAD{!leadObj.Id} = 'ATUALIZOULEAD{!leadObj.Id}';
+        var ABRIUOPORTUNIDADE{!leadObj.Id} = 'ABRIUOPORTUNIDADE{!leadObj.Id}';
+        debugger;
+        if('{!OpportunityConvertedId}' != '') {
+            var ATUALIZOU{!OpportunityConvertedId} = 'ATUALIZOU{!OpportunityConvertedId}';
+        }
+        var $j = jQuery.noConflict();
+        var tabId;
+        var IsConverted = "{!IsConverted}";
+        var OpportunityConvertedId = "{!OpportunityConvertedId}";
+        var ON_CALL = "onCall";
+        var CALL_NUMBER = "calledNumber";
+
+        function openSubTab(url) {
+            pagina = url;
+
+            if (sforce.console.isInConsole()) {
+                //First find the ID of the primary tab to put the new subtab in
+                sforce.console.getEnclosingPrimaryTabId(openSubtab);
+
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+
+        var openSubtab = function(result) {
+            //Now that we have the primary tab ID, we can open a new subtab in it
+            var primaryTabId = result.id;
+
+            sforce.console.openSubtab(primaryTabId , pagina, true);
+        };
+
+
+
+        function blockPage(){
+             var timeoutPasscode;
+             $j.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+                  css: {
+                   border: 'none',
+                   padding: '15px',
+                   '-webkit-border-radius': '10px',
+                   '-moz-border-radius': '10px',
+                   opacity: .9
+                  }
+                });
+          }
+
+        function unblockPage(){
+            $j.unblockUI();
+        }
+
+        var refreshSuccess = function refreshSuccess(result) {
+            if (result.success == true) {
+                console.log('Subtab refreshed successfully');
+            } else {
+                console.log('Subtab did not refresh');
+            }
+        };
+
+        var verificaBloqueioGuia = function(result) {
+            debugger;
+            tabId = result.id;
+            if(IsConverted != 'true' && localStorage.getItem(ATUALIZOULEAD{!leadObj.Id}) != true && localStorage.getItem(ATUALIZOULEAD{!leadObj.Id}) != 'true') {
+                sforce.console.disableTabClose(true, false, displayResultsCallback);
+            }
+            else {
+                debugger;
+                if(localStorage.getItem(ATUALIZOULEAD{!leadObj.Id}) != true && localStorage.getItem(ATUALIZOULEAD{!leadObj.Id}) != 'true') {
+                    localStorage.setItem(ATUALIZOULEAD{!leadObj.Id}, true);
+                    sforce.console.disableTabClose(false, false, displayResultsCallback);
+                    sforce.console.refreshPrimaryTabById(tabId, true, refreshSuccess);
+                }
+            }
+        }
+
+        var displayResultsCallback = function displayResultsCallback(result){
+            // console.log('displayResultsCallback: ' + JSON.stringify(result));
+        }
+
+        var callbackCTIMessage = function callbackCTIMessage(result) {
+            console.log('callbackCTIMessage: ' + result.success);
+            if (result.success == true) {
+                sforce.console.disableTabClose(false, false, displayResultsCallback);
+            }
+        };
+
+        function carregarRegistro(message){
+            console.log('CTIMessage: ' + message);
+            if(message != '') {
+                sforce.console.cti.sendCTIMessage(message, callbackCTIMessage);
+            }
+        }
+
+        $j(window).ready(function() {
+            if(localStorage.getItem(ATUALIZOULEAD{!leadObj.Id}) != true && localStorage.getItem(ATUALIZOULEAD{!leadObj.Id}) != 'true') {
+                debugger;
+                if(IsConverted == "true"){
+                    if('{!OpportunityConvertedId}' != '') {
+                        if(localStorage.getItem(ATUALIZOU{!OpportunityConvertedId}) != true && localStorage.getItem(ATUALIZOU{!OpportunityConvertedId}) != 'true') {
+                            dispararDiscagem();
+                        }
+                    }
+                }
+                else {
+                    dispararDiscagem();
+                }
+            }
+            var verificaLigacao = function() {
+                if(localStorage.getItem(ON_CALL) == 'true') {
+                    $j("[id$=telefoneDiscado]").val(localStorage.getItem(CALL_NUMBER));
+                    $j("[id$=telefoneDiscadoLabel]").text(localStorage.getItem(CALL_NUMBER));
+                }
+                else {
+                    $j("[id$=telefoneDiscado]").val("");
+                    $j("[id$=telefoneDiscadoLabel]").text("");
+                }
+            }
+
+            setInterval(verificaLigacao, 1000);
+        });
+
+        function dispararDiscagem() {
+            sforce.console.fireEvent('OpportunityEvent', '{!leadObj.Id}', callbackFireEvent);
+         }
+
+        var callbackFireEvent = function(result) {
+            if (result.success) {
+                console.log('The custom event is fired!');
+            } else {
+                console.log('The custom event could not be fired!');
+            }
+        };
+    </script>
+    <apex:form >
+        <apex:actionfunction name="selecionarTabulacao" action="{!selecionarTabulacao}" rerender="opPrincipal" status="blockUI" />
+        <apex:actionStatus onstart="blockPage()" onstop="unblockPage();" id="blockUI"/>
+        <apex:sectionHeader id="shCabecalho" title="Tabulação" subtitle="Lead"/>
+        <apex:outputpanel id="opPrincipal">
+            <script type="text/javascript">
+            $j(window).ready(function() {
+                debugger;
+                if('{!OpportunityConvertedId}' != '') {
+                    var ATUALIZOU{!OpportunityConvertedId} = 'ATUALIZOU{!OpportunityConvertedId}';
+                }
+                var listener = function() {
+                    localStorage.removeItem(ATUALIZOULEAD{!leadObj.Id});
+                }
+                sforce.console.addEventListener(sforce.console.ConsoleEvent.CLOSE_TAB, listener);
+
+                IsConverted = "{!IsConverted}";
+                OpportunityConvertedId = "{!OpportunityConvertedId}";
+                if('{!salvo}' == 'true') {
+                    localStorage.setItem(ATUALIZOULEAD{!leadObj.Id}, true);
+                    debugger;
+                    if(IsConverted == "true"){
+                        if('{!OpportunityConvertedId}' != '') {
+                            localStorage.setItem(ATUALIZOU{!OpportunityConvertedId}, true);
+                            debugger;
+                        }
+                    }
+                    debugger;
+                    sforce.console.disableTabClose(false, false, displayResultsCallback);
+                    debugger;
+                    sforce.console.refreshPrimaryTabById(tabId, true, refreshSuccess);
+                    debugger;
+                }
+                if(localStorage.getItem(ABRIUOPORTUNIDADE{!leadObj.Id}) != 'true') {
+                    if(IsConverted == 'true'){
+                        openSubTab('/' + OpportunityConvertedId);
+                        localStorage.setItem(ABRIUOPORTUNIDADE{!leadObj.Id}, 'true')
+                    }
+
+                    if (sforce.console.isInConsole()) {
+                        console.log('isInConsole: in console');
+                        sforce.console.getFocusedPrimaryTabId(verificaBloqueioGuia);
+                    }
+                    else {
+                        console.log('isInConsole: not  in console');
+                    }
+                }
+            });
+
+            </script>
+            <apex:pageMessages id="pmMensagem"/>
+            <apex:pageblock >
+                <apex:inputhidden value="{!telefone}" id="telefoneDiscado" />
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <apex:outputLabel style="font-weight:bold;" value="Telefone:"/>
+                        </td>
+                        <td>
+                            <apex:outputLabel id="telefoneDiscadoLabel" value=""/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <apex:outputLabel style="font-weight:bold;" value="Tabulação:"/>
+                        </td>
+                        <td>
+                            <apex:selectlist onchange="selecionarTabulacao();" size="1" multiselect="false" value="{!tabulacao1}">
+                                <apex:selectoptions value="{!tabulacoes}"/>
+                            </apex:selectlist>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <apex:outputLabel rendered="{!(tab1 != null && tab1.Agendamento__c)}" style="font-weight:bold;" value="Data do Agendamento:"/>
+                        </td>
+                        <td>
+                            <apex:inputfield rendered="{!(tab1 != null && tab1.Agendamento__c)}" value="{!leadObj.Agendamento_Retorno__c}" />
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <apex:pageblockbuttons location="top">
+                    <apex:commandbutton value="Salvar" action="{!salvar}" oncomplete="carregarRegistro('{!ctiMessage}');" status="blockUI" rerender="opPrincipal"/>
+                </apex:pageblockbuttons>
+            </apex:pageblock>
+        </apex:outputpanel>
+    </apex:form>
+</apex:page>

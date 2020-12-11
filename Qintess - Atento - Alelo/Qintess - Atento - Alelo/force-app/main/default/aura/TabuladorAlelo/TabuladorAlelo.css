@@ -1,0 +1,65 @@
+.THIS #consultorTab {
+    background-color: #017457;
+    border: 2px solid #BDD752;
+    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
+    padding: 10px;
+}
+.THIS.todo1{
+    background-color: #017457;
+    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
+    
+    
+}
+.THIS.container{
+    background-color: #017457;
+    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
+    
+}
+
+.THIS #baseTab {
+    background-color: #017457;
+    border: 2px solid #BDD752;
+    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
+    padding: 10px;
+}
+.THIS.todob {
+    background-color: #017457;
+    border: 2px solid #BDD752;
+    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
+    padding: 10px;
+}
+.THIS label {
+    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
+    font-size: 13px;
+    color: rgb(8, 112, 55);
+}
+.THIS #titulo {
+    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
+    color: #BDD752;
+    font-size: 22px;
+    width: 1100px;
+    height: 80px;
+    padding-left: 700px;
+    background-color: rgb(163, 159, 159);
+
+}
+
+/* -- Campos do Consultor Remoto -- */
+
+.THIS #id {
+    width: 160px;
+}
+
+.THIS ::-webkit-input-placeholder {
+    font-size: 13px;
+}
+
+.THIS #grupoRel {
+    width: 200px;
+}
+
+
+.THIS #folha {
+    padding-top: 10px;
+    width: 195px;
+}

@@ -1,0 +1,47 @@
+<apex:page controller="CtrlEstrategiaImplantacaoUsuarios">
+ <apex:form >
+		<apex:outputPanel layout="block">
+			<apex:outPutLabel value="Search for: "/>
+			<apex:inputText value="{!whereClause}" style=" margin: 10px;"/>
+			<apex:commandButton action="{!filterAvailableOptions}" value="Find" rerender="availableUsersBlock"/>
+		</apex:outputPanel>
+		<apex:outputPanel id="multiselectPanel" layout="block" styleClass="duelingListBox">
+			<table class="layout">
+				<tbody>
+					<tr>
+						<td class="selectCell">
+							<apex:outputPanel layout="block" styleClass="selectTitle">
+								<apex:outputLabel value="Available Users" for="multiselectPanel:leftList" />
+							</apex:outputPanel>
+							<apex:selectList id="availableUsersBlock" value="{!selectedUserIds}" multiselect="true" size="15" style="width: 200px;">
+								<apex:selectOptions value="{!availableUsers}"/>
+							</apex:selectList>
+						</td>
+						<td class="buttonCell">
+							<apex:outputPanel layout="block" styleClass="text">Add</apex:outputPanel>
+							<apex:outputPanel layout="block" styleClass="text">
+								<apex:commandLink action="{!add}" rerender="availableUsersBlock, selectedUsersBlock" id="btnRight"> 
+									<apex:image value="/s.gif" alt="Add" styleClass="rightArrowIcon" title="Add" />
+								</apex:commandLink>
+							</apex:outputPanel>
+							<apex:outputPanel layout="block" styleClass="text">
+								<apex:commandLink action="{!remove}" rerender="availableUsersBlock, selectedUsersBlock" id="btnLeft">
+									<apex:image value="/s.gif" alt="Remove" styleClass="leftArrowIcon" title="Remove" />
+								</apex:commandLink>
+								<apex:outputPanel layout="block" styleClass="duelingText">Remove</apex:outputPanel>
+							</apex:outputPanel>
+						</td>
+						<td class="selectCell">
+							<apex:outputPanel layout="block" styleClass="selectTitle">
+								<apex:outputLabel value="Selected Users" for="multiselectPanel:rightList" />
+							</apex:outputPanel>
+							<apex:selectList id="selectedUsersBlock" value="{!removedUserIds}" multiselect="true" size="15" style="width: 200px;">
+								<apex:selectOptions value="{!selectedUsers}"/>
+							</apex:selectList>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</apex:outputPanel>
+	</apex:form>
+</apex:page>

@@ -1,0 +1,292 @@
+<apex:page id="pageEnvioEmailModeloProposta" StandardController="Opportunity" extensions="CtrlEnvioEmailModeloProposta" title="Enviar Proposta por E-mail" showheader="false" language="pt_BR">
+	<html>
+		<head>
+			<apex:includeScript value="{!URLFOR($Resource.jquery_ui, '/external/jquery/jquery.js')}"/>
+			<apex:includeScript value="{!URLFOR($Resource.jquery_ui, 'jquery-ui.js')}"/>
+			<apex:includeScript value="{!URLFOR($Resource.angularjs, 'angular.js')}"/>
+			<apex:stylesheet value="{!URLFOR($Resource.jquery_ui, 'jquery-ui.css')}"/>
+			<apex:stylesheet value="{!URLFOR($Resource.jquery_ui, 'jquery-ui.structure.css')}"/>
+			<apex:stylesheet value="{!URLFOR($Resource.jquery_ui, 'jquery-ui.theme.css')}"/>
+		    <script type="text/javascript">
+	    	
+		    	function closeWin() {
+				    window.close();
+				}
+				
+				function openDiv() {
+			    	$("#dialog-form").attr("style", "display: block;");
+			    }
+		    </script>
+		    <style type="text/css">
+		    	div.emails {
+		    		width: 660px;
+		    		height: 500px;
+		    		display: table;
+		    		float: left;
+		    		margin: 0px 0 0 0;
+		    		padding: 10px 0 0 0;
+		    		border: 4px solid #CCCCCC;
+		    		overflow-y: scroll;
+		    		position: absolute;
+		    		top: 50px;
+		    		left: 50px;
+		    		background-color: #FFFFFF; 
+		    	}
+		    	
+		    	div.email-cc {
+		    		width: 100%;
+		    		height: 60px;
+		    		display: table;
+		    		float: left;
+		    		margin: 0px 0 0 0;
+		    		overflow-y: scroll;
+		    		position: relative;
+		    	}
+		    	
+		    	ul.table-emails {
+		    		width: 560px;
+		    		display: table;
+		    		border: 0px solid #CCCCCC;
+		    	}
+		    	ul.table-emails li {
+		    		width: 100%;
+		    		display: table;
+		    		border-bottom: 1px solid #CCCCCC;
+		    		margin: 0 0 1px 0;
+		    	}
+		    	ul.table-emails li span {
+		    		color: #333333;
+		    		width: 500px;
+		    		display: table;
+		    		float: left;
+		    	}
+		    	ul.table-emails li a {
+		    		width: 30px;
+		    		padding: 0 5px 0 5px;
+		    		text-align: center;
+		    		display: table;
+		    		float: rigth;
+		    	}
+		    	
+		    	div.button-group {
+		    		height: 30px;
+		    		text-align: center;
+		    	}
+		    </style>
+	    </head>
+	    <body onunload="window.opener.location.href='/{!idOpportunity}';">
+			<!-- <apex:sectionHeader id="scCabecalho" title="Visualização de PDF"/> -->
+			<apex:pageMessages id="pmMensagem" />
+			<apex:form id="idFormEnvioEmailProposta">
+				<apex:iframe rendered="{!showIframe}" src="/apex/ModeloPropostaPDF?id={!idOpportunity}" scrolling="true" id="idGerarProposta" height="500px"/>
+				
+				<div class="button-group">
+					<!--<p><a href="#add_email_modal" rel="modal:open">example</a></p>  -->
+					<apex:commandButton value="Enviar Proposta por E-mail" action="{!enviarEmail}" rendered="false" />
+					<!-- <a id="create-user">Enviar E-mail</a> -->
+					<!-- <button id="create-user" class="ui-button ui-corner-all ui-widget">Enviar E-mail</button> -->
+					<button onclick="openDiv(); return false;" class="ui-button ui-corner-all ui-widget" >Enviar E-mail</button>
+					<button onclick="closeWin();" class="ui-button ui-corner-all ui-widget" >Cancelar</button>
+					<!-- <button id="create-user">teste</button>	 -->
+				</div>
+
+				<div id="dialog-form" title="Enviar e-mail" style="display: none;" class="emails">
+				  	<h1>Selecione os Contatos e Anexos do E-mail</h1>
+				    <fieldset>
+				    	<p>
+					    	<span>De: </span>
+					    	<span>
+						    	<apex:selectList value="{!contactFrom}" size="1" multiselect="false">
+				                    <apex:selectOptions value="{!selectedContactFrom}"/>
+				                </apex:selectList>
+			                </span>
+		                </p>
+						<!-- Componente Salesforce -->
+						<c:MultiselectPicklist leftLabel="Contatos Disponíveis"
+			                leftOption="{!allContacts}"
+			                rightLabel="Contatos Selecionados"
+			                rightOption="{!selectedContacts}"
+			                size="4"
+			                width="250px"/>
+			                
+			            <c:MultiselectPicklist leftLabel="Anexos Disponíveis"
+			                leftOption="{!allAttachments}"
+			                rightLabel="Anexos Selecionados"
+			                rightOption="{!selectedAttachments}"
+			                size="4"
+			                width="250px"/>
+			               
+			            <div ng-app="app" ng-controller="formController">
+	  						<form name="form-modal" novalidate="novalidate"><br />
+	  							<h3>Adicionar E-mails em Cópia</h3>
+	  							<fieldset>
+		  							<p>
+						      			<label for="email">E-mail</label>
+						      			<input type="text" name="email" id="email" ng-model="email.value" class="text ui-widget-content ui-corner-all" />
+						      			<a href="#" data-ng-click="addEmail()" class="ui-button ui-corner-all ui-widget">Adicionar</a>&nbsp;<span>{{message}}</span>
+						      		</p>
+						      		<p class="validateTips"></p>
+					      			<h3>E-mails</h3>
+					      			<div class="email-cc">
+						      			<fieldset>
+								      		<ul class="table-emails">
+								      			<li data-ng-repeat="email in listEmail"><span>{{email}}</span><a href="#" data-ng-click="delEmail($index)">Remover</a></li>
+								      		</ul>
+							      		</fieldset>
+						      		</div>
+					      		</fieldset>
+							</form>
+							<table style="border: 1px solid black;margin: 2px;{!IF(showIframe, 'display:none;', '')}">
+								<tr>
+									<td>
+										<apex:outputLabel rendered="{!!showIframe}" style="font-weight: bold;" value="Corpo do E-mail: " />
+									</td>
+									<td>
+										<apex:inputTextarea richText="true" rows="5" cols="80" rendered="{!!showIframe}" id="emailBody" value="{!emailBody}" />
+									</td>
+								</tr>
+							</table>
+							<div class="button-group">
+								<a href="#" data-ng-click="sendEmail()" class="ui-button ui-corner-all ui-widget">Enviar E-mail</a>
+								<a href="#" data-ng-click="closeDiv()" class="ui-button ui-corner-all ui-widget">Cancelar</a>
+							</div>
+						</div>
+			            <!-- Allow form submission with keyboard without duplicating the dialog button -->
+				      	<input type="submit" tabindex="-1" style="position:absolute; top:-1000px" />
+				    </fieldset>
+				</div>
+				
+				<apex:actionFunction name="saveMethod" action="{!enviarEmail}" rerender="pmMensagem">
+				    <apex:param assignTo="{!addEmails}" name="addEmails" value="x"/>
+				</apex:actionFunction>
+				
+			</apex:form>
+			<script>
+				var app = angular.module('app', []);
+				app.controller('formController', function ($scope) {
+				
+					//$scope.listEmail = ['teste', 'teste2'];
+					$scope.message = '';
+					$scope.listEmail = {!addEmails};
+					
+					$scope.addEmail = function() {
+						
+						if($scope.validEmail()) {
+							if($scope.listEmail.indexOf($scope.email.value) !== -1) {
+								//$scope.message = 'E-mail já adicionado.';
+								$("#email").addClass("ui-state-error");
+								updateTips('E-mail já adicionado.');
+							} else {
+								$scope.listEmail.push($scope.email.value);
+								updateTips('E-mail adicionado com sucesso.');
+								$scope.email.value = '';
+							}
+						}
+					}
+					
+					$scope.delEmail = function(index) {
+						$scope.listEmail.splice(index, 1);
+						updateTips('E-mail removido com sucesso.');
+					}
+					
+					$scope.sendEmail = function(){
+					    //saveMethod(JSON.stringify($scope.contact));
+					    //{!addEmails} = $scope.listEmail;
+					    //saveMethod2(JSON.stringify($scope.listEmail));
+					    saveMethod(JSON.stringify($scope.listEmail));
+					    dialog.dialog("close");
+					    //{!addEmails} = $scope.listEmail;
+					}
+					
+					$scope.validEmail = function() {
+						var valid = true;
+						allFields.removeClass("ui-state-error");
+						//alert(valid);
+						//allFields.removeClass("ui-state-error");
+						valid = checkLength(email, "E-mail", 6, 80);
+						
+						if(valid)
+							valid = checkRegexp(email, emailRegex, "E-mail com formato incorreto.");
+						//alert(valid);
+						return valid;
+					}
+					
+					
+					
+					//Teste Jquery in Angularjs
+					//$(function() {
+					    var dialog, form,
+					 
+					      // From http://www.whatwg.org/specs/web-apps/current-work/multipage/states-of-the-type-attribute.html#e-mail-state-%28type=email%29
+					      emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
+					      email = $("#email"),
+					      allFields = $([]).add(email),
+					      tips = $(".validateTips");
+					 
+					    function updateTips(t) {
+					      tips
+					        .text(t)
+					        .addClass("ui-state-highlight");
+					      setTimeout(function() {
+					        tips
+					        .text('')
+					        .removeClass("ui-state-highlight");
+					      }, 1500 );
+					    }
+					 
+					    function checkLength(o, n, min, max) {
+					      if(o.val().length > max || o.val().length < min) {
+					        o.addClass("ui-state-error" );
+					        //updateTips("Length of " + n + " must be between " + min + " and " + max + ".");
+					        updateTips("O campo " + n + " deve ter entre " + min + " e " + max + " caracteres.");
+					        return false;
+					      } else {
+					        return true;
+					      }
+					    }
+					 
+					    function checkRegexp(o, regexp, n) {
+					      if (!(regexp.test(o.val()))) {
+					        o.addClass("ui-state-error");
+					        updateTips(n);
+					        return false;
+					      } else {
+					        return true;
+					      }
+					    }
+					 
+					    function addUser() {
+					      var valid = true;
+					      allFields.removeClass("ui-state-error");
+				
+					      valid = valid && checkLength(email, "E-mail", 6, 80);
+					 
+					      valid = valid && checkRegexp(email, emailRegex, "E-mail com formato incorreto.");
+					 
+					      if (valid) {
+					        $("#users tbody").append("<tr>" +
+					          "<td>" + email.val() + "</td>" +
+					        "</tr>" );
+					        dialog.dialog("close");
+					      }
+					      return valid;
+					    }
+					    
+					    $scope.closeDiv = function() {
+					    	$("#dialog-form").attr("style", "display: none;");
+					    }
+					 
+					 	angular.element(document).ready(function () {
+					 		if('{!showIframe}' == 'false') {
+					        	openDiv();
+					        }
+					    });
+					    
+					    
+					  //});
+				});
+			</script>
+			
+		</body>
+	</html>
+</apex:page>

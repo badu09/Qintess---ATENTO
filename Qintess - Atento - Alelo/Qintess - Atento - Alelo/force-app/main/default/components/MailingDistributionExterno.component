@@ -1,0 +1,82 @@
+<apex:component controller="CtrlMailingDistributionExterno" allowDML="true">
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'meiomask.js')}" />
+	<script type="text/javascript">
+		function blockPage(){
+    	
+	    	$.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+	             css: {
+	              border: 'none',   
+	              padding: '15px',   
+	              '-webkit-border-radius': '10px',   
+	              '-moz-border-radius': '10px',    
+	              opacity: .9 
+	             }   
+	           }); 
+	     }  
+
+	    function unblockPage(){
+	    	$.unblockUI();  
+	    }
+	</script>
+	<apex:sectionHeader id="shCabecalho" title="Edição" subtitle="Mailing Distribution Externo"/>
+	<apex:form >
+		<apex:outputPanel id="opPrincipal" >
+			<apex:pageMessages id="pmMensagem" />
+			<apex:actionStatus onstart="blockPage()" onstop="unblockPage()" id="blockUI"/>
+			<apex:pageBlock >
+				<p>
+					<apex:outputLabel style="font-weight:bold;" value="Tipo: " />
+					<apex:selectList multiselect="false" size="1" value="{!identificacaoFiltro}" style="width:200px;">
+						<apex:selectOptions value="{!identificacoes}"/>
+			        </apex:selectList>
+			        <apex:commandButton value="Filtrar" action="{!getMailingDistributions}" reRender="opPrincipal" status="blockUI"/>
+		        </p>
+				<apex:variable var="index" value="{!0}"/>
+				<apex:pageBlockTable id="pbtLista" value="{!lMailingDistribution}" var="md">
+					<apex:column headerValue="Campanha" value="{!md.Name}" />
+					<apex:column headerValue="Dta Carga"  value="{!md.DataCarga__c}" />
+					<apex:column headerValue="Fila" >
+						<apex:selectList value="{!md.Fila__c}" multiselect="false" size="1">
+							<apex:selectOptions value="{!items}" />
+						</apex:selectList>
+					</apex:column>
+					<apex:column headerValue="Canal">
+						<apex:inputField value="{!md.Canal__c}" />
+					</apex:column>
+					<apex:column headerValue="Ação" >
+						<apex:commandButton action="{!save}" value="Salvar" reRender="opPrincipal" status="blockUI" rendered="{!md.Status_Fila__c != 'Em processamento'}">	
+							<apex:param value="{!index}" assignTo="{!linha}" name="indice"/>
+						</apex:commandButton>
+					</apex:column>
+					<apex:column headerValue="Status Fila" value="{!md.Status_Fila__c}" />
+					<apex:column headerValue="Dta Fila" value="{!md.DataFila__c}" />
+					<apex:column value="{!md.Habilita_Discador__c}" />
+					<apex:column headerValue="Olos" >
+						<apex:commandButton action="{!enviarMailing}" value="Enviar" reRender="opPrincipal" status="blockUI" rendered="{!md.Habilita_Discador__c && md.Status_Discador__c != 'Finalizado' && md.Status_Fila__c == 'Finalizado'}">	
+							<apex:param value="{!index}" assignTo="{!linha}" name="indice"/>
+						</apex:commandButton>
+						<apex:variable var="index" value="{!index + 1}"/>
+					</apex:column>
+					<apex:column value="{!md.Status_Discador__c}" />
+					<apex:column headerValue="Dta Discador" value="{!md.DataDiscador__c}" />
+					<apex:column value="{!md.Retorno_Discador__c}" />
+					<apex:column headerValue="Identificação">
+						<apex:outputField value="{!md.Identificacao__c}" />
+					</apex:column>
+        		<apex:facet name="footer">Página {!pageNumber} de {!totalPages}</apex:facet>
+				</apex:pageBlockTable>
+				<p>
+			        <apex:commandButton action="{!Beginning}" title="Beginning" value="<<" disabled="{!disablePrevious}" reRender="opPrincipal" status="blockUI"/>
+			        <apex:commandButton action="{!Previous}" title="Previous" value="<" disabled="{!disablePrevious}" reRender="opPrincipal" status="blockUI"/>        
+			        <apex:commandButton action="{!Next}" title="Next" value=">" disabled="{!disableNext}" reRender="opPrincipal" status="blockUI"/>
+			        <apex:commandButton action="{!End}" title="End" value=">>" disabled="{!disableNext}" reRender="opPrincipal" status="blockUI"/>
+		        </p>
+				<apex:pageBlockButtons location="bottom">
+                	<apex:commandButton style="float:left;" value="Atualizar Status" action="{!atualizarMailing}" reRender="opPrincipal" status="blockUI"/>
+                </apex:pageBlockButtons>
+			</apex:pageBlock>
+		</apex:outputPanel>
+	</apex:form>
+</apex:component>

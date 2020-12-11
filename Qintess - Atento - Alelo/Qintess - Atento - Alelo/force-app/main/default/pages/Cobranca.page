@@ -1,0 +1,138 @@
+<apex:page id="pageCobranca" StandardController="Opportunity" extensions="CtrlCobranca" action="{!carregaProduto}">
+<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+<apex:includeScript value="/support/console/37.0/integration.js"/>
+<apex:includeScript value="/soap/ajax/37.0/connection.js" />
+<apex:includeScript value="/soap/ajax/37.0/apex.js" />
+<style type="text/css">
+	
+</style>
+<script type="text/javascript">
+	var $j = jQuery.noConflict();
+
+    function blockPage(){
+         var timeoutPasscode; 
+         $j.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+              css: {
+               border: 'none',
+               padding: '15px',
+               '-webkit-border-radius': '10px',
+               '-moz-border-radius': '10px',
+               opacity: .9
+              }
+            });
+      } 
+
+    function unblockPage(){
+    	$j.unblockUI();
+    }
+    
+    $j(window).ready(function() {
+    	if (sforce.console.isInConsole()) {
+    		console.log('isInConsole: in console');
+    		//alert('isInConsole: in console');
+			sforce.console.disableTabClose(true, false, displayResultsCallback);
+		}
+		else {
+			console.log('isInConsole: not  in console');
+    		//alert('isInConsole: not  in console');
+		}
+	});
+    
+    var displayResultsCallback = function displayResultsCallback(result){
+    
+    	console.log('displayResultsCallback: ' + JSON.stringify(result));
+    	//alert('displayResultsCallback: ' + JSON.stringify(result));
+    }
+    
+    var refreshSuccess = function refreshSuccess(result) {
+    	console.log('refreshSuccess: ' + result.success);
+    	//alert(result.success);
+    };
+    
+    var refreshSubTab = function refreshSubTab(result) {
+    	console.log('refreshSubTab: ' + result.id);
+    	//alert(result.id);  
+    	sforce.console.refreshSubtabById(result.id, true, refreshSuccess);
+    }
+    
+    var callbackCTIMessage = function callbackCTIMessage(result) {
+		console.log('callbackCTIMessage: ' + result.success); 
+		//alert('callbackCTIMessage: ' + result.success);
+    	if (result.success == true) {
+    		//sforce.console.getEnclosingTabId(refreshSubTab);
+    		sforce.console.disableTabClose(false, false, displayResultsCallback);
+    	}
+    };
+    
+    function carregarRegistro(message){
+		console.log('CTIMessage: ' + message); 
+		//alert('CTIMessage: ' + message);  
+		if(message != '') {
+			//sforce.console.disableTabClose(true, true, displayResultsCallback);
+			sforce.console.cti.sendCTIMessage(message, callbackCTIMessage);
+    	}
+	}	
+	
+	function liberarAba() {
+		var codigo = window.prompt("Por favor, entre com o código de liberação.", "");
+	       
+	    if (codigo == '9321') {
+	    	sforce.console.disableTabClose(false, false, displayResultsCallback);
+		}
+		else {
+			alert('Código inválido, tente novamente.');
+		}
+	}
+    </script>
+    <apex:actionStatus onstart="blockPage()" onstop="unblockPage();" id="blockUI"/>
+    <apex:sectionHeader id="shCabecalho" title="Tabulação" subtitle="Cobrança"/>
+    <apex:form id="formpageCobranca">
+        <apex:pageMessages id="pmMensagem" />
+        <apex:outputPanel id="opPrincipal">
+            <apex:pageBlock id="pbCobranca" mode="maindetail">
+                <apex:outputPanel id="opComponentePrincipal">
+                    <apex:repeat id="rOportunidade" value="{!lOportunidade}" var="p">
+                           <apex:repeat id="rCobranca" value="{!lCobranca}" var="c"> 
+                            <apex:pageBlock id="pbProduto" title="{!c.Produtos_Alelo__r.Name}" mode="maindetail">
+                                <apex:pageBlockSection id="pbsDetalhe" title="Detalhes de Produtos Alelo">
+                                    <apex:outputField id="ofName" value="{!c.Produtos_Alelo__r.Name}"/>
+                                    <apex:outputField id="ofNumeroContrato" value="{!c.Produtos_Alelo__r.Numero_do_Contrato__c}"/>
+                                    <apex:outputField id="ofValorUnitario" value="{!c.Produtos_Alelo__r.Valor_Unitario__c}"/>
+                                    <apex:outputField id="ofNumeroFilial" value="{!c.Produtos_Alelo__r.Numero_de_Filiais__c}"/>
+                                    <apex:outputField id="ofValorTotal" value="{!c.Produtos_Alelo__r.F_Valor_Total__c}"/>
+                                    <apex:outputField id="ofQuantidadeRecargaPrevista" value="{!c.Produtos_Alelo__r.Quantidade_de_Recarga_Prevista__c}"/>
+                                    <apex:outputField id="ofNomeEmpresaGravacaoCartao" value="{!c.Produtos_Alelo__r.Nome_Empresa_Gravacao_Cartao__c}"/>
+                                    <apex:outputField id="ofQuantidadeCartao" value="{!c.Produtos_Alelo__r.Quantidade_de_Cartoes__c}"/>
+                                </apex:pageBlockSection>
+                                <apex:pageBlockSection id="pbsFaturamento" title="Faturamento">
+                                    <apex:outputField id="ofQtdDiaPagamento" value="{!c.Produtos_Alelo__r.Qtd_Dias_para_Pagamento__c}"/>
+                                    <apex:outputField id="ofBanco" value="{!c.Produtos_Alelo__r.Banco__c}"/>
+                                    <apex:outputField id="ofFaturamento" value="{!c.Produtos_Alelo__r.Faturamento__c}"/>
+                                    <apex:outputField id="ofAgenciaDigito" value="{!c.Produtos_Alelo__r.Agencia_Digito__c}"/>
+                                    <apex:outputField id="ofDataFaturamento" value="{!c.Produtos_Alelo__r.Data_Faturamento__c}"/>
+                                </apex:pageBlockSection>
+                                <apex:pageBlockSection id="pbsImplantacao" title="Implantação">
+                                    <apex:inputField id="ifTabulacaoPai" value="{!c.Tabulacao_Cobranca_Pai__c}" required="true" />
+                                    <apex:outputField id="ofValorPago" value="{!c.Valor_Pago__c}"/>
+                                    <apex:inputField id="ifTabulacaoFilho" value="{!c.Tabulacao_Cobranca_Filho__c}"/>
+                                    <apex:outputField id="ofValorPrevisto" value="{!c.Valor_Previsto__c}"/>
+                                    <apex:outputField id="ofDataVencBoleto" value="{!c.Data_Vencimento_Boleto__c}"/>
+                                    <apex:inputField id="ifValorPercentual" value="{!c.Valor_Percentual_Pago_Previsto__c}"/>
+                                </apex:pageBlockSection> 
+                                <apex:pageBlockSection id="pbsObservacaoIf" title="Observação" >
+                                    <apex:inputField style="width: 500px; hegiht:70px;" id="ifObservacaoCobranca" value="{!c.Observacao_Cobranca__c}"/>
+                                </apex:pageBlockSection>
+                            </apex:pageBlock>
+                        </apex:repeat>
+                    </apex:repeat>
+                </apex:outputPanel> 
+                <apex:pageBlockButtons id="pbbTabularProduto">
+                    <apex:commandButton id="cbSalvar" value="{!'Salvar'}" action="{!salvar}" oncomplete="carregarRegistro('{!ctiMessage}');"
+                                        reRender="opPrincipal, pmMensagem, pmMensagemRodape" status="blockUI" />
+                </apex:pageBlockButtons>
+            </apex:pageBlock>
+        </apex:outputPanel>
+        <apex:pageMessages id="pmMensagemRodape" />
+    </apex:form> 
+</apex:page>

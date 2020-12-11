@@ -1,0 +1,234 @@
+<apex:page id="pageProdutoAleloAuditoria" StandardController="Opportunity" extensions="CtrlProdutoAleloAuditoria" >
+<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.maskMoney.js')}" />
+<apex:includeScript value="/support/console/37.0/integration.js"/>
+<apex:includeScript value="/soap/ajax/37.0/connection.js" />
+<apex:includeScript value="/soap/ajax/37.0/apex.js" />
+<style type="text/css">
+	
+</style>
+<script type="text/javascript"> 
+	var $j = jQuery.noConflict();
+
+    function blockPage(){
+         var timeoutPasscode; 
+         $j.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+              css: {
+               border: 'none',
+               padding: '15px',
+               '-webkit-border-radius': '10px',
+               '-moz-border-radius': '10px',
+               opacity: .9
+              }
+            });
+      } 
+
+    function unblockPage(){
+    	$j.unblockUI();
+    }
+    
+    $j(window).ready(function() {
+    	if (sforce.console.isInConsole()) {
+    		console.log('isInConsole: in console');
+    		//alert('isInConsole: in console');
+			//sforce.console.disableTabClose(true, false, displayResultsCallback);
+		}
+		else {
+			console.log('isInConsole: not  in console');
+    		//alert('isInConsole: not  in console');
+		}
+	});
+	
+	function liberarAba() {
+		var codigo = window.prompt("Por favor, entre com o código de liberação.", "");
+	       
+	    if (codigo == '9321') {
+	    	sforce.console.disableTabClose(false, false, displayResultsCallback);
+		}
+		else {
+			alert('Código inválido, tente novamente.');
+		}
+	}
+</script>
+<apex:actionStatus onstart="blockPage()" onstop="unblockPage();" id="blockUI"/>
+<apex:sectionHeader id="shCabecalho" title="Informações" subtitle="Auditoria"/>
+<apex:form id="formpageProdutoAlelo">
+	<apex:outputPanel id="opPrincipal">
+		<apex:pageBlock id="pbProdutos" mode="maindetail">
+			<apex:outputPanel id="opDetalheVenda" rendered="{!possuiValeTransporte}">
+				<apex:pageBlock id="pbDetalheVenda" title="Detalhes da Venda" mode="maindetail">
+					<apex:pageBlockSection id="pbsDetalheVenda" title=" " collapsible="false"/>
+					<apex:repeat id="rDadoTransporte" value="{!lValeTransporte}" var="va"> 
+						<apex:pageBlock id="pbDadoTransporte" mode="maindetail">
+							<apex:pageBlockButtons id="pbbDadoTransporte" location="top"> 
+								 
+	         				</apex:pageBlockButtons>
+							<apex:pageBlockSection id="pbsDetalhe" title="Dados de Transporte">
+								<apex:outputField id="ofValorMedioMensalCompra" value="{!va.Valor_medio_mensal_de_compra__c}"/>
+								<apex:outputField id="ofQuantidadeUsuarioVtCartao" value="{!va.Quantidade_de_usuarios_VT_cartao__c}"/>
+								<apex:outputField id="ofTaxaServico" value="{!va.Taxa_de_servico__c}"/>
+								<apex:outputField id="ofQuantidadeUsuarioVtPapel" value="{!va.Quantidade_de_usuarios_VT_papel__c}"/>
+								<apex:outputField id="ofTarifaAtendimento" value="{!va.Tarifa_de_atendimento__c}"/>
+								<apex:outputField id="ofQuantidadePontoEntrega" value="{!va.Quantidade_de_pontos_de_entrega__c}"/>
+								<apex:outputField id="ofTarifaGerenciamento" value="{!va.Tarifa_de_Gerenciamento__c}"/>										
+							</apex:pageBlockSection>				
+						</apex:pageBlock>
+					</apex:repeat>
+				</apex:pageBlock>
+			</apex:outputPanel>
+			<apex:outputPanel id="opProduto" rendered="{!possuiProdutoAlelo}">
+				<script type="text/javascript">
+	                $j(document).ready(function() {
+	                    $j("[class$=currencyValorUnitario]").maskMoney({allowNegative: false, thousands:'.', decimal:',', affixesStay: false, allowZero: true});
+						
+						$j("[id$=ifQuantidadeCartao]").on("keyup", function(e)
+						{
+						    $j(this).val(
+						        $j(this).val()
+						        .replace(/\D/g, '')
+								.substring(0, 18));
+						});
+	                   
+	                });
+	            </script>
+				<apex:pageBlock id="pbProduto" title="Produtos" mode="maindetail">
+					<apex:pageBlockSection id="pbsProduto" title=" " collapsible="false"/>
+					<apex:variable var="indexPa" value="{!0}"/> 
+					<apex:repeat id="rProdutoAlelo" value="{!lModelProdutoAlelo}" var="pa"> 
+						<apex:pageBlock id="pbProdutoAlelo" mode="maindetail">
+							<apex:pageBlockButtons id="pbbGerarContrato" location="top"> 
+								
+	         				</apex:pageBlockButtons>
+							<apex:pageBlockSection id="pbsDetalheProduto" title="{!pa.produtoAlelo.Name}" columns="1">
+								<apex:pageBlockSectionItem id="pbsTarifa">
+									<apex:pageBlock id="pbDetalheProduto" mode="maindetail"> 
+										<apex:pageBlockSection id="pbsDetalheProduto">
+											<apex:outputField id="ofName" value="{!pa.produtoAlelo.Name}"/> 
+											<apex:outputField id="ofNumeroContrato" value="{!pa.produtoAlelo.Numero_do_Contrato__c}" />
+											<apex:inputField id="ifQuantidadeCartao" value="{!pa.produtoAlelo.Quantidade_de_Cartoes__c}" rendered="{!pa.simular}"/>
+											<apex:outputField id="ofQuantidadeCartao" value="{!pa.produtoAlelo.Quantidade_de_Cartoes__c}" rendered="{!!pa.simular}"/>
+											<apex:outputField id="ofRetornoRW" value="{!pa.produtoAlelo.Retorno_RW__c}"/>
+										 	<apex:inputField id="ifValorUnitario" value="{!pa.produtoAlelo.Valor_Unitario__c}" rendered="{!pa.simular}" styleClass="currencyValorUnitario"/>
+										 	<apex:outputField id="ofValorUnitario" value="{!pa.produtoAlelo.Valor_Unitario__c}" rendered="{!!pa.simular}"/>
+											<apex:outputField id="ofValorTotal" value="{!pa.produtoAlelo.Valor_Total__c}"/>
+											<apex:outputField id="ofNomeEmpresaGravacaoCartao" value="{!pa.produtoAlelo.Nome_Empresa_Gravacao_Cartao__c}"/>							
+											<apex:outputField id="ofDataHoraAuditoria" value="{!pa.produtoAlelo.Data_Hora_Auditoria__c}"/>													
+										</apex:pageBlockSection>
+										<apex:pageBlockSection id="pbsDetalheAgendamento" title="Detalhes do agendamento" rendered="{!(pa.agendar || pa.produtoAlelo.Agendamento_Retorno_Implanta_o__c != null)}">
+											<apex:outputField id="ofTabulacaoPaiImplantacao" value="{!pa.produtoAlelo.Tabulacao_Pai_Implantacao__c }"/> 
+											<apex:outputField id="ofTabulacaoFilhoImplantacao" value="{!pa.produtoAlelo.Tabulacao_Filho_Implantacao__c }" />
+											<apex:outputField id="ofAgendamentoRetornoImplantacao" value="{!pa.produtoAlelo.Agendamento_Retorno_Implanta_o__c }" rendered="{!!pa.agendar}"/>
+											<apex:inputField id="ifAgendamentoRetornoImplantacao" value="{!pa.produtoAlelo.Agendamento_Retorno_Implanta_o__c }" rendered="{!pa.agendar}"/>													
+										</apex:pageBlockSection>
+										<apex:pageMessages id="pmMensagem" />
+										<div style="width: 100%; text-align: center;">
+										
+											<!-- <apex:commandButton id="cbLiberar" value="Liberar Aba" onclick="liberarAba(); return false;" reRender="none" status="blockUI" />  -->
+											<apex:commandButton id="cbAgendar" 
+							 									value="Agendar"
+							 									action="{!agendar}" 
+							 									rendered="{!pa.contratoGerado && !pa.agendar}"  
+							 									reRender="opProduto, pmMensagem" 
+							 									status="blockUI">
+							 						<apex:param name="indiceProduto" assignTo="{!indiceProduto}" value="{!indexPa}"/>
+							 				</apex:commandButton>											
+											<apex:commandButton id="cbEditar" 
+							 									value="Editar"
+							 									action="{!editar}" 
+							 									rendered="{!!pa.contratoGerado && !pa.simular}"  
+							 									reRender="opProduto, pmMensagem" 
+							 									status="blockUI">
+							 						<apex:param name="indiceProduto" assignTo="{!indiceProduto}" value="{!indexPa}"/>
+							 				</apex:commandButton>
+							 				<apex:commandButton id="cbGerarContrato" 
+							 									value="Gerar Contrato"
+							 									action="{!gerarContrato}" 
+							 									rendered="{!!pa.contratoGerado && !pa.simular}"  
+							 									reRender="opProduto, pmMensagem" 
+							 									status="blockUI">
+							 						<apex:param name="indiceProduto" assignTo="{!indiceProduto}" value="{!indexPa}"/>
+							 				</apex:commandButton>
+							 				
+							 				<apex:commandButton id="cbCancelar" 
+							 									value="Cancelar"
+							 									action="{!cancelar}" 
+							 									rendered="{!pa.simular || pa.agendar}"  
+							 									reRender="opProduto, pmMensagem" 
+							 									status="blockUI"> 
+							 						<apex:param name="indiceProduto" assignTo="{!indiceProduto}" value="{!indexPa}"/>
+							 				</apex:commandButton>
+							 				<apex:commandButton id="cbSimular" 
+							 									value="Simular"
+							 									action="{!simular}"  
+							 									rendered="{!pa.simular}"  
+							 									reRender="opProduto, pmMensagem" 
+							 									status="blockUI">
+							 						<apex:param name="indiceProduto" assignTo="{!indiceProduto}" value="{!indexPa}"/>
+							 				</apex:commandButton>
+							 				<apex:commandButton id="cbSalvar" 
+							 									value="Salvar"
+							 									action="{!salvar}" 
+							 									rendered="{!(pa.simular || pa.agendar) && pa.salvar}"  
+							 									reRender="opProduto, pmMensagem" 
+							 									status="blockUI">
+							 						<apex:param name="indiceProduto" assignTo="{!indiceProduto}" value="{!indexPa}"/>
+							 				</apex:commandButton>
+										</div>
+										<apex:pageBlockSection id="pbsDetalheProdutoTarifa" title="Tarifas" columns="1" collapsible="false">
+											<apex:pageBlockSectionItem id="pbsDetalheProdutoTarifa">
+												<apex:pageBlockTable id="pbtDetalheProdutoTarifa" value="{!pa.Tarifas}" var="tc">
+													<apex:column rendered="{!!pa.simular && !pa.contratoGerado}" >
+														<apex:outputLink value="/{!tc.Id}/e"><apex:outputText id="ofEditar" value="Editar"/></apex:outputLink>
+													</apex:column>
+													<apex:column headerValue="Nome de Tarifas Carrinho">
+														<apex:outputLink value="/{!tc.Id}"><apex:outputField id="ofName" value="{!tc.Name}"/></apex:outputLink>
+													</apex:column>
+													<apex:column value="{!tc.Valor_Tarifa_Padrao__c}" />
+													<apex:column value="{!tc.Valor_Unitario__c}" />
+													<apex:column value="{!tc.CreatedDate}" rendered="{!!pa.simular}"/>
+												</apex:pageBlockTable>
+											</apex:pageBlockSectionItem>
+										</apex:pageBlockSection>
+										<apex:outputPanel id="opPaginacao" rendered="{!!pa.simular}">
+											<!-- Paginacao -->
+								            <table style="width: 100%">
+								            	<tr>
+									                <td align="center">
+                 				                    	<!-- Previous page -->
+									                    <!-- active -->
+									                    <apex:commandLink id="clAnterior" action="{!pa.setCon.Previous }" value="« Anterior"
+									                         rendered="{!pa.setCon.HasPrevious }" reRender="opProduto" />
+									                    <!-- inactive (no earlier pages) -->
+									                    <apex:outputText id="otAnterior" style="color: #ccc;" value="« Anterior"
+									                         rendered="{! NOT(pa.setCon.HasPrevious) }"/>
+									                    
+									                    &nbsp;&nbsp;
+									                    
+									                    <apex:outputText id="clPagina" value=" {!pa.setCon.PageNumber} de {! CEILING(pa.setCon.ResultSize / pa.setCon.PageSize) }"/>
+									                    
+									                    &nbsp;&nbsp;  
+									                    
+									                    <!-- Next page -->
+									                    <!-- active -->
+									                    <apex:commandLink id="clProximo" action="{!pa.setCon.Next }" value="Próxima »"
+									                         rendered="{!pa.setCon.HasNext }" reRender="opProduto"/>
+									                    <!-- inactive (no more pages) -->
+									                    <apex:outputText id="otProximo" style="color: #ccc;" value="Próxima »"
+									                         rendered="{! NOT(pa.setCon.HasNext) }"/>
+									                </td>
+								                </tr> 
+								       		</table>
+							       		</apex:outputPanel>
+									</apex:pageBlock>
+								</apex:pageBlockSectionItem>
+							</apex:pageBlockSection>						
+						</apex:pageBlock>
+						<apex:variable var="indexPa" value="{!indexPa + 1}"/>
+					</apex:repeat>
+				</apex:pageBlock>
+			</apex:outputPanel>
+		</apex:pageBlock>
+	</apex:outputPanel>
+</apex:form> 
+</apex:page>

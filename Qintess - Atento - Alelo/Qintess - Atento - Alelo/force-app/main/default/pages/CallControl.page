@@ -1,0 +1,2447 @@
+<apex:page showHeader="false" controller="CtrlCallControl">
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'meiomask.js')}" />
+    <!--<apex:includeScript value="{!URLFOR($Resource.olosJS, 'olosws.min.js')}" />-->
+    <!--<apex:includeScript value="{!URLFOR($Resource.olosJS, 'olos_cti.min.js')}" />-->
+    <apex:includeScript value="{!URLFOR($Resource.OlosJSFull, 'olosws.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.OlosJSFull, 'olos_cti.js')}" />
+    <script src="/support/api/37.0/interaction.js" type="text/javascript"></script>
+    <apex:includeScript value="/support/console/31.0/integration.js" />
+
+    <script type="text/javascript">
+        var callbackPage = {
+            Id: null,
+            DataAgendamento: null,
+            Tipo: null
+        };
+        var idFarol;
+        var segundos;
+        var timerId;
+        var mapCampanha = JSON.parse('{!mapCampanhaStr}');
+        var mapTab = JSON.parse('{!mapTabStr}');
+        var dtAgendamento;
+        var fazerLigacaoManual = false;
+        var campaingIdLigacao;
+        var salvoTarefa = false;
+        var mapTempoStr = '{!mapTempoStr}';
+        var mapTempo = JSON.parse(mapTempoStr);
+        var statusReloginho = {
+            "Status": null,
+            "DataInicio": null,
+            "DataFim": null,
+            "MotivoPausa": null
+        };
+        var statusAntigo;
+        var segundoPause = 0;
+        var minutoPause = 0;
+        var horaPause = 0;
+        var IdTempoPause;
+        var enviouTabulacao = false;
+        var padTwo = "00"
+        var SOFTPHONE = {};
+        callLogSubject = 'Em ligação ';
+        var ocultaTabulacao = '{!ocultaTabulacao}';
+        var idPowerDialing;
+        var statusChamadaManual;
+        var teste = {};
+        var activeCalls = new Array();
+
+        function blockPage() {
+            var timeoutPasscode;
+            $.blockUI({
+                message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+                css: {
+                    border: 'none',
+                    padding: '15px',
+                    '-webkit-border-radius': '10px',
+                    '-moz-border-radius': '10px',
+                    opacity: .9
+                }
+            });
+        }
+
+        function unblockPage() {
+            $.unblockUI();
+        }
+
+        function showPasscode() {
+            $.blockUI({
+                message: '<p><label id="lblPasscode" style="color: red;">Código de Acesso</label></p><p><label id="lblPasscode" style="color: red;">' + passcode + ' </label></p><p id="segundos">10s</p>',
+                css: {
+                    border: 'none',
+                    padding: '15px',
+                    '-webkit-border-radius': '10px',
+                    '-moz-border-radius': '10px',
+                    opacity: .9
+                }
+            });
+            segundos = $("#segundos").text().replace(/(\d+).+/, '$1');
+            console.log('Segundos ' + segundos);
+            var milisegundos = segundos * 1000;
+            timeoutPasscode = setTimeout(function() {
+                hidePasscode();
+            }, 10000);
+            contagem_tempo();
+        }
+
+        var efetuarTransferencia = function() {
+            Olos.agentCommand.transferCallRequest();
+        }
+
+        var isTransfer;
+
+        var efetuarConferencia = function() {
+            // Metodo de conferência
+            Olos.agentCommand.conferenceRequest();
+        }
+
+        function contagem_tempo() {
+            $("#segundos").text(segundos + 's');
+            console.log('Segundos ' + segundos);
+            if (segundos <= 0) {
+                hidePasscode();
+                clearTimeout(timerId);
+            } else {
+                segundos--;
+                timerId = setTimeout(function() {
+                    contagem_tempo();
+                }, 1000);
+            }
+
+        }
+
+        function hidePasscode() {
+            $.unblockUI();
+            if (timeoutPasscode != null) {
+                clearTimeout(timeoutPasscode);
+                timeoutPasscode = null;
+            }
+        }
+
+        function dateString2Date(dateString) {
+            var dt = dateString.split(/\/|\s/);
+            return new Date(dt.slice(0, 3).reverse().join('/') + ' ' + dt[3]);
+        }
+
+        function putMessage(message) {
+            message = message;
+            $("#pMessage #lblMessage").text(message);
+            console.warn(new Date() + ' - ' + message);
+            $("#pMessage").css("display", "table");
+            setTimeout(hideMessage, 3000);
+        }
+
+        var hideMessage = function() {
+            $("#pMessage").hide();
+        }
+
+        function showDoConference() {
+            // document.querySelector('#buttonDoConference').style.display = '';
+            // document.querySelector('#buttonConference').style.display = 'none';
+        }
+
+        function hideDoConference() {
+            // document.querySelector('#buttonDoConference').style.display = 'none';
+            // document.querySelector('#buttonConference').style.display = '';
+        }
+
+
+    </script>
+
+    <style>
+        html,
+        body {
+            height: 100%;
+            text-align: center;
+            font-size: 13px;
+        }
+        /* Inbound and Outbound icon sprite */
+
+        .callDiv {
+            width: 20px;
+            height: 20px;
+            display: inline-table;
+            background-image: url({!$Resource.cti_sprite});
+        }
+        .inboundCall {
+            background-position: -0px -20px;
+        }
+        .outboundCall {
+            background-position: -0px -40px;
+        }
+        .bPageBlock {
+            border-top: 4px solid #F8F8F8;
+        }
+        .yui3-skin-night table.yui3-datatable-table {
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        .yui3-skin-night .yui3-datatable-cell {
+            color: #4A4A56 !important;
+            border: 0 !important;
+        }
+        .yui3-skin-night .yui3-tabview-list,
+        .yui3-skin-night .yui3-widget-hd,
+        .yui3-skin-night .yui3-widget-ft {
+            z-index: 1;
+            border: 1px solid #d5dadc !important;
+            border-bottom-color: #8A8C8D !important;
+            padding: 2px 2px !important;
+            background: #ffffff !important;
+            background: -moz-linear-gradient(top, #ffffff 0%, #ededed 100%) !important;
+            background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ffffff), color-stop(100%, #ededed)) !important;
+            background: -webkit-linear-gradient(top, #ffffff 0%, #ededed 100%) !important;
+            background: -o-linear-gradient(top, #ffffff 0%, #ededed 100%) !important;
+            background: -ms-linear-gradient(top, #ffffff 0%, #ededed 100%) !important;
+            background: linear-gradient(top, #ffffff 0%, #ededed 100%) !important;
+            font-size: 1em !important;
+            background-color: #4A4A56 !important;
+        }
+        .yui3-skin-night .yui3-widget-hd {
+            color: #4A4A56 !important;
+        }
+        .yui3-skin-night .yui3-tabview-panel {
+            background-color: #E0E8E8 !important;
+        }
+        .yui3-skin-night .yui3-button {
+            background-color: #E0E8E8 !important;
+            color: #4A4A56 !important;
+        }
+        .yui3-skin-night .yui3-tabview-list li a {
+            background: -webkit-gradient(linear, left bottom, left top, from(#E0E8E8), to(#F1FAFE)) !important;
+            background: -moz-linear-gradient(top, #E0E8E8 0%, #F1FAFE 100%) !important;
+            color: #4A4A56 !important;
+            border: 0 !important;
+            border-right: solid 1px #E0E8E8 !important;
+            text-shadow: none !important;
+        }
+        .yui3-skin-night .yui3-datatable-table {
+            z-index: 1;
+            border: 1px solid #d5dadc !important;
+            border-bottom-color: #8A8C8D !important;
+            padding: 2px 2px !important;
+            background: #ffffff !important;
+            background: -moz-linear-gradient(top, #ffffff 0%, #ededed 100%) !important;
+            background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ffffff), color-stop(100%, #ededed)) !important;
+            background: -webkit-linear-gradient(top, #ffffff 0%, #ededed 100%) !important;
+            background: -o-linear-gradient(top, #ffffff 0%, #ededed 100%) !important;
+            background: -ms-linear-gradient(top, #ffffff 0%, #ededed 100%) !important;
+            background: linear-gradient(top, #ffffff 0%, #ededed 100%) !important;
+            font-size: 1em !important;
+            background-color: #4A4A56 !important;
+        }
+        .yui3-skin-night .yui3-datatable-header {
+            display: none;
+        }
+        .yui3-skin-night .yui3-datatable-message-content {
+            background-color: inherit !important;
+            color: #4A4A56;
+            border-bottom: 0 !important;
+        }
+        .yui3-skin-night .yui3-datatable-odd .yui3-datatable-cell {
+            background-color: Transparent !important;
+        }
+        .yui3-skin-night .yui3-datatable-even .yui3-datatable-cell {
+            background-color: Transparent !important;
+        }
+        .yui3-skin-night .yui3-widget-stdmod {
+            background-color: #E0E8E8 !important;
+            color: #4A4A56;
+        }
+        #myProgress {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            background-color: #ddd;
+        }
+        #myBar {
+            position: absolute;
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            display: block;
+        }
+        .message {
+            position: fixed;
+            top: 0px;
+            z-index: 100;
+            width: 100%;
+            background-color: rgb(255, 255, 255);
+            display: table;
+            margin: 0;
+            border-bottom: 1px solid rgb(204, 0, 0);
+            border-radius: 4px;
+        }
+    </style>
+
+    <div id="softphonePanel" style="height:100%;background-color:#E0E8E8;">
+        <apex:form >
+            <apex:actionStatus onstart="blockPage()" onstop="unblockPage()" id="blockUI" />
+            <apex:actionFunction name="doNothing" action="{!doNothing}" rerender="opEndCall" status="blockUI" />
+            <apex:actionFunction name="selecionaTabulacao" action="{!selecionaTabulacao}" rerender="opEndCall" status="blockUI" />
+            <apex:actionFunction name="salvarTabulacao" action="{!salvarTabulacao}" rerender="opPrincipal" status="blockUI">
+                <apex:param value="" id="phoneNumber" name="phoneNumber" />
+                <apex:param value="" id="dtAgendamento1" name="dtAgendamento" />
+            </apex:actionFunction>
+            <apex:actionFunction name="carregarLead" action="{!carregarLead}" oncomplete="getFocusedSubtabObjectId();" rerender="opEndCall,opPrincipal" status="blockUI">
+                <apex:param value="" id="idObjeto" name="idObjeto" />
+            </apex:actionFunction>
+            <apex:actionFunction name="encerrarChamada" action="{!encerrarChamada}" rerender="opEndCall,opPrincipal">
+                <apex:param value="" id="telefone" name="telefone" />
+                <apex:param value="" id="dtAgendamento2" name="dtAgendamento" />
+            </apex:actionFunction>
+            <div id="panelLogin">
+                <div class="yui3-widget-bd">
+                    <fieldset>
+                        <p>
+                            <label for="inputUsername">Usuário</label>
+                            <br />
+                            <apex:inputText value="{!login}" title="Username" id="inputUsername" />
+                            <!-- <input type="text" name="Username" id="inputUsername" placeholder="" /> -->
+                        </p>
+                        <p>
+                            <label for="inputPassword">Senha</label>
+                            <br />
+                            <apex:inputSecret value="{!password}" title="Password" id="inputPassword" />
+                            <!-- <input type="password" name="Password" id="inputPassword" value="" placeholder="" /> -->
+                        </p>
+                        <p>
+                            <label id="lblPasscode" style="color: red;display: none;">Código de Acesso: </label>
+                        </p>
+                    </fieldset>
+                </div>
+            </div>
+            <div class="yui3-tabview-panel" style="text-align: center">
+                <select id="selectDisposition" onchange="mudarStatus();">
+                    <!-- <option value="readyForCalls">Ready for calls</option>
+                    <option value="onCall">On call</option>
+                    <option value="wrapUp">Wrap up</option>
+                    <option value="lunch">Lunch</option>
+                    -->
+                    <!-- ***Alterado dia 23/08/2018 pois os códigos estavam errados***.
+                    <option value="008">Offline</option>
+                    <option value="007">Online</option>
+                    <option value="009">Lanche</option>
+                    <option value="010">Ambulatorio</option>
+                    <option value="011">Pos Atendimento</option>
+                    <option value="012">Ativo Indisponivel</option>
+                    <option value="013">Backoffice</option>
+                    <option value="014">Defeito</option>
+                    <option value="015">Descanso</option>
+                    <option value="016">Feedback</option>
+                    <option value="017">Particular</option>
+                    <option value="018">Reunião</option>
+                    <option value="019">Treinamento</option>                    
+                    -->
+                    <option value="007">Online</option>
+                    <option value="008">Offline</option>
+                    <option value="009">Lanche</option>                    
+                    <option value="011">Pos Atendimento</option>                    
+                    <option value="013">Backoffice</option>                    
+                    <option value="016">Feedback</option>
+                    <option value="10">Reunião</option>
+                    <option value="11">Descanso</option>
+                    <option value="13">Particular</option>
+                    <option value="14">Treinamento</option>                    
+                    <option value="15">Ambulatorio</option>
+                    <option value="-1">Manual</option>                    
+                </select>
+                <button id="buttonLogout">Logout</button>
+                <p>
+                    <label id="lblStatus" style="margin-right: 20px;margin-top: 5px;color: rgb(38, 167, 38);">Status Atual: </label>
+                </p>
+                <p id="pMessage" class="message" sytle="display:none;">
+                    <label id="lblMessage" style="margin-right: 20px;margin-top: 5px;color: #c00;"></label>
+                </p>
+                <p>
+                <div id="txtProgress" style="color: black;font-weight: bold;">
+                </div>
+                </p>
+                <p>
+                <div id="myProgress">
+                    <div id="myBar"></div>
+                </div>
+                </p>
+                <p>
+                <div id="tempoPausa" style="display:none;color: black;font-weight: bold;">
+                    TempoPausa: 00:00:00
+                </div>
+                </p>
+            </div>
+            <div id="callControl">
+                <ul>
+                    <li><a href="#linkMenu">Menu</a>
+                    </li>
+                    <li><a href="#linkPhone">Phone</a>
+                    </li>
+                </ul>
+                <div>
+                    <div id="linkMenu" style="text-align: center;">
+
+
+                    </div>
+                    <div id="linkPhone" style="text-align: center;">
+                        <div style="vertical-align:super">
+                            <div id="divCallData" style="height:100%;display:inline-table;" />
+                            <div style="display:inline-table; padding-left: 10px;">
+                                <div id="divDuration">
+                                    <br/>
+                                    <span id="spanMinutes" /> : <span id="spanSeconds" />
+                                </div>
+                                <div id="divCampaignName" style="display:none;">
+                                    <label id="lblCampaignName" style="font-weight: bold;">Campanha: </label>
+                                    <label id="txtCampaignName"></label>
+                                </div>
+                                <div class="endCall">
+                                    <br/>
+                                    <div id="divEndCall">
+                                        <apex:outputPanel id="opEndCall">
+                                            <div style="display: {!IF(tabSelecionada.Agendamento__c, '', 'none')};">
+                                                <p>
+                                                    <label style="font-weight:bold;" for="dtAgendamento">Data de Agendamento:</label>
+                                                </p>
+                                                <p>
+                                                    <label style="font-weight:bold;" for="dtAgendamento">(dd/MM/yyyy hh:mm)</label>
+                                                </p>
+                                                <p>
+                                                    <apex:inputField id="dtAgendamentoHidden" value="{!LeadObj.Agendamento_Retorno__c}" />
+                                                    <apex:inputText styleClass="cssbody" size="16" id="dtAgendamento" value="{!dtAgendamento}" onfocus="DatePicker.pickDate(true, this, true);" />
+                                                    <script type="text/javascript">
+                                                        $(document).ready(function() {
+                                                            $("#pMessage").hide();
+                                                            $(".dateFormat").remove();
+                                                            $("input[id$=dtAgendamento]").change(function() {
+                                                                dtAgendamento = $(this).val();
+                                                            })
+                                                            $("input[id$=dtAgendamentoHidden]").hide();
+                                                        })
+                                                    </script>
+                                                </p>
+                                            </div>
+                                            <p>
+                                                <apex:selectList style="width:95%;" id="selectTab" onchange="selecionaTabulacao();" value="{!tabSelecionadaStr}" size="1" multiselect="false">
+                                                    <apex:selectOptions value="{!listaTab}" />
+                                                </apex:selectList>
+                                            </p>
+                                            <!--                                             <p> -->
+                                            <!--                                                 <apex:selectList style="width:95%;" id="selectStatus" onchange="doNothing();" value="{!StatusLigacao}" size="1" multiselect="false"> -->
+                                            <!--                                                     <apex:selectOptions value="{!listaStatus}" /> -->
+                                            <!--                                                 </apex:selectList> -->
+                                            <!--                                             </p> -->
+                                            <!--                                             <p> -->
+                                            <!--                                                 <apex:selectList style="width:95%;" id="selectTabulacao" onchange="doNothing();" size="1" rendered="{!StatusLigacao != null && StatusLigacao != '-'}" value="{!Tabulacao}" multiselect="false"> -->
+                                            <!--                                                     <apex:selectOptions value="{!listaTabulacao}" /> -->
+                                            <!--                                                 </apex:selectList> -->
+                                            <!--                                             </p> -->
+                                            <!--                                             <p> -->
+                                            <!--                                                 <apex:selectList style="width:95%;" id="selectMotivo" onchange="doNothing();" size="1" rendered="{!AND(Tabulacao != null, OR(Tabulacao == '001' || Tabulacao == '003' || Tabulacao == '005'))}" value="{!Motivo}" multiselect="false"> -->
+                                            <!--                                                     <apex:selectOptions value="{!listaMotivo}" /> -->
+                                            <!--                                                 </apex:selectList> -->
+                                            <!--                                             </p> -->
+                                        </apex:outputPanel>
+                                    </div>
+                                    <p>
+                                        <button style="width:80%;" id="buttonSave">Salvar Tabulação</button>
+                                    </p>
+                                    <p>
+                                        <button style="width:80%;" id="buttonEndCall">Encerrar Chamada</button>
+                                    </p>
+                                    <p>
+                                        <button style="width:80%;" id="buttonConference">Conferência</button>
+                                        <button style="width:80%;" id="buttonDoConference">Efetuar Conferência</button>
+                                    </p>
+                                    <p style="{!IF(ocultaTabulacao, '', 'display:none;')}">
+                                        <button style="width:80%;" id="buttonTransferCAE">Transferência p/ CAE</button>
+                                    </p>
+                                    <p>
+                                        <button style="width:80%;" id="buttonTransferCamp">Transferir p/ {!nomeCampanha}</button>
+                                    </p>
+                                    <p>
+                                        <button style="width:80%;" id="buttonTransfer">Transferir p/ Agente</button>
+                                    </p>
+                                    <p>
+                                        <button style="width:80%;" id="buttonExternalTransfer">Transferir Externo</button>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </apex:form>
+    </div>
+
+    <audio id="phone_ring_mp3" src="{!$Resource.phone_ring_mp3}"></audio>
+    <audio id="phone_dialing_mp3" src="{!$Resource.phone_dialing_mp3}"></audio>
+
+    <!-- <script src="/support/api/25.0/interaction.js"></script> -->
+    <!-- <script src="/support/console/25.0/integration.js"></script> -->
+    <!-- <script src="https://yuicombo.appspot.com/combo?3.5.0/build/yui/yui-min.js"></script> -->
+    <script src="{!URLFOR($Resource.yuiBuildMin,'build/yui/yui-min.js')}"></script>
+
+    <apex:outputPanel id="opPrincipal">
+        <script type="text/javascript">
+            var salvo = '{!salvo}';
+
+            function getFocusedSubtabObjectId() {
+
+                sforce.console.getFocusedSubtabObjectId(abrirLeadOportunidade);
+            }
+
+            abrirLeadOportunidade = function(result) {
+                if (localStorage.getItem(TIPO_LIGACAO) != 'RECEPTIVO') {
+                    ocultaTabulacao = "{!ocultaTabulacao}";
+                } else {
+                    if ('{!IdObj}' != '') {
+                        ocultaTabulacao = "true";
+                    } else {
+                        ocultaTabulacao = "false";
+                    }
+                }
+                console.log('result: ' + JSON.stringify(result));
+                console.log('IdOportunidade: ' + '{!IdOportunidade}');
+                console.log('IdOportunidade index: ' + '{!IdOportunidade}'.indexOf(result.id));
+
+                ///////////////////////////////////////////////////// CHAMADA MANUAL
+                var tipoLigacaoVerifica = localStorage.getItem(TIPO_LIGACAO);
+                console.log('tipoLigacaoVerifica: ' + tipoLigacaoVerifica);
+                console.log('fazerLigacaoManual: ' + fazerLigacaoManual);
+                if (tipoLigacaoVerifica == 'MANUAL' && fazerLigacaoManual) {
+                    fazerLigacaoManual = false;
+                    debugger;
+                    if (localStorage.getItem(ON_CALL) != 'true') {
+                        console.log('campanhaReceptivo: {!campanhaReceptivo}');
+                        console.log('AleloAtivoManual: {!AleloAtivoManual}');
+                        debugger;
+                        var numeroDiscado = localStorage.getItem(CALL_NUMBER);
+                        debugger;
+                        if ('{!campanhaReceptivo}' == 'true' && '{!AleloAtivoManual}' != '') {
+                            debugger;
+                            Olos.agentCommand.sendManualCallRequest('', numeroDiscado.replace(/ |\t/g, ''), '{!AleloAtivoManual}');
+                        } else if ('{!AleloAtivoManual}' != '') {
+                            debugger;
+                            Olos.agentCommand.sendManualCallRequest('', numeroDiscado.replace(/ |\t/g, ''), '{!AleloAtivoManual}');
+                        } else {
+                            debugger;
+                            putMessage("Não foi possível encontrar a campanha configurada. Por favor contatar o administrador do sistema.");
+                        }
+                    }
+
+                }
+                ////////////////////////////////////////////////////////////////
+                if ('{!LeadObj.Id}' != '') {
+                    if ('{!LeadObj.isConverted}' == 'true') {
+                        if ('{!LeadObj.ConvertedOpportunityId}' != '' && '{!LeadObj.ConvertedOpportunityId}'.indexOf(result.id) < 0) {
+                            sforce.console.openPrimaryTab(null, '/{!LeadObj.ConvertedOpportunityId}', true, 'Opportunity');
+                        }
+                    } else {
+                        sforce.console.openPrimaryTab(null, '/{!LeadObj.Id}', true, 'Lead');
+                    }
+                    return;
+                } else if ('{!IdOportunidade}' != '' && '{!IdOportunidade}'.indexOf(result.id) < 0) {
+                    sforce.console.openPrimaryTab(null, '/{!IdOportunidade}', true, 'Opportunity');
+                } else if ('{!IdObj}' != '' && '{!IdObj}'.indexOf(result.id) < 0) {
+                    sforce.console.openPrimaryTab(null, '/{!IdObj}', true, 'Object');
+                }
+
+
+                if (ocultaTabulacao == "true") {
+                    $("[id$=divEndCall], [id$=buttonSave]").css("visibility", "hidden");
+                } else {
+                    $("[id$=divEndCall], [id$=buttonSave]").css("visibility", "visible");
+                }
+
+            }
+
+            getIdObjeto = function() {
+                if ('{!IdOportunidade}' != '') {
+                    return '{!IdOportunidade}';
+                } else if ('{!LeadObj.Id}' != '') {
+                    return '{!LeadObj.Id}';
+                } else {
+                    return '';
+                }
+
+            }
+
+            $(document).ready(function() {
+                if (salvo == 'true') {
+                    putMessage('Salvo com sucesso.');
+                    sforce.console.getFocusedPrimaryTabId(function(result) {
+                        sforce.console.refreshPrimaryTabById(result.id, true);
+                    })
+                }
+                if ('{!alertaErro}' != '') {
+                    putMessage('{!alertaErro}');
+                }
+            })
+        </script>
+    </apex:outputPanel>
+
+    <script type="text/javascript">
+        var callbackCTIMessage = function(result) {
+            console.log('callbackCTIMessage: ' + result);
+            console.log('callbackCTIMessage: ' + result.message);
+            callbackPage = JSON.parse(result.message);
+            if (callbackPage.Tipo == 'Consulta') {
+                carregarLead(callbackPage.Id);
+                // Olos.agentCommand.updateCallData('<IdSalesforce>' + callbackPage.Id + '</IdSalesforce><tipoLigacao>RECEPTIVO</tipoLigacao>');
+                // Olos.agentCommand.updateCallData('{\"IdSalesforce\":\"' + callbackPage.Id + '\",\"tipoLigacao\":\"RECEPTIVO\"}');
+                Olos.agentCommand.updateCallData('IdSalesforce=' + callbackPage.Id + ';tipoLigacao=RECEPTIVO;');
+            }
+        };
+
+        sforce.console.cti.onSendCTIMessage(callbackCTIMessage);
+
+
+        var agentId;
+        var passcode;
+        var listAgentStatus;
+        var callObj = {
+            "callId": null
+        };
+        var screenPopObj = {
+            "campaignData": null
+        };
+        var dispositionList;
+
+        // Body skin. Also available yui3-skin-sam
+        document.body.className = 'yui3-skin-night';
+        document.body.style.margin = 0;
+
+        // STATE VALUES
+        var LOGGED_IN = 'loggedIn';
+        var CALL_DETAILS = 'callDetails';
+        debugger;
+        var ON_CALL = 'onCall';
+        var CALL_START_TIME = 'callStartTime';
+        var END_CALL = 'endCall';
+        var CALL_LOG = 'callLog';
+        var CALLED_TYPE = 'calledType';
+        var CALL_NUMBER = 'calledNumber';
+        var ID_OBJETO = 'objectId';
+        var CONSULTING = 'consulting';
+        var TIPO_LIGACAO = 'tipoLigacao';
+        if(!sforce.console.isInConsole()) {
+            document.getElementsByTagName("body")[0].innerHTML = "";
+        }
+        else {
+            localStorage.removeItem(ON_CALL);
+        }
+
+
+        // State variables
+        var phoneTabIndex = 1;
+        var loginPanelWidth = '180px';
+        var callStartTime = null;
+        var calledType = null;
+        var callNumber = null;
+        var blManual = false;
+
+        // Console Flag
+        var isInConsole = false;
+        var campaign;
+
+        sforce.interaction.isInConsole(function(response) {
+            if (!response.result) {
+                if (disableSoftphoneInStandardApp) {
+                    document.body.innerHTML = 'This tool is not available outside the Service Cloud Console.';
+                } else {
+                    var sheet = document.createElement('style')
+                    sheet.innerHTML = '.yui3-skin-night .yui3-tabview-list li a {padding: 6px 10px 6px 10px !important;} .yui3-skin-night .yui3-tabview-list {height: 35px !important;} .yui3-skin-night .yui3-widget-bd input {width: 125px !important;}';
+                    document.body.appendChild(sheet);
+                    sforce.interaction.cti.setSoftphoneHeight(475);
+                }
+            } else {
+                loginPanelWidth = '250px';
+                isInConsole = true;
+            }
+        });
+
+        YUI.namespace('VisualforceCallControl');
+
+
+        var demoSoftphone = function(Y) {
+            var agentDisposition = Y.one('#selectDisposition');
+            var tabview = new Y.TabView({
+                srcNode: '#callControl'
+            });
+            tabview.render();
+
+            function disableTab(index, disabled) {
+                    if (disabled) {
+                        tabview._items[index].disable();
+                    } else {
+                        tabview._items[index].enable();
+                    }
+                }
+                // Disable the phone tab unless there is a call
+            disableTab(phoneTabIndex, true);
+
+            // Call duration values
+            var minutes = Y.one('#spanMinutes');
+            var seconds = Y.one('#spanSeconds');
+            var timer = null;
+
+            $("#linkPhone").hide();
+
+            var callDisposition = document.getElementsByName("callDisposition");
+            var loginPanel = new Y.Panel({
+                srcNode: '#panelLogin', // Login panel for agent credentials. Will show whenever the agent "logs off"
+
+                headerContent: 'Atento',
+                close: false,
+
+                width: loginPanelWidth,
+                zIndex: 5,
+                centered: true,
+                modal: true,
+                visible: false,
+                render: true,
+                hideOn: [],
+                buttons: [{
+                    value: 'Login',
+                    section: Y.WidgetStdMod.FOOTER,
+                    action: function(e) {
+                        efetuarLogin();
+                    }
+                }]
+            });
+
+
+            // Audio for call control ring and dial
+            var phoneRingAudio = document.getElementById('phone_ring_mp3');
+            var phoneDialingAudio = document.getElementById('phone_dialing_mp3');
+
+            function renderButton(buttonId, onClickCallback) {
+                var button = new Y.Button({
+                    id: buttonId,
+                    srcNode: '#' + buttonId,
+                    on: {
+                        'click': onClickCallback
+                    }
+                });
+                button.render();
+                return button;
+            }
+
+            // Softphone Logout button
+            var buttonLogout = renderButton('buttonLogout', function(e) {
+                Olos.agentCommand.agentLogout();
+                resetaFarol();
+            });
+
+            function processEndCall() {
+                $("#txtCampaignName").text("");
+                $("#divCampaignName").css("display", "none");
+
+                if (timer) {
+                    timer.cancel();
+                }
+                tabview.selectChild(0);
+                // agentDisposition.getDOMNode().value = '007';
+                agentDisposition.getDOMNode().disabled = false;
+                buttonLogout.enable();
+                buttonSave.disable();
+                buttonEndCall.disable();
+                buttonTransfer.disable();
+                buttonTransferCamp.disable();
+                buttonExternalTransfer.disable();
+                buttonConference.disable();
+                disableTab(phoneTabIndex, true);
+                $("#linkPhone").hide();
+            }
+
+            function responseAnalysis(response) {
+                putMessage(response.result);
+            }
+
+            function saveLog(response) {
+                if (!salvoTarefa) {
+                    salvoTarefa = true;
+                    var timeStamp = new Date().toString();
+                    timeStamp = timeStamp.substring(0, timeStamp.lastIndexOf(':') + 3);
+                    var currentDate = new Date();
+                    var currentDay = currentDate.getDate();
+                    var currentMonth = currentDate.getMonth() + 1;
+                    var currentYear = currentDate.getFullYear();
+                    var selectTab = $("[id$=selectTab]").val();
+
+                    var dueDate = currentYear + '-' + currentMonth + '-' + currentDay;
+                    var saveParams = 'Subject=' + callLogSubject + timeStamp;
+                    saveParams += '&Status=completed';
+                    saveParams += '&Activitydate=' + dueDate;
+                    saveParams += '&CallObject=' + currentDate.getTime();
+                    saveParams += '&Phone=' + callNumber;
+                    saveParams += '&CallType=' + localStorage.getItem(TIPO_LIGACAO);
+                    if (campaingIdLigacao != null && campaingIdLigacao != undefined) {
+                        saveParams += '&Campanha__c=' + mapCampanha[campaingIdLigacao];
+                    } else if (campaign.campaignId != null && mapCampanha[campaign.campaignId] != undefined) {
+                        saveParams += '&Campanha__c=' + mapCampanha[campaign.campaignId];
+                    }
+                    if (selectTab != null && mapTab[selectTab] != undefined) {
+                        saveParams += '&Status_Lead__c=' + mapTab[selectTab].Status_do_Lead__c;
+                        saveParams += '&Tabulacao_Lead__c=' + mapTab[selectTab].Tabulacao_1__c;
+                        saveParams += '&Status_Telefone__c=' + mapTab[selectTab].Status_1__c;
+                        saveParams += '&Tabulacao_Telefone__c=' + mapTab[selectTab].Motivo_Detalhado__c;
+                    }
+
+                    // saveParams += '&Description=' + callLogText.value;
+                    var callDisposition = getSelectedCallDisposition();
+                    if (callDisposition) {
+                        saveParams += '&CallDisposition=' + callDisposition.value;
+                    }
+                    saveParams += '&CallDurationInSeconds=' + Math.floor((currentDate.getTime() - callStartTime) / 1000);
+
+                    var result = JSON.parse(response.result);
+                    if (result.objectId.substr(0, 3) == '003' || result.objectId.substr(0, 3) == '00Q') {
+                        saveParams += '&whoId=' + result.objectId;
+                    } else {
+                        saveParams += '&whatId=' + result.objectId;
+                    }
+                    sforce.interaction.saveLog('Task', saveParams);
+
+                    $("[id$=selectTab]").val('');
+                }
+            }
+
+            // End call button
+            var buttonEndCall = renderButton('buttonEndCall', function(e) {
+                if(activeCalls.length > 1) {
+                    var callIdToHangup = activeCalls.pop();
+                    Olos.agentCommand.hangupRequest(callIdToHangup);
+                    var linhasAtivas = activeCalls.length;
+                    putMessage('Ultima ligação encerrada, restam ' + linhasAtivas + ' linhas ativas');
+                    return;
+                }
+                if (ocultaTabulacao == 'true') {
+                    if (callbackPage != null && callbackPage.Tipo == 'Tabulacao' && callbackPage.Id != null && callbackPage.Id != undefined) {
+                        if (callbackPage.DataAgendamento != "" && callbackPage.DataAgendamento != null && callbackPage.DataAgendamento != undefined) {
+                            if (localStorage.getItem(TIPO_LIGACAO) == 'MANUAL') {
+                                debugger;
+                                if (localStorage.getItem(ON_CALL) == 'true') {
+                                    Olos.agentCommand.hangupRequest();
+                                    activeCalls.pop();
+                                }
+                            } else {
+                                if (!enviouTabulacao) {
+                                    var fidelizado = callbackPage.Id == '033';
+                                    var dt = dateString2Date(callbackPage.DataAgendamento);
+                                    var mesNum = dt.getMonth() + 1;
+                                    var mesNumStr = padTwo.substring(0, padTwo.length - mesNum.toString().length) + mesNum.toString();
+                                    var hourString = padTwo.substring(0, padTwo.length - dt.getHours().toString().length) + dt.getHours().toString();
+                                    var minuteString = padTwo.substring(0, padTwo.length - dt.getMinutes().toString().length) + dt.getMinutes().toString();
+                                    var dateString = padTwo.substring(0, padTwo.length - dt.getDate().toString().length) + dt.getDate().toString();
+                                    Olos.agentCommand.dispositionCallBackByCode(callbackPage.Id,
+                                        dt.getFullYear().toString(),
+                                        mesNumStr,
+                                        dateString,
+                                        hourString,
+                                        minuteString,
+                                        localStorage.getItem(CALL_NUMBER),
+                                        fidelizado);
+                                    activeCalls.pop();
+                                }
+                                enviouTabulacao = true;
+                            }
+                        } else {
+                            if (localStorage.getItem(TIPO_LIGACAO) == 'MANUAL') {
+                                debugger;
+                                if (localStorage.getItem(ON_CALL) == 'true') {
+                                    Olos.agentCommand.hangupRequest();
+                                    activeCalls.pop();
+                                    // hideDoConference();
+                                }
+                            } else {
+                                if (!enviouTabulacao) {
+                                    Olos.agentCommand.dispositionCallByCode(callbackPage.Id);
+                                    activeCalls.pop();
+                                    // hideDoConference();
+                                }
+                                enviouTabulacao = true;
+                                sforce.console.getFocusedPrimaryTabId(function(result) {
+                                    sforce.console.closeTab(result.id);
+                                })
+                            }
+                        }
+                    } else {
+                        putMessage('Favor efetuar a tabulação na tela.');
+                        return;
+                    }
+                } else {
+                    var selectTab = $("[id$=selectTab]").val();
+                    var selectTabObj = mapTab[selectTab];
+                    console.log('selectTab: ' + selectTab);
+                    if (selectTab == null || selectTab == undefined || selectTab == '') {
+                        putMessage('Você precisa tabular a ligação antes de encerrar a chamada!');
+                        return;
+                    } else {
+                        if (selectTabObj.Agendamento__c) {
+                            try {
+                                if (dtAgendamento.match(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/).length == 1) {
+                                    if (localStorage.getItem(TIPO_LIGACAO) == 'MANUAL') {
+                                        debugger;
+                                        if (localStorage.getItem(ON_CALL) == 'true') {
+                                            Olos.agentCommand.hangupRequest();
+                                            activeCalls.pop();
+                                            // hideDoConference();
+                                        }
+                                    } else {
+                                        if (!enviouTabulacao) {
+                                            var fidelizado = selectTab == '033';
+                                            var dt = dateString2Date(dtAgendamento);
+                                            var mesNum = dt.getMonth() + 1;
+                                            var mesNumStr = padTwo.substring(0, padTwo.length - mesNum.toString().length) + mesNum.toString();
+                                            var hourString = padTwo.substring(0, padTwo.length - dt.getHours().toString().length) + dt.getHours().toString();
+                                            var minuteString = padTwo.substring(0, padTwo.length - dt.getMinutes().toString().length) + dt.getMinutes().toString();
+                                            var dateString = padTwo.substring(0, padTwo.length - dt.getDate().toString().length) + dt.getDate().toString();
+                                            Olos.agentCommand.dispositionCallBackByCode(selectTab,
+                                                dt.getFullYear().toString(),
+                                                mesNumStr,
+                                                dateString,
+                                                hourString,
+                                                minuteString,
+                                                localStorage.getItem(CALL_NUMBER),
+                                                fidelizado);
+                                            activeCalls.pop();
+                                            dtAgentdamento = '';
+                                            // hideDoConference();
+                                        }
+                                        enviouTabulacao = true;
+                                    }
+                                } else {
+                                    putMessage("Preencha uma data/hora valida no formato especificado.");
+                                    return;
+                                }
+                            } catch (err) {
+                                console.log('err: ' + err);
+                                putMessage("Preencha uma data/hora valida no formato especificado.");
+                                return;
+                            }
+                        } else {
+                            if (localStorage.getItem(TIPO_LIGACAO) == 'MANUAL') {
+                                debugger;
+                                if (localStorage.getItem(ON_CALL) == 'true') {
+                                    Olos.agentCommand.hangupRequest();
+                                    activeCalls.pop();
+                                    // hideDoConference();
+                                }
+                            } else {
+                                if (!enviouTabulacao) {
+                                    Olos.agentCommand.dispositionCallByCode(selectTab);
+                                    activeCalls.pop();
+                                    // hideDoConference();
+                                }
+                                enviouTabulacao = true;
+                            }
+                        }
+
+                    }
+                }
+                processEndCall();
+                encerrarChamada(localStorage.getItem(CALL_NUMBER), dtAgendamento);
+                localStorage.setItem(END_CALL, (new Date().getTime()));
+                debugger;
+                localStorage.removeItem(ON_CALL);
+                localStorage.removeItem(CALL_START_TIME);
+                localStorage.removeItem(CALLED_TYPE);
+                localStorage.removeItem(CALL_NUMBER);
+                sforce.interaction.getPageInfo(saveLog);
+            });
+
+            // Save button
+            var buttonSave = renderButton('buttonSave', function(e) {
+                var selectTab = $("[id$=selectTab]").val();
+                var selectTabObj = mapTab[selectTab];
+                if (selectTabObj.Agendamento__c) {
+                    try {
+                        if (dtAgendamento.match(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/).length == 1) {
+                            salvarTabulacao(localStorage.getItem(CALL_NUMBER), dtAgendamento);
+
+                        } else {
+                            putMessage("Preencha uma data/hora valida no formato especificado.");
+                            return;
+                        }
+                    } catch (err) {
+                        console.log('err: ' + err);
+                        putMessage("Preencha uma data/hora valida no formato especificado.");
+                        return;
+                    }
+                } else {
+                    salvarTabulacao(localStorage.getItem(CALL_NUMBER), dtAgendamento);
+                }
+            });
+
+            var buttonTransfer = renderButton('buttonTransfer', function(e) {
+                var pedeDestino = true;
+                var destino;
+                if (ocultaTabulacao == 'true') {
+                    if (callbackPage == null ||
+                        callbackPage == undefined ||
+                        callbackPage.Tipo != 'Tabulacao' ||
+                        callbackPage.Id == null ||
+                        callbackPage.Id == undefined) {
+                        putMessage('Favor efetuar a tabulação de todos os produtos na tela.');
+                        return;
+                    }
+                } else {
+                    if (localStorage.getItem(TIPO_LIGACAO) != "MANUAL") {
+                        var selectTab = $("[id$=selectTab]").val();
+                        var selectTabObj = mapTab[selectTab];
+
+                        if (selectTab == null || selectTab == undefined || selectTab == "") {
+                            putMessage('Você precisa tabular a ligação antes de transferir a chamada!');
+                            return;
+                        }
+
+                    }
+                }
+                do {
+                    destino = window.prompt("Por favor, digite o Login do agente para o qual deseja transferir.", "");
+                    if (destino !== '') {
+                        pedeDestino = false;
+                    }
+                } while (pedeDestino);
+                if (destino != null) {
+                    Olos.agentCommand.consultingAgentRequest(0, destino, null);
+                }
+
+            });
+
+            var buttonExternalTransfer = renderButton('buttonExternalTransfer', function(e) {
+                var pedeDestino = true;
+                var destino;
+                do {
+                    destino = window.prompt("Por favor, digite o telefone para o qual deseja transferir.", "");
+                    if (destino !== '' && !isNaN(destino)) {
+                        pedeDestino = false;
+                    }
+                } while (pedeDestino);
+                if (destino != null) {
+                    if (localStorage.getItem(TIPO_LIGACAO) == "MANUAL") {
+                        if (statusChamadaManual == 'CustomerConnected') {
+                            isTransfer = true;
+                            Olos.agentCommand.consultingRequest(destino, '0', "");
+                        } else {
+                            putMessage("Ligação ainda não conectada.");
+                        }
+                    } else {
+                        isTransfer = true;
+                        Olos.agentCommand.consultingRequest(destino, '0', "");
+                    }
+                }
+            });
+
+            var buttonTransferCamp = renderButton('buttonTransferCamp', function(e) {
+                debugger;
+                if ("{!codigoCampanha}" == "") {
+                    debugger;
+                    putMessage("Campanha não cadastrada para usuário.");
+                } else {
+                    debugger;
+                    if (ocultaTabulacao == 'true') {
+                        debugger;
+                        if (callbackPage == null ||
+                            callbackPage == undefined ||
+                            callbackPage.Tipo != 'Tabulacao' ||
+                            callbackPage.Id == null ||
+                            callbackPage.Id == undefined) {
+                            debugger;
+                            putMessage('Favor efetuar a tabulação na tela.');
+                            return;
+                        }
+                    } else {
+                        debugger;
+                        if (localStorage.getItem(TIPO_LIGACAO) != "MANUAL") {
+                            debugger;
+                            var selectTab = $("[id$=selectTab]").val();
+                            var selectTabObj = mapTab[selectTab];
+
+                            if (selectTab == null || selectTab == undefined || selectTab == "") {
+                                putMessage('Você precisa tabular a ligação antes de transferir a chamada!');
+                                return;
+                            }
+                        }
+                    }
+                    debugger;
+                    // var phoneNumber = localStorage.getItem(CALL_NUMBER);
+                    debugger;
+                    // if (phoneNumber != null && phoneNumber != undefined) {
+                    debugger;
+                    // phoneNumber = phoneNumber.replace(/ |\t/g, "");
+                    if (localStorage.getItem(TIPO_LIGACAO) == "MANUAL") {
+                        debugger;
+                        if (statusChamadaManual == 'CustomerConnected') {
+                            debugger;
+                            isTransfer = true;
+                            Olos.agentCommand.consultingRequest('0', '{!codigoCampanha}', null);
+                        } else {
+                            debugger;
+                            putMessage("Ligação ainda não conectada.");
+                        }
+                        debugger;
+                    } else {
+                        debugger;
+                        isTransfer = true;
+                        Olos.agentCommand.consultingRequest('0', '{!codigoCampanha}', null);
+                    }
+                    debugger;
+                    // }
+                    // else {
+                    //    putMessage("Não existe telefone para transferir.");
+                    // }
+                    debugger;
+                }
+                debugger;
+            });
+
+            var buttonConference = renderButton('buttonConference', function(e) {
+                var pedeDestino = true;
+                var destino;
+                do {
+                    destino = window.prompt("Por favor, digite o telefone para o qual deseja ligar para a conferência.", "");
+                    if (destino !== '' && !isNaN(destino)) {
+                        pedeDestino = false;
+                    }
+                } while (pedeDestino);
+                if (destino != null) {
+                    if (localStorage.getItem(TIPO_LIGACAO) == "MANUAL") {
+                        if (statusChamadaManual == 'CustomerConnected') {
+                            isTransfer = false;
+                            Olos.agentCommand.consultingRequest(destino, '0', "");
+                            // showDoConference();
+                        } else {
+                            putMessage("Ligação ainda não conectada.");
+                        }
+                    } else {
+                        isTransfer = false;
+                        Olos.agentCommand.consultingRequest(destino, '0', "");
+                        // showDoConference();
+                    }
+                }
+            });
+
+            var buttonDoConference = renderButton('buttonDoConference', function(e) {
+                efetuarConferencia();
+            });
+
+            var buttonTransferCAE = renderButton('buttonTransferCAE', function(e) {
+                if (localStorage.getItem(TIPO_LIGACAO) == "MANUAL") {
+                    if (statusChamadaManual == 'CustomerConnected') {
+                        isTransfer = true;
+                        Olos.agentCommand.consultingRequest('40037779', "0", "");
+                    } else {
+                        putMessage("Ligação ainda não conectada.");
+                    }
+                } else {
+                    isTransfer = true;
+                    Olos.agentCommand.consultingRequest('40037779', "0", "");
+                }
+
+            });
+
+            buttonSave.disable();
+            buttonEndCall.disable();
+            buttonTransfer.disable();
+            buttonExternalTransfer.disable();
+            buttonConference.disable();
+            buttonTransferCamp.disable();
+
+            // Clean number formatting
+            function cleanFormatting(number) {
+                return number.replace(' ', '').replace('-', '').replace('(', '').replace(')', '');
+            }
+
+            // Get selected call disposition
+            function getSelectedCallDisposition() {
+                for (var i = 0; i < callDisposition.length; i++) {
+                    if (callDisposition[i].checked) {
+                        return callDisposition[i];
+                    }
+                }
+            }
+
+            // Local storage persistence
+            function setLocalStorageValue(name, value) {
+                localStorage.setItem(name, value);
+            }
+
+            function getLocalStorageValue(name) {
+                return localStorage.getItem(name);
+            }
+
+            function setLocalStorageObject(key, value) {
+                localStorage.setItem(key, JSON.stringify(value));
+            }
+
+            function getLocalStorageObject(key) {
+                var value = localStorage.getItem(key);
+                return value && JSON.parse(value);
+            }
+
+            function removeLocalStorageValue(key) {
+                localStorage.removeItem(key);
+            }
+
+            // Methods for calculating the call duration
+            function increaseSeconds() {
+                var elapsed = new Date().getTime() - callStartTime;
+                var secondsElapsed = Math.floor(((elapsed / 1000)));
+                var minutesElapsed = Math.floor(secondsElapsed / 60);
+                secondsElapsed = secondsElapsed % 60;
+                seconds.set('innerHTML', secondsElapsed);
+                minutes.set('innerHTML', minutesElapsed);
+            }
+
+            function startCallDuration() {
+                minutes.set('innerHTML', '00');
+                seconds.set('innerHTML', '00');
+                //increaseSeconds();
+                timer = Y.later(1000, null, increaseSeconds, [], true);
+                $("#linkPhone").show();
+            }
+
+            // Methods for call initiation
+            function screenPop(number) {
+                $("[id$=selectTab]").val('');
+                sforce.interaction.searchAndScreenPop(number, '', 'inbound');
+            }
+
+            function setupCall() {
+                if (localStorage.getItem(TIPO_LIGACAO) == "MANUAL") {
+                    $("[id$=selectTab]").hide();
+                } else {
+                    $("[id$=selectTab]").show();
+                }
+                startCallDuration();
+                disableTab(phoneTabIndex, false);
+                // Select phone tab
+                tabview.selectChild(phoneTabIndex);
+                buttonSave.enable();
+                buttonEndCall.enable();
+                buttonTransfer.enable();
+                buttonExternalTransfer.enable();
+                buttonConference.enable();
+                buttonTransferCamp.enable();
+            }
+
+            function startCall(number, callType) {
+                $("[id$=selectTab]").val('');
+                enviouTabulacao = false;
+                if (ocultaTabulacao == "true") {
+                    $("[id$=divEndCall], [id$=buttonSave]").css("visibility", "hidden");
+                } else {
+                    $("[id$=divEndCall], [id$=buttonSave]").css("visibility", "visible");
+                }
+                callbackPage = {
+                    Id: null,
+                    DataAgendamento: null,
+                    Tipo: null
+                };
+                $("[id$=selectTab]").val("");
+                callStartTime = new Date().getTime();
+                setLocalStorageObject(CALL_START_TIME, callStartTime);
+                setTimeout(verificaStatusOportunidade, 1500);
+                if (!number) {
+                    callNumber = cleanFormatting(callFromContactANI);
+                } else {
+                    callNumber = cleanFormatting(number);
+                }
+                localStorage.setItem(CALL_NUMBER, callNumber);
+                setupCall();
+                if (!callType) {
+                    phoneRingAudio.play();
+                    calledType = 'Inbound';
+                } else {
+                    phoneDialingAudio.play();
+                    calledType = 'Outbound';
+                }
+                setLocalStorageObject(CALLED_TYPE, calledType);
+            }
+
+            teste.startCall = startCall;
+
+            function startCallAndScreenPop(number, callType) {
+                screenPop(number);
+                startCall(number, callType);
+            }
+
+            function createTableRow(name, value) {
+                var row = new Object();
+                row.name = name;
+                row.value = value;
+                return row;
+            }
+
+            teste.createTableRow = createTableRow;
+
+            function renderTable(data) {
+                var tableDiv = Y.one('#divCallData');
+                tableDiv.set('innerHTML', '');
+                var table = new Y.DataTable({
+                    columns: [{
+                        key: 'name',
+                        label: 'Name'
+                    }, {
+                        key: 'value',
+                        label: 'Value'
+                    }],
+                    data: data,
+
+                    // Optionally configure table with a caption
+                    caption: 'Call Data',
+                });
+                table.render('#divCallData');
+                if (data.length == 0) {
+                    table.showMessage('No Results Found for ' + callBackSearchParam + '.');
+                }
+            }
+
+            // Phone panel display
+            function createTable(data) {
+                setLocalStorageObject(CALL_DETAILS, data);
+                renderTable(data);
+            }
+            teste.createTable = createTable;
+
+            // Call backs and phone and salesforce interaction
+            YUI.VisualforceCallControl.callFromNumber = function(name, number) {
+                var data = [];
+                data[0] = createTableRow('Caller', name);
+                data[1] = createTableRow('Number', number);
+                // data[2] = createTableRow('Dialed Number', '1(800)555-1212');
+                createTable(data);
+                startCallAndScreenPop(number);
+            }
+
+            YUI.VisualforceCallControl.callToNumber = function(name, number) {
+                var data = [];
+                data[0] = createTableRow('Caller', name);
+                data[1] = createTableRow('Number', number);
+                createTable(data);
+                startCallAndScreenPop(number);
+            }
+
+            function clickToDialCallback(response) {
+                debugger;
+                if (localStorage.getItem(ON_CALL) != 'true') {
+                    $("[id$=selectTab]").val('');
+                    console.log('clickToDialCallback: ' + response);
+                    var numero;
+                    salvoTarefa = false;
+                    sforce.interaction.setVisible(true);
+                    var result;
+                    console.log('typeof(response.result): ' + typeof(response.result));
+                    if (typeof(response.result) == "object") {
+                        result = response.result;
+                    } else {
+                        result = JSON.parse(response.result);
+                    }
+                    if (result.phoneNumber != null && result.phoneNumber != undefined && result.phoneNumber != '') {
+                        numero = result.phoneNumber;
+                    } else {
+                        numero = result.number;
+                    }
+                    var data = [];
+                    data[0] = createTableRow('Caller', result.objectName.replace('+', ' '));
+                    data[1] = createTableRow('Type', result.object);
+                    data[2] = createTableRow('Number', numero);
+                    data[3] = createTableRow('Record Id', result.objectId);
+                    localStorage.setItem(ID_OBJETO, result.objectId);
+                    localStorage.setItem(TIPO_LIGACAO, 'MANUAL');
+                    fazerLigacaoManual = true;
+                    carregarLead(result.objectId);
+                    callNumber = cleanFormatting(numero);
+                    localStorage.setItem(CALL_NUMBER, callNumber);
+                    startCall(callNumber);
+                    createTable(data);
+                    // startCallAndScreenPop(response.number, 'OUTBOUND');
+                }
+            }
+
+            SOFTPHONE.clickToDialCallback = clickToDialCallback;
+
+            var discagemAutomatica = function(result) {
+                debugger;
+                if (localStorage.getItem(ON_CALL) != 'true' && localStorage.getItem(ON_CALL) != true) {
+                    console.log('discagemAutomatica: ' + result);
+                    console.log('discagemAutomatica: ' + JSON.stringify(result));
+                    if (ocultaTabulacao == 'true') {
+                        var idProcessoImplantacao = result.message;
+                        if (idPowerDialing != idProcessoImplantacao) {
+                            idPowerDialing = idProcessoImplantacao;
+                            Visualforce.remoting.Manager.invokeAction(
+                                '{!$RemoteAction.CtrlCallControl.consultarProcessoImplantacao}',
+                                idProcessoImplantacao,
+                                function(result, event) {
+                                    if (event.status) {
+                                        if (result != null && result != undefined && result != '') {
+                                            console.log('result stringify: ' + JSON.stringify(result));
+                                            var objResponseAuto = {
+                                                "result": result
+                                            };
+                                            console.log('objResponseAuto: ' + objResponseAuto);
+                                            clickToDialCallback(objResponseAuto);
+                                        }
+                                    } else if (event.type === 'exception') {
+                                        console.log(event.message);
+                                    } else {
+                                        console.log(event.message);
+                                    }
+                                }
+
+                            );
+                        }
+                    }
+                }
+            }
+
+            sforce.console.addEventListener('OpportunityEvent', discagemAutomatica, {});
+
+            var callBackSearchParam = '';
+            YUI.VisualforceCallControl.shortcutHandler = function(event) {
+
+            }
+
+            function runApexCallback(response) {
+                var result = JSON.parse(response.result);
+                var data = [];
+                var i = 0;
+                for (var attribute in result) {
+                    if (result.hasOwnProperty(attribute)) {
+                        var objectData = result[attribute];
+                        for (var objectField in objectData) {
+                            if (objectData.hasOwnProperty(objectField) && objectField != 'attributes' && objectField != 'Id') {
+                                data[i++] = createTableRow(objectField, objectData[objectField]);
+                            }
+                        }
+                    }
+                }
+                createTable(data);
+                startCallAndScreenPop(callBackSearchParam);
+            }
+
+            function runApexCaseCallback(response) {
+                var result = JSON.parse(response.result);
+                var data = [];
+                var i = 0;
+                var bookmarkableURL = '/ui/support/servicedesk/ServiceDeskPage#';
+                var focusedTab = '';
+                for (var attribute in result) {
+                    if (result.hasOwnProperty(attribute)) {
+                        var caseData = result[attribute];
+                        for (var caseField in caseData) {
+                            if (caseData.hasOwnProperty(caseField) && caseField != 'attributes') {
+                                if (caseField == 'Id' || caseField == 'ContactId' || caseField == 'AccountId') {
+                                    if (caseField == 'Id') {
+                                        focusedTab = '/' + caseData[caseField];
+                                    }
+                                    bookmarkableURL += '/' + caseData[caseField] + '|';
+                                } else {
+                                    data[i++] = createTableRow(caseField, caseData[caseField]);
+                                }
+                            }
+                        }
+                    }
+                }
+                createTable(data);
+                startCall();
+                if (bookmarkableURL === '/ui/support/servicedesk/ServiceDeskPage#') {
+                    return;
+                }
+                bookmarkableURL += '|' + focusedTab;
+                if (!isInConsole) {
+                    bookmarkableURL = focusedTab;
+                }
+                sforce.interaction.screenPop(bookmarkableURL);
+            }
+
+            YUI.VisualforceCallControl.handleLogEntry = function() {
+                // localStorage.setItem(CALL_LOG, callLogText.value);
+            }
+
+            if (localStorage.getItem(LOGGED_IN) == null || localStorage.getItem(LOGGED_IN) == 'false') {
+                loginPanel.show();
+            }
+            sforce.interaction.cti.onClickToDial(clickToDialCallback);
+
+            function processLocalStorageStartCall() {
+                onCallData = getLocalStorageObject(CALL_DETAILS);
+                callStartTime = getLocalStorageObject(CALL_START_TIME);
+                calledType = getLocalStorageObject(CALLED_TYPE);
+                callNumber = getLocalStorageObject(CALL_NUMBER);
+                setupCall();
+            }
+
+            var onCallData = getLocalStorageObject(CALL_DETAILS);
+            if (onCallData !== null) {
+                renderTable(onCallData);
+                debugger;
+                if (localStorage.getItem(ON_CALL) != null) {
+                    processLocalStorageStartCall();
+                }
+            }
+
+            // callLogText.value = localStorage.getItem(CALL_LOG);
+
+            function storageEventHandler(e) {
+                    if (e.key == END_CALL) {
+                        processEndCall();
+                        debugger;
+                    } else if (e.key == ON_CALL && e.newValue == 'true') {
+                        processLocalStorageStartCall();
+                    } else if (e.key == CALL_LOG) {
+                        // callLogText.value = e.newValue;
+                    }
+                }
+                // window.addEventListener('storage', storageEventHandler, false);
+
+            Olos.agentCommand.on('manualcallrequestfail', function(obj) {
+                localStorage.removeItem(ON_CALL);
+                localStorage.setItem(TIPO_LIGACAO, "");
+                putMessage(obj);
+                processEndCall();
+                localStorage.setItem(END_CALL, (new Date().getTime()));
+                localStorage.removeItem(CALL_START_TIME);
+                localStorage.removeItem(CALLED_TYPE);
+                localStorage.removeItem(CALL_NUMBER);
+                sforce.interaction.getPageInfo(saveLog);
+                console.log(JSON.stringify(obj));
+            });
+
+
+            Olos.agentCommand.on('agentAuthentication', function(id) {
+                console.log('agentId: ' + id);
+                if (id > 0) {
+                    agentId = id;
+                    localStorage.setItem('agentId', id);
+                } else {
+                    putMessage('Usuário e/ou senha incorreta!');
+                    unblockPage();
+                }
+            });
+
+            Olos.agentCommand.on('consultingrequestfail', function(obj) {
+                // localStorage.setItem(CONSULTING, false);
+                putMessage('Ocorreu um erro na transfêrencia, tente novamente mais tarde.');
+                console.log('consultingrequestfail: ' + JSON.stringify(obj));
+            });
+
+            Olos.agentCommand.on('redialrequestfail', function(obj) {
+                putMessage(obj);
+                console.log('RedialRequestFail: ' + JSON.stringify(obj));
+            });
+
+            Olos.agentCommand.on('privatecallbackfail', function(obj) {
+                putMessage(obj);
+                console.log('privatecallbackfail: ' + JSON.stringify(obj));
+            });
+
+            Olos.agentCommand.on('passcode', function(code) {
+                passcode = code;
+                console.log('Passcode: ' + code);
+                showPasscode();
+            });
+
+            Olos.agentCommand.on('loginccm', function(obj) {
+                console.info(obj);
+                debugger;
+                putMessage('Login efetuado com sucesso!');
+                localStorage.removeItem(ON_CALL);
+                localStorage.setItem(LOGGED_IN, 'true');
+                $("#selectDisposition").val('007');
+                $(".yui3-widget-mask, .yui3-panel").hide();
+                sforce.interaction.cti.onClickToDial(clickToDialCallback);
+                $("input[id$=inputUsername]").val('');
+                $("input[id$=inputPassword]").val('');
+                hidePasscode();
+            });
+
+            Olos.agentCommand.on('logincampaign', function(obj) {
+                campaign = obj;
+                console.log('campaign: ' + JSON.stringify(campaign));
+            });
+            Olos.agentCommand.on('logoutcampaign', function(obj) {
+                console.info(obj);
+            });
+
+            Olos.agentCommand.on('logoutccm', function(obj) {
+                console.info(obj);
+                putMessage('Logout realizado com sucesso!');
+                debugger;
+                localStorage.removeItem(ON_CALL);
+                localStorage.setItem(LOGGED_IN, 'false');
+                $(".yui3-widget-mask, .yui3-panel").show();
+                sforce.interaction.cti.disableClickToDial();
+            });
+
+            Olos.agentCommand.on('logoutccmfail', function(obj) {
+                console.info(obj);
+                putMessage(obj);
+                unblockPage();
+            });
+
+            Olos.agentCommand.on('logoutcampaignfail', function(obj) {
+                console.info(obj);
+                putMessage(obj);
+                unblockPage();
+            });
+
+            Olos.agentCommand.on('changemanualcallstate', function(obj) {
+                console.log(JSON.stringify(obj));
+                callObj = obj;
+                statusChamadaManual = callObj.callState;
+                if (callObj.callState == 'Finished') {
+                    debugger;
+                    localStorage.removeItem(ON_CALL);
+                    putMessage('Chamada encerrada');
+                } else if (callObj.callState == 'CustomerConnected') {
+                    // Olos.agentCommand.updateCallData('<IdSalesforce>' + localStorage.getItem(ID_OBJETO) + '</IdSalesforce><tipoLigacao>MANUAL</tipoLigacao>');
+                    // console.log(new Date() + ' - Olos.agentCommand.updateCallData<IdSalesforce>' + localStorage.getItem(ID_OBJETO) + '</IdSalesforce><tipoLigacao>MANUAL</tipoLigacao>');
+                    debugger;
+                    localStorage.setItem(ON_CALL, 'true');
+                    Olos.agentCommand.updateCallData('{\"IdSalesforce\":\"' + localStorage.getItem(ID_OBJETO) + '\",\"tipoLigacao\":\"MANUAL\"}');
+                    activeCalls.push(callObj.callId);
+                }
+                else {
+                    debugger;
+                    localStorage.removeItem(ON_CALL);
+                }
+            });
+
+            Olos.agentCommand.on('listDispositions', function(obj) {
+                console.log('listDispositions: ' + obj);
+            });
+
+            Olos.agentCommand.on('screenpop', function(obj) {
+                $("[id$=selectTab]").val('');
+                salvoTarefa = false;
+                screenPopObj = obj;
+                if (obj.campaignData != null &&
+                    obj.campaignData != undefined &&
+                    obj.campaignData != '' &&
+                    ((obj.campaignData.match(/<IdSalesforce>.+<\/IdSalesforce>/g) != null &&
+                            obj.campaignData.match(/<IdSalesforce>.+<\/IdSalesforce>/g).length > 0 &&
+                            obj.campaignData.match(/<tipoLigacao>.+<\/tipoLigacao>/g) != null &&
+                            obj.campaignData.match(/<tipoLigacao>.+<\/tipoLigacao>/g).length > 0) ||
+                        (obj.campaignData.match(/IdSalesforce\":.+?,/g) != null &&
+                            obj.campaignData.match(/IdSalesforce\":.+?,/g).length > 0 &&
+                            obj.campaignData.match(/tipoLigacao\":.+?/g) != null &&
+                            obj.campaignData.match(/tipoLigacao\":.+?/g).length > 0) ||
+                        (obj.campaignData.match(/IdSalesforce=.+?;/g) != null &&
+                            obj.campaignData.match(/IdSalesforce=.+?;/g).length > 0 &&
+                            obj.campaignData.match(/tipoLigacao=.+?;/g) != null &&
+                            obj.campaignData.match(/tipoLigacao=.+?;/g).length > 0))) {
+                    console.log("campaignData: " + obj.campaignData);
+                    var idDoObjeto;
+                    var tipoLigacao;
+                    try {
+                        var objCData = JSON.parse(obj.campaignData);
+                        idDoObjeto = objCData.IdSalesforce;
+                        tipoLigacao = objCData.tipoLigacao;
+                        if (idDoObjeto == null || idDoObjeto == undefined) {
+                            throw DOMException("idDoObjetoVazio");
+                        }
+                    } catch (err) {
+                        try {
+                            idDoObjeto = obj.campaignData.replace(/.*IdSalesforce=(.+?);.*/g, "$1");
+                            tipoLigacao = obj.campaignData.replace(/.*tipoLigacao=(.+?);.*/g, "$1");
+                            if (idDoObjeto == null || idDoObjeto == undefined) {
+                                throw DOMException("idDoObjetoVazio");
+                            }
+                        } catch (err) {
+                            idDoObjeto = obj.campaignData.replace(/.*<IdSalesforce>(.+)<\/IdSalesforce>.*/g, "$1");
+                            tipoLigacao = obj.campaignData.replace(/.*<tipoLigacao>(.+)<\/tipoLigacao>.*/g, "$1")
+                        }
+                    }
+
+                    localStorage.setItem(TIPO_LIGACAO, tipoLigacao);
+                    carregarLead(idDoObjeto);
+                } else if (obj.customerId != undefined && obj.customerId != null && obj.customerId != '' && obj.customerId != 'undefined') {
+                    console.log("customerId: " + obj.customerId);
+                    carregarLead(obj.customerId);
+                    localStorage.setItem(TIPO_LIGACAO, "PREDITIVO");
+                } else {
+                    if (mapCampanha[obj.campaignId] != undefined) {
+                        $("#txtCampaignName").text(mapCampanha[obj.campaignId]);
+                        $("#divCampaignName").css("display", "");
+                    }
+                    localStorage.setItem(TIPO_LIGACAO, "RECEPTIVO");
+                    ocultaTabulacao = "false";
+                    sforce.console.openPrimaryTab(null, '/apex/{!tabulacaoSoftphone.TelaReceptivo__c}?campaignId=' + obj.campaignId + '&phoneNumber=' + obj.phoneNumber, true, 'Consulta');
+                }
+                activeCalls.push(obj.callId);
+                campaingIdLigacao = obj.campaignId;
+                console.log('screenpop: ' + JSON.stringify(obj));
+                var data = [];
+                data[0] = createTableRow('Number', obj.phoneNumber);
+                createTable(data);
+                debugger;
+                localStorage.setItem(ON_CALL, 'true');
+                startCall(obj.phoneNumber);
+            });
+
+            function tabulaEncerraChamada() {
+                if (ocultaTabulacao == 'true') {
+                    if (callbackPage != null &&
+                        callbackPage.Tipo == 'Tabulacao' &&
+                        callbackPage.Id != null &&
+                        callbackPage.Id != undefined) {
+                        if (callbackPage.DataAgendamento != "" && callbackPage.DataAgendamento != null && callbackPage.DataAgendamento != undefined) {
+                            var fidelizado = callbackPage.Id == '033';
+                            var dt = dateString2Date(callbackPage.DataAgendamento);
+                            var mesNum = dt.getMonth() + 1;
+                            var mesNumStr = padTwo.substring(0, padTwo.length - mesNum.toString().length) + mesNum.toString();
+                            var hourString = padTwo.substring(0, padTwo.length - dt.getHours().toString().length) + dt.getHours().toString();
+                            var minuteString = padTwo.substring(0, padTwo.length - dt.getMinutes().toString().length) + dt.getMinutes().toString();
+                            var dateString = padTwo.substring(0, padTwo.length - dt.getDate().toString().length) + dt.getDate().toString();
+                            if (localStorage.getItem(TIPO_LIGACAO) == 'MANUAL') {
+                                debugger;
+                                if (localStorage.getItem(ON_CALL) == 'true') {
+                                    Olos.agentCommand.hangupRequest();
+                                    activeCalls.pop();
+                                }
+                            } else {
+                                if (!enviouTabulacao) {
+                                    Olos.agentCommand.dispositionCallBackByCode(callbackPage.Id,
+                                        dt.getFullYear().toString(),
+                                        mesNumStr,
+                                        dateString,
+                                        hourString,
+                                        minuteString,
+                                        localStorage.getItem(CALL_NUMBER),
+                                        fidelizado);
+                                    activeCalls.pop();
+                                }
+                                enviouTabulacao = true;
+                            }
+                        } else {
+                            if (localStorage.getItem(TIPO_LIGACAO) == 'MANUAL') {
+                                debugger;
+                                if (localStorage.getItem(ON_CALL) == 'true') {
+                                    Olos.agentCommand.hangupRequest();
+                                    activeCalls.pop();
+                                }
+                            } else {
+                                if (!enviouTabulacao) {
+                                    Olos.agentCommand.dispositionCallByCode(callbackPage.Id);
+                                    activeCalls.pop();
+                                }
+                                enviouTabulacao = true;
+                                sforce.console.getFocusedPrimaryTabId(function(result) {
+                                    sforce.console.closeTab(result.id);
+                                })
+                            }
+                        }
+                    } else {
+                        debugger;
+                        if (localStorage.getItem(ON_CALL) == 'true') {
+                            putMessage('Favor efetuar a tabulação de todos os produtos na tela.');
+                        }
+                        return;
+                    }
+                } else {
+                    var selectTab = $("[id$=selectTab]").val();
+                    var selectTabObj = mapTab[selectTab];
+
+                    console.log('selectTab: ' + selectTab);
+
+                    if (selectTab == null || selectTab == undefined || selectTab == '') {
+                        return;
+                    } else {
+                        if (selectTabObj.Agendamento__c) {
+                            try {
+                                if (dtAgendamento.match(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/).length == 1) {
+                                    if (!enviouTabulacao) {
+                                        if (localStorage.getItem(TIPO_LIGACAO) == 'MANUAL') {
+                                            debugger;
+                                            if (localStorage.getItem(ON_CALL) == 'true') {
+                                                Olos.agentCommand.hangupRequest();
+                                                activeCalls.pop();
+                                            }
+                                        } else {
+                                            var fidelizado = selectTab == '033';
+                                            var dt = dateString2Date(dtAgendamento);
+                                            var mesNum = dt.getMonth() + 1;
+                                            var mesNumStr = padTwo.substring(0, padTwo.length - mesNum.toString().length) + mesNum.toString();
+                                            var hourString = padTwo.substring(0, padTwo.length - dt.getHours().toString().length) + dt.getHours().toString();
+                                            var minuteString = padTwo.substring(0, padTwo.length - dt.getMinutes().toString().length) + dt.getMinutes().toString();
+                                            var dateString = padTwo.substring(0, padTwo.length - dt.getDate().toString().length) + dt.getDate().toString();
+                                            Olos.agentCommand.dispositionCallBackByCode(selectTab,
+                                                dt.getFullYear().toString(),
+                                                mesNumStr,
+                                                dateString,
+                                                hourString,
+                                                minuteString,
+                                                localStorage.getItem(CALL_NUMBER),
+                                                fidelizado);
+                                            activeCalls.pop();
+                                        }
+                                        enviouTabulacao = true;
+                                        dtAgentdamento = '';
+                                    }
+                                } else {
+                                    debugger;
+                                    if (localStorage.getItem(ON_CALL) == 'true') {
+                                        putMessage("Preencha uma data/hora valida no formato especificado.");
+                                    }
+                                    return;
+                                }
+                            } catch (err) {
+                                console.log('err: ' + err);
+
+                                debugger;
+                                if (localStorage.getItem(ON_CALL) == 'true') {
+                                    putMessage("Preencha uma data/hora valida no formato especificado.");
+                                }
+                                return;
+                            }
+                        } else {
+                            if (localStorage.getItem(TIPO_LIGACAO) == 'MANUAL') {
+                                debugger;
+                                if (localStorage.getItem(ON_CALL) == 'true') {
+                                    Olos.agentCommand.hangupRequest();
+                                    activeCalls.pop();
+                                }
+                            } else {
+                                if (!enviouTabulacao) {
+                                    Olos.agentCommand.dispositionCallByCode(selectTab);
+                                    activeCalls.pop();
+                                }
+                                enviouTabulacao = true;
+                            }
+                        }
+                    }
+                }
+
+                localStorage.setItem(TIPO_LIGACAO, "");
+                processEndCall();
+                localStorage.setItem(END_CALL, (new Date().getTime()));
+                debugger;
+                localStorage.removeItem(ON_CALL);
+                localStorage.removeItem(CALL_START_TIME);
+                localStorage.removeItem(CALLED_TYPE);
+                localStorage.removeItem(CALL_NUMBER);
+                sforce.interaction.getPageInfo(saveLog);
+                doNothing();
+            }
+
+
+            Olos.agentCommand.on('changestatus', function(obj) {
+                console.log(JSON.stringify(obj));
+                var status = obj.agentStatusId.trim();
+
+                statusAntigo = statusReloginho.Status;
+
+                switch (status) {
+                    case listAgentStatus.Pause.value:
+                        localStorage.removeItem(ON_CALL);
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Pause.description);
+                        if (statusAntigo != 'Pausa') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Pausa, "Pausa");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.Idle.value:
+                        localStorage.removeItem(ON_CALL);
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Idle.description);
+                        if (statusAntigo != 'Disponivel') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Disponível, "Disponivel");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.Nothing.value:
+                        localStorage.removeItem(ON_CALL);
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Nothing.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.Talking.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Talking.description);
+                        if (statusAntigo != 'Atendimento') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Atendimento, "Atendimento");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.Wrap.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Wrap.description);
+                        tabulaEncerraChamada();
+                        if (statusAntigo != 'Tabulacao') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Tabulação, "Tabulacao");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.Ending.value:
+                        localStorage.removeItem(ON_CALL);
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Ending.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.TalkingWithPause.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.TalkingWithPause.description);
+                        if (statusAntigo != 'Atendimento') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Atendimento, "Atendimento");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.WrapWithPause.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.WrapWithPause.description);
+                        tabulaEncerraChamada();
+                        if (statusAntigo != 'Tabulacao') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Tabulação, "Tabulacao");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.TalkingWithEnding.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.TalkingWithEnding.description);
+                        if (statusAntigo != 'Atendimento') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Atendimento, "Atendimento");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.WrapWithEnding.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.WrapWithEnding.description);
+                        tabulaEncerraChamada();
+                        if (statusAntigo != 'Tabulacao') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Tabulação, "Tabulacao");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.Consulting.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        if(isTransfer) {
+                            setTimeout(efetuarTransferencia, 1500);
+                        }
+                        else {
+                            // showDoConference();
+                        }
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Consulting.description);
+                        resetaFarol();
+                        break;
+                    case listAgentStatus.Chat.value:
+                        localStorage.removeItem(ON_CALL);
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Chat.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.ChatWithPause.value:
+                        localStorage.removeItem(ON_CALL);
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.ChatWithPause.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.ChatWithEnding.value:
+                        localStorage.removeItem(ON_CALL);
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.ChatWithEnding.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.ConsultingWithPause.value:
+                        if(isTransfer) {
+                            setTimeout(efetuarTransferencia, 1500);
+                        }
+                        else {
+                            // showDoConference();
+                        }
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.ConsultingWithPause.description);
+                        resetaFarol();
+                        break;
+                    case listAgentStatus.Transfer.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Transfer.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.Holding.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Holding.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.HoldingWithPause.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.HoldingWithPause.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.HoldingWithEnding.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.HoldingWithEnding.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.ManualCall.value:
+                        sforce.interaction.cti.enableClickToDial();
+                        localStorage.removeItem(ON_CALL);
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.ManualCall.description);
+                        if (statusAntigo != 'Disponivel') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Disponível, "Disponivel");
+                        }
+                        hideDoConference();
+                        break;
+                    case listAgentStatus.TalkingWithManualCall.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.TalkingWithManualCall.description);
+                        if (statusAntigo != 'Atendimento') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Atendimento, "Atendimento");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.WrapWithManualCall.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.WrapWithManualCall.description);
+                        tabulaEncerraChamada();
+                        if (statusAntigo != 'Tabulacao') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Tabulação, "Tabulacao");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.ConsultingWithManualCall.value:
+                        if(isTransfer) {
+                            setTimeout(efetuarTransferencia, 1500);
+                        }
+                        else {
+                            // showDoConference();
+                        }
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.ConsultingWithManualCall.description);
+                        resetaFarol();
+                        break;
+                    case listAgentStatus.HoldingWithManualCall.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.HoldingWithManualCall.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.Redial.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Redial.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.PrivateCallback.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.PrivateCallback.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.TalkingWithPrivateCallback.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.TalkingWithPrivateCallback.description);
+                        if (statusAntigo != 'Atendimento') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Atendimento, "Atendimento");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.WrapWithPrivateCallback.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.WrapWithPrivateCallback.description);
+                        tabulaEncerraChamada();
+                        if (statusAntigo != 'Tabulacao') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Tabulação, "Tabulacao");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.ManualCallWithPrivateCallback.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.ManualCallWithPrivateCallback.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.ConsultingWithPrivateCallback.value:
+                        if(isTransfer) {
+                            setTimeout(efetuarTransferencia, 1500);
+                        }
+                        else {
+                            // showDoConference();
+                        }
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.ConsultingWithPrivateCallback.description);
+                        resetaFarol();
+                        break;
+                    case listAgentStatus.HoldingWithPrivateCallback.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.HoldingWithPrivateCallback.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.ThirdPartyCampaign.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.ThirdPartyCampaign.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.PersonalCall.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.PersonalCall.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.TalkingWithPersonalCall.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.TalkingWithPersonalCall.description);
+                        if (statusAntigo != 'Atendimento') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Atendimento, "Atendimento");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.WrapWithPersonalCall.value:
+                        localStorage.setItem(ON_CALL, 'true');
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.WrapWithPersonalCall.description);
+                        tabulaEncerraChamada();
+                        if (statusAntigo != 'Tabulacao') {
+                            resetaFarol();
+                            ligaFarol(mapTempo.Tabulação, "Tabulacao");
+                        }
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.ManualCallWithPersonalCall.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.ManualCallWithPersonalCall.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.ConsultingWithPersonalCall.value:
+                        if(isTransfer) {
+                            setTimeout(efetuarTransferencia, 1500);
+                        }
+                        else {
+                            // showDoConference();
+                        }
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.ConsultingWithPersonalCall.description);
+                        resetaFarol();
+                        break;
+                    case listAgentStatus.HoldingWithPersonalCall.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.HoldingWithPersonalCall.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.PersonalCallWithEnding.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.PersonalCallWithEnding.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.PersonalCallWithPause.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.PersonalCallWithPause.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.Analyzing.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Analyzing.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.AnalyzingWithPersonalCall.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.AnalyzingWithPersonalCall.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.Attempting.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.Attempting.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.AttemptingWithPersonalCall.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.AttemptingWithPersonalCall.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.AfterAttempting.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.AfterAttempting.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.AfterAttemptWithPersonalCall.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.AfterAttemptWithPersonalCall.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.AttemptingWithPrivateCallback.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.AttemptingWithPrivateCallback.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                    case listAgentStatus.RedialWithPersonalCall.value:
+                        $("#lblStatus").text('Status atual: ' + listAgentStatus.RedialWithPersonalCall.description);
+                        resetaFarol();
+                        // hideDoConference();
+                        break;
+                }
+            });
+
+            $("button").attr("onclick", "return false;");
+
+            if (!isInConsole) {
+                $("input[title=Username], input[title=Password]").each(function() {
+                    $(this).css('width', '100px');
+                });
+            }
+
+            function verificaStatusOportunidade() {
+                try {
+                    debugger;
+                    if (localStorage.getItem(ON_CALL) != undefined && localStorage.getItem(ON_CALL) != null && localStorage.getItem(ON_CALL) == 'true') {
+                        var idObjetoMetodo = getIdObjeto();
+                        if (idObjetoMetodo != null && idObjetoMetodo != '') {
+                            Visualforce.remoting.Manager.invokeAction(
+                                '{!$RemoteAction.CtrlCallControl.verificaStatusOportunidade}',
+                                idObjetoMetodo,
+                                '{!codigoCampanha}',
+                                '{!nomeCampanha}',
+                                function(result, event) {
+                                    if (event.status) {
+                                        if (result == true || result == 'true') {
+                                            if ("{!codigoCampanha}" == "") {
+                                                putMessage("Campanha não cadastrada para usuário.");
+                                            } else {
+                                                if (localStorage.getItem(TIPO_LIGACAO) != "MANUAL") {
+                                                    var selectTab = $("[id$=selectTab]").val();
+                                                    var selectTabObj = mapTab[selectTab];
+
+                                                    if (selectTab == null || selectTab == undefined) {
+                                                        putMessage('Você precisa tabular a ligação antes de transferir a chamada!');
+                                                        return;
+                                                    }
+                                                }
+                                                var phoneNumber = localStorage.getItem(CALL_NUMBER);
+                                                if (phoneNumber != null && phoneNumber != undefined) {
+                                                    phoneNumber = phoneNumber.replace(/ |\t/g, "");
+                                                    if (localStorage.getItem(TIPO_LIGACAO) == "MANUAL") {
+                                                        if (statusChamadaManual == 'CustomerConnected') {
+                                                            isTransfer = true;
+                                                            Olos.agentCommand.consultingRequest(phoneNumber, '0', null);
+                                                        }
+                                                    } else {
+                                                        isTransfer = true;
+                                                        Olos.agentCommand.consultingRequest(phoneNumber, '0', null);
+                                                    }
+                                                } else {
+                                                    putMessage("Não existe telefone para transferir.");
+                                                }
+                                            }
+                                        } else {
+                                            setTimeout(verificaStatusOportunidade, 1500);
+                                        }
+                                    } else if (event.type === 'exception') {
+                                        console.log(event.message);
+                                        setTimeout(verificaStatusOportunidade, 1500);
+                                    } else {
+                                        console.log(event.message);
+                                        setTimeout(verificaStatusOportunidade, 1500);
+                                    }
+                                }
+
+                            );
+                        }
+                    }
+                } catch (err) {
+                    console.warn("Erro tratado: Ocorreu um erro ao verificar status da Oportunidade");
+                    console.warn(err);
+                }
+            }
+        };
+
+        YUI({
+            skin: 'night'
+        }).use(
+            'tabview',
+            'button',
+            'datatable',
+            'node',
+            'panel',
+            demoSoftphone
+        );
+        window.onkeypress = function(event) {
+            YUI.VisualforceCallControl.shortcutHandler(event);
+        };
+
+        $(document).ready(function() {
+            sforce.interaction.cti.disableClickToDial();
+            var addrs = {
+                wsAgentCmd: "{!wsAgentCmd}",
+                wsAgentEvt: "{!wsAgentEvt}",
+                wsMailingCmd: "{!wsMailingCmd}",
+                wsAgentConfigCmd: ""
+            };
+            Olos.connect(addrs);
+
+            Olos.setLogger(parseInt('{!setLogger.Valor__c}'), 'INFO');
+
+            listAgentStatus = Olos.agentCommand.getListStatusAgent();
+            agentId = localStorage.getItem('agentId');
+            localStorage.setItem(LOGGED_IN, 'false');
+            $("button").attr("onclick", "return false;");
+            localStorage.setItem(CONSULTING, false);
+            localStorage.setItem(TIPO_LIGACAO, "");
+            try {
+                if(!sforce.console.isInConsole()) {
+                    document.getElementsByTagName("body")[0].innerHTML = ""; }
+                else {
+                    processEndCall();
+                    localStorage.setItem(END_CALL, (new Date().getTime()));
+                    debugger;
+                    localStorage.removeItem(ON_CALL);
+                    localStorage.removeItem(CALL_START_TIME);
+                    localStorage.removeItem(CALLED_TYPE);
+                    localStorage.removeItem(CALL_NUMBER);
+                }
+            } catch (err) {
+                // do nothing
+            }
+
+        });
+
+        function ligaFarol(limite, status) {
+            $("#txtProgress").text(status);
+            if (status == "Pausa") {
+                var motivoPausa = $("#selectDisposition").val() + " - " + $("#selectDisposition > option:selected").text();
+                statusReloginho = {
+                    "Status": status,
+                    "DataInicio": new Date(),
+                    "DataFim": "",
+                    "MotivoPausa": motivoPausa
+                };
+                $("#tempoPausa").css("display", "block");
+                IdTempoPause = setInterval(incrementaPausa, 1000);
+            } else {
+                statusReloginho = {
+                    "Status": status,
+                    "DataInicio": new Date(),
+                    "DataFim": "",
+                    "MotivoPausa": ""
+                };
+            }
+            var tempoDecorrido = 0;
+            var elem = document.getElementById("myBar");
+            var width = 1;
+            idFarol = setInterval(frame, 1000);
+
+            function frame() {
+                tempoDecorrido++;
+                var decorridoPer = Math.floor(tempoDecorrido / limite * 100);
+                elem.style.width = decorridoPer + '%';
+                if (decorridoPer >= 100) {
+                    clearInterval(idFarol);
+                    document.getElementById('myBar').style.backgroundColor = '#ff1818';
+                }
+            }
+        }
+
+        function resetaFarol() {
+            $("#tempoPausa").css("display", "none");
+            $("#txtProgress").text("");
+            segundoPause = 0;
+            minutoPause = 0;
+            horaPause = 0;
+            statusReloginho.DataFim = new Date();
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.CtrlCallControl.salvarStatus}',
+                JSON.stringify(statusReloginho),
+                function(result, event) {
+                    // do nothing
+                }
+
+            );
+            clearInterval(idFarol);
+            clearInterval(IdTempoPause);
+            var elem = document.getElementById("myBar");
+            elem.style.width = '0%';
+            elem.style.backgroundColor = '#4CAF50';
+            statusAntigo = null;
+            statusReloginho = {
+                "Status": null,
+                "DataInicio": null,
+                "DataFim": null,
+                "MotivoPausa": null
+            };
+        }
+
+
+        function incrementaPausa() {
+            segundoPause++;
+            if (segundoPause >= 60) {
+                segundoPause = 0;
+                minutoPause++;
+                if (minutoPause >= 60) {
+                    minutoPause = 0;
+                    horaPause++;
+                }
+            }
+            $("#tempoPausa").text('TempoPausa: ' + FormatNumberLength(horaPause, 2) + ':' + FormatNumberLength(minutoPause, 2) + ':' + FormatNumberLength(segundoPause, 2));
+        }
+
+        function FormatNumberLength(num, length) {
+            var r = "" + num;
+            while (r.length < length) {
+                r = "0" + r;
+            }
+            return r;
+        }
+
+        function olosEvents(objEvent) {};
+
+        function efetuarLogin() {
+            try {
+                var login = $("input[id$=inputUsername]").val();
+                var password = $("input[id$=inputPassword]").val();
+                if (login != null && login != '') {
+                    if (password != null && password != '') {
+                        Olos.agentCommand.agentAuthentication(login, password);
+                    } else {
+                        putMessage('Por favor, preencha a senha.');
+                    }
+                } else {
+                    putMessage('Por favor, preencha o login.');
+                }
+            } catch (err) {
+                unblockPage();
+                console.log(err);
+                putMessage(err);
+            }
+        }
+
+        function mudarStatus() {
+            var statusId = $("#selectDisposition").val();
+            var status = $("#selectDisposition option[value=" + statusId + "]").text();
+            if (blManual) {
+                Olos.agentCommand.endManualCallStateRequest();
+                blManual = false;
+                sforce.interaction.cti.disableClickToDial();
+            }
+            if (statusId == '-1') {
+                Olos.agentCommand.manualCallStateRequest();
+                blManual = true;
+            } else if (statusId == '007') {
+                Olos.agentCommand.agentIdleRequest();
+            } else if (statusId == '008') {
+                Olos.agentCommand.agentLogout();
+                resetaFarol();
+            } else {
+                Olos.agentCommand.agentReasonRequestByCode(statusId, agentId);
+            }
+        }
+
+        $("#inputUsername, #inputPassword").on("keydown", function() {
+            $("#lblPasscode").css('display', 'none');
+        });
+
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if(!sforce.console.isInConsole()) {
+                document.getElementsByTagName("body")[0].innerHTML = "";
+            }
+            else {
+                localStorage.clear();
+                localStorage.removeItem('onCall');
+            }
+        });
+    </script>
+</apex:page>

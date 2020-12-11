@@ -1,0 +1,116 @@
+<apex:page standardcontroller="Desdobramento__c" extensions="CtrlDesdobramentoMetas" title="Desdobramento de Metas">
+    <apex:includeScript value="/support/console/37.0/integration.js"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'meiomask.js')}"/>
+    <style type="text/css">
+        table#cadastroDesdobramento td.label label {
+            font-weight: bold;
+        }
+
+        table#cadastroDesdobramento td.label {
+            text-align: right;
+        }
+
+        table#cadastroDesdobramento td.field {
+            padding-left: 5px;
+        }
+
+    </style>
+    <script type="text/javascript">
+		function blockPage(){
+
+	    	$.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+	             css: {
+	              border: 'none',
+	              padding: '15px',
+	              '-webkit-border-radius': '10px',
+	              '-moz-border-radius': '10px',
+	              opacity: .9
+	             }
+	           });
+	     }
+
+	    function unblockPage(){
+	    	$.unblockUI();
+	    }
+
+        function limitarTamanho(element, tamanho) {
+            element.on("keyup", function(event) {
+            console.log('gesate');
+                if($(this).val().length > tamanho) { $(this).val($(this).val().substring(0, tamanho)); }
+            })
+        }
+        
+        function mensagemPopup(pIdDesdobramento) {
+        	if(pIdDesdobramento != null && pIdDesdobramento != ''){
+	        	var result = confirm('Desdobramento salvo com sucesso.\nDeseja vincular operadores ao desdobramento.')
+				if(result == true) {
+					vincularOperador();
+				}
+			}
+		}
+    </script>
+    <apex:sectionHeader id="shCabecalho" title="Cadastro" subtitle="Desdobramento de Metas"/>
+    <apex:form >
+        <apex:outputPanel id="opPrincipal">
+            <script type="text/javascript">
+                $(document).ready(function() {
+                    limitarTamanho($("[id$=nomeDesdobramento]"), 180);
+                });
+            </script>
+            <apex:pageMessages id="pmMensagem"/>
+            <apex:actionStatus onstart="blockPage()" onstop="unblockPage()" id="blockUI"/>
+            <apex:actionFunction name="vincularOperador" action="{!redirectVincularUsuario}" status="blockUI" />
+            <apex:outputPanel id="opCadastroDesdobramento">
+                <apex:pageblock >
+                    <table id="cadastroDesdobramento" style="widht:100%;border-collapse: collapse;">
+                        <tbody>
+                        <tr>
+                            <td class="label">
+                                <apex:outputlabel value="Nome do Desdobramento:"/>
+                            </td>
+                            <td class="field">
+                                <apex:inputtext id="nomeDesdobramento" value="{!nomeDesdobramento}"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="label">
+                                <apex:outputlabel value="Área:"/>
+                            </td>
+                            <td class="field">
+                                <apex:selectlist multiselect="false" size="1" value="{!area}">
+                                    <apex:selectoptions value="{!Areas}"/>
+                                </apex:selectlist>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <apex:pageblockbuttons location="bottom">
+                        <apex:commandbutton action="{!salvar}" value="Salvar" status="blockUI" rerender="opPrincipal" oncomplete="mensagemPopup('{!idDesdobramentoMeta}');" />
+                        <apex:commandbutton action="{!limpar}" value="Limpar" status="blockUI" rerender="opPrincipal"/>
+                    </apex:pageblockbuttons>
+                </apex:pageblock>
+            </apex:outputPanel>
+            <apex:outputPanel id="opListaDesdobramentos">
+                <apex:pageblock >
+                    <apex:pageblocktable value="{!desdobramentos}" var="d">
+                        <apex:column headerValue="Ação">
+                            <apex:commandlink value="Inativar" rendered="{!d.desdobramento.Ativo__c}" action="{!d.inativar}" status="blockUI" rerender="opPrincipal" />
+                            <apex:commandlink value="Reativar" rendered="{!!d.desdobramento.Ativo__c}" action="{!d.reativar}" status="blockUI" rerender="opPrincipal"/>
+                        </apex:column>
+                        <!-- <apex:column headerValue="Desdobramento" value="{!d.desdobramento.Name}"/> -->
+                        <apex:column headerValue="Desdobramento">
+                            <apex:commandlink value="{!d.desdobramento.Name}" action="{!redirectVincularUsuario}" status="blockUI">
+                            	<apex:param name="idDesdobramentoMeta" value="{!d.desdobramento.Id}" assignTo="{!idDesdobramentoMeta}"/>
+							</apex:commandlink>
+                        </apex:column>
+                        <apex:column headerValue="Área" value="{!d.desdobramento.Area__c}"/>
+                        <apex:column headerValue="Ativo" value="{!d.desdobramento.Ativo__c}"/>
+                        <apex:column headerValue="Data de Criação" value="{!d.desdobramento.CreatedDate}"/>
+                    </apex:pageblocktable>
+                </apex:pageblock>
+            </apex:outputPanel>
+        </apex:outputPanel>
+    </apex:form>
+</apex:page>

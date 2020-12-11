@@ -1,0 +1,290 @@
+<apex:page id="pConsultaCliente" controller="CtrlConsultaCliente" tabStyle="Lead" >
+	<apex:includeScript value="/support/console/37.0/integration.js"/>
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-2.2.3.min.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery.blockUI.js')}" />
+	<apex:includeScript value="{!URLFOR($Resource.jQuery, 'meiomask.js')}" /> 
+	<style type="text/css">
+		ul {
+		  list-style-type: none;
+		}
+		
+		ul li, ol li, ul {
+		    margin-left: 0;
+		    padding-left: 0;
+		}
+		
+		li {
+		    padding-bottom: 5px;
+		}
+	</style>
+	<script type="text/javascript">
+		var $j = jQuery.noConflict();
+		
+		function blockPage(){
+    	 
+	    	$j.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Aguarde...</h1>',
+	             css: {
+	              border: 'none',   
+	              padding: '15px',   
+	              '-webkit-border-radius': '10px',   
+	              '-moz-border-radius': '10px',    
+	              opacity: .9 
+	             }   
+	           });  
+	     }  
+
+	    function unblockPage(){
+	    	$j.unblockUI();  
+	    }
+	    
+	    $j(function(){
+
+			$j(document).on('click','[data-id*="btnMostrarCartoes"]',function(e){
+				e.preventDefault();
+				console.log('teste');
+				//console.log($j(this).data('aviso'));
+				var aviso = $j(this).data('aviso');
+				var active = $j(this).data('active');
+				//console.log(typeof active);
+
+				if(active == false){
+
+					$j('[data-id="aviso_'+aviso+'"]').css('display','');
+					$j(this).data('active',true);
+					$j(this).html('-');
+				}else {
+					$j('[data-id="aviso_'+aviso+'"]').css('display','none');
+					$j(this).data('active',false);
+					$j(this).html('+');
+				}
+			});
+		});
+	    
+	    function carregarRegistro(id){
+	    	
+	    	var message = '{"Tipo":"Consulta","Id":"' + id + '"}';
+	    	
+	    	sforce.console.cti.sendCTIMessage(message, callbackCTIMessage);
+	    }
+	    
+	    var callbackCTIMessage = function callbackCTIMessage(result) {
+	    	if (result.success == true) {
+	    		// sforce.console.getEnclosingTabId(closeSubtab);
+	    	}
+	    };
+	    
+	    var closeSubtab = function closeSubtab(result) {
+		    sforce.console.closeTab(result.id);
+		};
+	</script>
+	<apex:sectionHeader id="shCabecalho" title="Consultar" subtitle="Cliente"/>
+	<apex:form >
+		<apex:outputPanel id="opPrincipal" >
+			<apex:pageMessages id="pmMensagem" />
+			<apex:actionStatus onstart="blockPage()" onstop="unblockPage()" id="blockUI"/>
+			<apex:outputPanel id="opConsulta">
+				<apex:pageBlock >
+					<table cellpadding="2" style="width: 60%;">
+						<tr>
+							<td style="text-align: right;"> 
+								<apex:outputLabel value="CNPJ/CPF" style="font-weight: bold;"/>		
+							</td>
+							<td>
+								<apex:inputText id="cnpj" label="CNPJ/CPF" value="{!cnpjCpf}" />
+								<apex:outputLabel value="(apenas números)"/>		
+							</td>
+							<td style="text-align: right;"> 
+								<apex:outputLabel value="Razão Social" style="font-weight: bold;"/>		
+							</td>
+							<td>
+								<apex:inputText id="razaoSocial" label="Razão Social" value="{!razaoSocial}" />		
+							</td>
+						</tr>
+						<tr>
+							<td style="text-align: right;"> 
+								<apex:outputLabel value="Contrato" style="font-weight: bold;"/>		
+							</td>
+							<td colspan="3">
+								<apex:inputText id="contrato" label="Contrato" value="{!contrato}" />		
+							</td>
+						</tr>
+					</table>
+				<apex:pageBlockButtons location="top">
+					<apex:commandButton value="Pesquisar" action="{!consultar}" reRender="opPrincipal" status="blockUI"/>		
+					<apex:commandButton value="Limpar" action="{!cancelar}" reRender="opPrincipal" status="blockUI"/>		
+				</apex:pageBlockButtons>
+				</apex:pageBlock>
+				<script type="text/javascript">
+					$j(document).ready(function() {
+						$j("[id$=cnpj]").on("keyup", function(e)
+						{
+						    $j(this).val(
+						        $j(this).val()
+						        .replace(/\D/g, '')
+								.substring(0, 14));
+						});
+						
+						$j("[id$=razaoSocial]").on("keyup", function(e)
+						{
+						    $j(this).val(
+						        $j(this).val()
+								.substring(0, 99));
+						});
+						
+						$j("[id$=contrato]").on("keyup", function(e)
+						{
+						    $j(this).val(
+						        $j(this).val()
+						        .replace(/\D/g, '')
+								.substring(0, 8));
+						});
+					});
+				</script>
+			</apex:outputPanel>
+			<apex:outputPanel >
+				<apex:pageBlock >
+					<p><apex:outputText rendered="{!pesquisou && (listaPrincipal == null || listaPrincipal.size == 0)}" value="Não foram encontrados dados, favor cadastrar a conta, contato e oportunidade" /></p>
+					<p><apex:outputLink style="text-decoration: none;" styleClass="btn" rendered="{!pesquisou && (listaPrincipal == null || listaPrincipal.size == 0)}" value="/001/e"><apex:outputText value="Nova Conta" /></apex:outputLink></p>
+					<!-- <apex:pageBlockTable value="{!listaPrincipal}" var="op" rendered="{!listaPrincipal != null && listaPrincipal.size > 0}">
+						<apex:column headerValue="Pedido" >
+							<ul style="margin:0px;">
+								<apex:repeat value="{!op.Orders}" var="pe">
+									<li style="{!IF(pe.Status != 'Finalizado', 'display:none;', '')}"><apex:outputText value="{!pe.OrderNumber}" /></li>
+									<li style="{!IF(pe.Status == 'Finalizado', 'display:none;', '')}"><apex:outputLink onClick="carregarRegistro('{!pe.Id}');" value="/{!pe.Id}"><apex:outputText value="{!pe.OrderNumber}" /></apex:outputLink></li>
+								</apex:repeat>
+							</ul>
+						</apex:column>
+						<apex:column headerValue="Nome da Oportunidade" >
+							<apex:outputText value="{!op.Name}" />
+						</apex:column>
+						<apex:column headerValue="Produto Alelo" >
+							<ul style="margin:0px;">
+								<apex:repeat value="{!op.Produtos_Alelo__r}" var="pr">
+									<li><apex:outputText value="{!pr.Name}" /></li>
+								</apex:repeat>
+							</ul></apex:column>
+						<apex:column headerValue="Data do Pedido" >
+							<ul style="margin:0px;">
+								<apex:repeat value="{!op.Orders}" var="pe">
+									<li><apex:outputField value="{!pe.EffectiveDate}" /></li>
+								</apex:repeat>
+							</ul>
+						</apex:column>
+						<apex:column headerValue="CNPJ" ><apex:outputField value="{!op.Account.CPF_CNPJ__c}" /></apex:column>
+						<apex:column headerValue="Conta" >
+							<apex:outputText value="{!op.Account.Name}" />
+						</apex:column>
+						<apex:column headerValue="Contato">
+							<apex:outputText value="{!op.Contato_da_oportunidade__r.Name}" />
+						</apex:column>
+					</apex:pageBlockTable> -->
+					
+					
+					<table class="list" border="0" cellpadding="0" cellspacing="0">
+						<colgroup span="8" />
+						<thead>
+							<tr class="headerRow">
+								<th class="headerRow">Pedido</th>
+								<th class="headerRow">Nome da Oportunidade</th>
+								<th class="headerRow">Data do Pedido</th>
+								<th class="headerRow">CNPJ</th>
+								<th class="headerRow">Conta</th>
+								<th class="headerRow">Contato</th>
+								<th class="headerRow">Implantador atribuido</th>
+								<th class="headerRow"></th>
+							</tr>
+						</thead>
+						<tbody>
+						<apex:variable var="index" value="{!0}"/>
+						<apex:repeat value="{!listaPrincipal}" var="o">
+							<tr class="dataRow" onmouseover="if (window.hiOn){hiOn(this);}" onmouseout="if (window.hiOff){hiOff(this);}"
+								onblur="if (window.hiOff){hiOff(this);}" onfocus="if (window.hiOn){hiOn(this);}">
+								<td class="dataCell">
+									<ul style="margin:0px;">
+										<apex:repeat value="{!o.Orders}" var="pe">
+											<li style="{!IF(pe.Status != 'Finalizado', 'display:none;', '')}"><apex:outputText value="{!pe.OrderNumber}" /></li>
+											<li style="{!IF(pe.Status == 'Finalizado', 'display:none;', '')}"><apex:outputLink onClick="carregarRegistro('{!pe.Id}');" value="/{!pe.Id}"><apex:outputText value="{!pe.OrderNumber}" /></apex:outputLink></li>
+										</apex:repeat>
+									</ul>
+								</td>
+								<td class="dataCell">
+									<apex:outputField value="{!o.Name}" />
+								</td>
+								<td class="dataCell">
+									<ul style="margin:0px;">
+										<apex:repeat value="{!o.Orders}" var="pe">
+											<li><apex:outputField value="{!pe.EffectiveDate}" /></li>
+										</apex:repeat>
+									</ul>
+								</td>
+								<td class="dataCell">
+									<apex:outputField value="{!o.Account.CPF_CNPJ__c}" />
+								</td>
+								<td class="dataCell">
+									<apex:outputField value="{!o.Account.Name}" />
+								</td>
+								<td class="dataCell">
+									<apex:outputField value="{!o.Contato_da_oportunidade__r.Name}" />
+								</td>
+								<td class="dataCell">
+									<apex:outputField value="{!o.Implantador_Atribuido__c}" />
+								</td>
+								<td class="dataCell" align="center" style="border:1px solid #ccc; font-size:large;">
+									<apex:commandLink style="text-decoration:none;" html-data-active="true" html-data-aviso="{!index}" html-data-id="btnMostrarCartoes" onclick="return false;" reRender="none">
+										-
+									</apex:commandLink>
+								</td>
+							</tr>
+							<tr class="dataRow" data-id="aviso_{!index}"
+								onmouseover="if (window.hiOn){hiOn(this);}" onmouseout="if (window.hiOff){hiOff(this);}"
+								onblur="if (window.hiOff){hiOff(this);}" onfocus="if (window.hiOn){hiOn(this);}">
+								<td class="dataCell" >
+									
+								</td>
+								<td class="dataCell" colspan="7" style="padding-too: 5px; padding-bottom:20px;">
+									<table class="list" border="0" cellpadding="0" cellspacing="0">
+										<colgroup span="5" />
+										<thead>
+											<tr class="headerRow">
+												<th class="headerRow">Produto</th>
+												<th class="headerRow">Tabulação pai</th>
+												<th class="headerRow">Data da última tabulação</th>
+												<th class="headerRow">Tabulação filho</th>
+												<th class="headerRow">Tabulação neto</th>
+											</tr>
+										</thead>
+										<tbody> 
+											<apex:repeat value="{!o.Produtos_Alelo__r}" var="pa">
+											<tr class="dataRow" onmouseover="if (window.hiOn){hiOn(this);}" onmouseout="if (window.hiOff){hiOff(this);}"
+												onblur="if (window.hiOff){hiOff(this);}" onfocus="if (window.hiOn){hiOn(this);}">
+												<td class="dataCell">
+													<apex:outputField value="{!pa.Name}" />
+												</td> 
+												<td class="dataCell">
+													<apex:outputField value="{!pa.Tabulacao_Pai_Implantacao__c}" />
+												</td>
+												<td class="dataCell">
+													<apex:outputField value="{!pa.Data_Hora_Tabulacao__c}" />
+												</td>
+												<td class="dataCell">
+													<apex:outputField value="{!pa.Tabulacao_Filho_Implantacao__c}" />
+												</td>
+												<td class="dataCell">
+													<apex:outputField value="{!pa.Tabulacao_Neto_Implantacao__c}" />
+												</td>												
+											</tr>
+											</apex:repeat>
+											<apex:variable var="index" value="{!index + 1}"/>
+										</tbody>
+									 </table>
+								</td>
+							</tr>
+						</apex:repeat>
+						</tbody>
+					</table>	
+					
+				</apex:pageBlock>
+			</apex:outputPanel>
+		</apex:outputPanel>
+	</apex:form>
+</apex:page>

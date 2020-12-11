@@ -1,0 +1,230 @@
+<apex:page showHeader="false">
+    <style type="text/css">
+    body{
+        font-family: "Helvetica Neue" , "Lucida Grande" , "Segoe UI" , Arial, Helvetica, Verdana, sans-serif;
+        font-size: 12px;
+        color: #666;
+    }
+
+    form {
+        margin: 0 auto;
+    }
+
+    input {
+        font-size: 1em;
+        padding: 2px;
+        color: #052147;
+        background: #fff;
+        border-top: 1px solid #888;
+        border-left: 1px solid #888;
+        border-bottom: 1px solid #e4e4e4;
+        border-right: 1px solid #e4e4e4;
+    }
+
+    button {
+        background: url('{!$Resource.Prechat_Enviar}');
+        width: 130px;
+        height: 35px;
+        margin: 10px auto 0px;
+        display: block;
+    }
+
+    input.estiloLink {
+        background-color:#005e47;
+        font-weight: bold;
+        text-decoration: none !important;
+        color: #ffffff;
+        padding: 10px 30px 10px 30px;
+    }
+
+    input.estiloLink:hover {
+        background-color:#005e47;
+        font-weight: bold;
+        text-decoration: none !important;
+        color: #ffffff;
+        padding: 10px 30px 10px 30px;
+    }
+</style>
+
+    <!-- This script takes the endpoint URL parameter passed from the deployment page and makes it the action for the form -->
+    <script type='text/javascript' src='https://d.la1-c1-ph2.salesforceliveagent.com/content/g/js/32.0/prechat.js'></script>
+    <script type='text/javascript'>
+        (function() {
+            function handlePageLoad() {
+                var endpointMatcher = new RegExp("[\\?\\&]endpoint=([^&#]*)");
+                document.getElementById('prechatForm').setAttribute('action',
+                decodeURIComponent(endpointMatcher.exec(document.location.search)[1]));
+            }
+            if (window.addEventListener) {
+                window.addEventListener('load', handlePageLoad, false);
+            }
+            else {
+                window.attachEvent('onload', handlePageLoad, false);
+            }
+        })()
+
+    </script>
+
+    <body marginheight="0" marginwidth="0" leftmargin="0" bottommargin="0" rightmargin="0" topmargin="0">
+    <table height="100%" cellpadding="0" cellspacing="0" style="background-color: #FFFFFF;">
+        <tr>
+            <td style="text-align: center;">
+                <a href="#" title="Chat Empresas"><apex:image url="{!$Resource.Prechat_Header}" width="390"/></a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="dvNaoCliente">
+                    <form method='post' id='prechatForm'>
+                        <table cellpadding="3" style="width: 100%">
+                            <tr>
+                                <td style="padding-bottom: 20px; padding-left: 30px">
+                                    Nome Completo*:
+                                </td>
+                                <td style="width: 70%;">
+                                    <input type="text" name="liveagent.prechat:ContactName" id='fullName' onblur="preencheNome()" width="80%"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-left: 30px">
+                                    CNPJ*:
+                                </td>
+                                <td>
+                                    <input type='text' name='liveagent.prechat:CaseCNPJ' id='cnpj' class="cnpj" maxlength="14"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="padding-top: 20px; text-align: center;">
+                                    (*) Preenchimento obrigatório
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="text-align: center;">
+                                    &nbsp;
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Hidden fields used to set additional custom details -->
+                        <input type="hidden" name="liveagent.prechat:CaseStatus" value="Novo" /><br />
+                        <input type="hidden" name="liveagent.prechat:CaseType" value="Pergunta" /><br />
+
+                        <!-- This example assumes that "Chat" was added as picklist value to the Case Origin field -->
+                        <input type="hidden" name="liveagent.prechat:CaseOrigin" value="Portal Bancos" /><br />
+
+                        <!-- todo This example will set the Case Record Type to a specific value for the record type configured on the org. Lookup the case record type's id on your org and set it here -->
+                        <input type="hidden" name="liveagent.prechat:CaseRecordType" value="0121R000000oFhc" />
+                        <input type="hidden" name="liveagent.prechat:CaseAccountId" id="caseIdAccount" />
+                        <input type="hidden" name="liveagent.prechat:ContactFirstName" id="contactFirstName" />
+                        <input type="hidden" name="liveagent.prechat:ContactLastName" id="contactLastName" />
+
+                        <!-- Used to set the visitor's name for the agent in the Console -->
+                        <input type="hidden" name="liveagent.prechat.name" id="prechat_field_name" />
+
+                       <!-- map: Use the data from prechat form to map it to the Salesforce record's fields -->
+                        <input type="hidden" name="liveagent.prechat.findorcreate.map:Case" value="Status,CaseStatus;Type,CaseType;Origin,CaseOrigin;CNPJ__c,CaseCNPJ;RecordTypeId,CaseRecordType;AccountId,CaseAccountId" />
+
+                        <!-- doCreate example for a Case: create a case to attach to the chat, set the Case Subject to the value provided by the customer and set the case's Status and Origin fields -->
+                        <input type="hidden" name="liveagent.prechat.findorcreate.map.doCreate:Case" value="Status,true;Type,true;Origin,true;CNPJ__c,true;RecordTypeId,true;AccountId,true" />
+
+                        <!-- map: Use the data from prechat form to map it to the Salesforce record's fields -->
+                        <input type="hidden" name="liveagent.prechat.findorcreate.map:Contact" value="FirstName,ContactFirstName;LastName,ContactLastName;AccountId,CaseAccountId" />
+
+                        <!-- doFind, doCreate and isExactMatch example for a Contact:
+                            Find a contact whose Email exactly matches the value provided by the customer in the form
+                            If there's no match, then create a Contact record and set it's First Name, Last Name, Email, and Phone to the values provided by the customer -->
+                        <input type="hidden" name="liveagent.prechat.findorcreate.map.doFind:Contact" value="Name,true" />
+                        <input type="hidden" name="liveagent.prechat.findorcreate.map.isExactMatch:Contact" value="Name,true" />
+                        <input type="hidden" name="liveagent.prechat.findorcreate.map.doCreate:Contact" value="FirstName,true;LastName,true;AccountId,true" />
+
+                        <!-- linkToEntity: Set the record Contact record, found/created above, as the Contact on the Case that's created -->
+                        <input type="hidden" name="liveagent.prechat.findorcreate.linkToEntity:Contact" value="Case,ContactId" />
+
+                        <!-- showOnCreate: Open the Contact and Case records as sub-tabs to the chat for the agent in the Console -->
+                        <input type="hidden" name="liveagent.prechat.findorcreate.showOnCreate:Case" value="true" />
+                        <input type="hidden" name="liveagent.prechat.findorcreate.showOnCreate:Contact" value="false" />
+
+                        <!-- saveToTranscript: Associates the records found / created, i.e. Contact and Case, to the Live Chat Transcript record. -->
+                        <input type="hidden" name="liveagent.prechat.findorcreate.saveToTranscript:Case" value="CaseId" />
+
+                        <!-- displayToAgent: Hides the case record type from the agent -->
+                         <input type="hidden" name="liveagent.prechat.findorcreate.displayToAgent:CaseRecordType" value="false" />
+
+                        <!-- searchKnowledge: Searches knowledge article based on the text, this assumes that Knowledge is setup -->
+                        <!-- <input type="hidden" name="liveagent.prechat.knowledgeSearch:CaseSubject" value="true" /> -->
+
+                        <div style="width: 100%; text-align: center; padding-bottom: 30px;">
+                            <input type='submit' value='Enviar' id='prechat_submit' onclick="return validaCampos()" class="estiloLink"/>
+                        </div>
+
+                        <!-- Set the visitor's name for the agent in the Console to first and last name provided by the customer -->
+                        <script type="text/javascript">
+
+                            function preencheNome(){
+
+                                if(document.getElementById("fullName").value != ''){
+                                    var nomes = (document.getElementById("fullName").value).replace(' ', '|');
+                                    var nomesArray = nomes.split('|');
+                                    if(nomesArray.length > 0){
+                                        document.getElementById("contactFirstName").value = nomesArray[0];
+
+                                        if(nomesArray.length > 1){
+                                            document.getElementById("contactLastName").value = nomes.replace('|',' ').replace(document.getElementById("contactFirstName").value,'');
+                                        }
+                                        else {
+                                            alert('Favor preencher nome e sobrenome');
+                                        }
+                                    }
+                                }
+
+                            }
+
+                            function validaCampos() {
+
+                                if(document.getElementById("fullName").value == '' || document.getElementById("cnpj").value == '') {
+                                    alert('Campo(s) obrigatório(s) não preenchido(s)');
+                                    return false;
+                                }
+
+                                document.getElementById("prechat_field_name").value = document.getElementById("fullName").value;
+                                return true;
+                            }
+
+                            var detailCallback = function (details){
+                                
+                                for (var i = 0; i < details.customDetails.length; i++) {
+
+                                    //todo
+                                    if(details.customDetails[i].label == 'codigoBanco'){
+                                        if(details.customDetails[i].value == '001') {
+                                         
+                                            document.getElementById("caseIdAccount").value = '0013600001I68du';
+                                            break;
+                                        }
+                                        else if(details.customDetails[i].value == '237'){
+                                            document.getElementById("caseIdAccount").value = '0013600000s5KPs';
+                                            break;
+                                        }
+                                        //console.log(details.customDetails[i].value);
+                                        //alert(details.customDetails[i].value);
+                                    }
+                                }
+                            };
+
+                            //First parameter is Chat URL. This is same as generated in Live Chat deployment code and can be used here
+                            //This might be different for different users todo
+                            liveagent.details.preChatInit('https://d.la1-c1-ph2.salesforceliveagent.com/chat','detailCallback');
+
+                        </script>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: center;">
+                <apex:image url="{!$Resource.Prechat_Footer}" width="442" />
+            </td>
+        </tr>
+    </table>
+    </body>
+</apex:page>

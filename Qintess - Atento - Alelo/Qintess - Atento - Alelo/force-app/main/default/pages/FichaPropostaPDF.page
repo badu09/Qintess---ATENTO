@@ -1,0 +1,843 @@
+<apex:page id="pageFichaPropostaPDF" controller="CtrlFichaPropostaPDF" renderAs="pdf" showheader="false" applyhtmltag="false" language="pt_BR">
+<!-- <apex:page id="pageFichaPropostaPDF" controller="CtrlFichaPropostaPDF" showheader="false" applyhtmltag="false" language="pt_BR"> -->
+<html>
+    <head>
+	    <style type="text/css">
+	    	 @page{
+                size: A4 portrait;
+                 margin-top:2.0cm; 
+                 margin-left:1.0cm; 
+                 margin-right:0.5cm; 
+                 margin-bottom:0.0cm; 
+                @top-center {
+                    content: element(header);
+                }
+            }
+            div.pagina {
+            	width: 100%;
+            	height: 300px;
+            }
+            
+            div.header {
+/*             	background: url("{!$Resource.img_cabecalho}") no-repeat center center; */
+            	height: 50px;
+            	width: 19cm;
+            	text-align: center;
+            	position: running(header);
+            	background-position: center;
+            }
+            
+            div.texto {
+            	text-align: left;
+            }
+            body{
+            	font-family: "Helvetica Neue" , "Lucida Grande" , "Segoe UI" , Arial, Helvetica, Verdana, sans-serif;
+            }      
+            h2 {
+            	width: 100%;
+            	color: #FFFFFF;
+            	background-color: #000000;
+			  	font-size: 13px;  
+            }
+            h3 {
+            	width: 50%;
+            	color: #FFFFFF;
+            	background-color: #000000;
+			  	font-size: 13px;  
+            }
+            h4 {
+            	width: 100%;
+            	color: #000000;
+			  	font-size: 13px;  
+            }
+            p.subtitulo {
+            	border-bottom: 2px solid;
+            	font-size: 13px; 
+            	font-weight: bold
+            }
+            hr.quebra-linha {
+           		color: #000000;
+				background-color: #000000;
+				height: 10px;
+            }
+            p.texto {
+            	font-size:12px;
+            	margin-top: 0px;
+            }
+            td.campo_direita {
+            	font-size:10px; 
+            	float:right; 
+            	margin-right:170px;
+            }
+            label.nome_coluna_produto {
+            	font-weight: bold;
+            	font-size:10px; 
+            	text-align:center;
+            }
+            
+            label.nome_colunas{
+            	font-size:9px;
+            }
+            
+            label.nome_colunas_direita{
+            	font-size:9px;
+            	float:right; 
+            	margin-right:30px;
+            }
+            .texto_colunas {
+            	font-size:11px;
+            	margin-top: 0px;
+            }
+            .texto_colunas_direita {
+            	font-size:11px;
+            	margin-top: 0px;
+            	float:right; 
+            	margin-right:30px;
+            }            
+		</style>
+	</head> 
+	<body>
+		<div class="header" style="padding: 0; margin: 0;">
+			<apex:image id="imgCabecalho" width="100%" value="{!URLFOR($Resource.img_cabecalho)}"/>
+		</div>
+		<div>
+			<h3>1. Dados Cadastrais do Contratante</h3>
+			<div>
+				<table style="width:100%" cellspacing="0">
+					<tbody>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">*CNPJ do Contratante</label></td>	
+						</tr> 
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="{!objOportunidade.Account.CPF_CNPJ__c}" /></td>		 
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">*Razão Social</label></td>	
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="{!objOportunidade.Account.Razao_Social__c}" /></td>	
+						</tr>			
+						<tr>
+							<td><label class="nome_colunas">*Nome Fantasia</label></td>
+							<td><label class="nome_colunas_direita">Quantidade Total de Funcionarios*</label></td>
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="{!objOportunidade.Account.Nome_Fantasia__c}" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" value="{!objOportunidade.Account.Quantidade_de_Funcionarios__c}" /></td> 
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">*Faturamento Anual</label></td>	
+						</tr>
+						<tr>
+							<td><label style="font-size:12px"><apex:outputField styleClass="texto_colunas" value="{!objOportunidade.Account.Faturamento__c}" /></label></td>			
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">*Atividade Principal - Ramo de Atividade (Seção/Divisão/Descrição) – ver códigos no anexo</label></td>	
+						</tr>
+						<tr>
+							<td><label style="font-size:12px">{!AtividadePrincipalCompleto}</label></td>			
+						</tr>
+						<tr>
+							<td><label class="nome_colunas">*Forma de Constituição</label></td>
+							<td><label class="nome_colunas_direita">*Data da Constituição</label></td>
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="{!objOportunidade.Account.Forma_de_Constituicao__c}" /></td>
+							<td>
+								<apex:outputText value="{0,date,dd/MM/yyyy}" style="width:110px;">
+									<apex:param value="{!objOportunidade.Account.Data_da_Constituicao__c}" />
+								</apex:outputText>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<p class="subtitulo">Responsáveis Legais</p>
+			<p class="subtitulo" style="border-bottom:none">Dados dos Administradores <label style="font-size:10px">(Pessoas físicas que representam a empresa. Podem ser membros da diretoria ou administradores eleitos pela Sociedade.)</label></p>
+			<div class="texto">
+				<table style="width:100%" cellspacing="0">
+					<tbody>
+						<tr>
+							<td><label class="nome_colunas">*Nome</label></td>
+							<td><label class="nome_colunas_direita">*CPF</label></td>
+						</tr>
+						<tr>
+						<!-- INFORMAÇÕES TA TABELA Responsavel_Leagal__c -->
+ 							<td><apex:outputText styleClass="texto_colunas" value="{!objOportunidade.Responsavel_Legal__r.Name}" /></td> 
+							<td><apex:outputText styleClass="texto_colunas_direita" value="{!objOportunidade.Responsavel_Legal__r.CPF__c}" /></td> 
+						</tr>
+						<tr>
+							<td><label class="nome_colunas">Nome 1</label></td>
+							<td><label class="nome_colunas_direita">CPF 1</label></td>
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="{!objOportunidade.Responsavel_Legal_2__r.Name}" /></td> 
+							<td><apex:outputText styleClass="texto_colunas_direita" value="{!objOportunidade.Responsavel_Legal_2__r.CPF__c}" /></td> 
+						</tr>
+					</tbody>
+				</table>		
+			</div>
+			<!-- bloco1.2 -->
+			<p class="subtitulo">Filial Contratante (Matriz)</p>
+			<div>
+				<table style="width:100%" cellspacing="0">
+					<tbody>
+						<tr>
+							<td colspan="3"><label class="nome_colunas">*Nome da Filial Contratante</label></td>	
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="Industria alguma coisa la LTDA" /></td> 	
+						</tr>			
+						<tr>
+							<td colspan="2"><label class="nome_colunas">*Inscrição Estadual da Filial Contratante</label></td>
+							<td><label class="nome_colunas_direita">* Inscrição Municipal da Filial Contratante</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="80.651.848" /></td> 
+							<td><apex:outputText styleClass="texto_colunas_direita" value="01510" /></td> 
+						</tr>
+						<tr>
+							<td colspan="3"><label class="nome_colunas">*E-mail de contato</label></td>	
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="leticia.lopes@dentsply.com" /></td> 
+						</tr>
+						<tr>
+							<td colspan="3"><label class="nome_colunas">*E-mail para envio de nota fiscal eletrônica</label></td>	
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="leticia.lopes@dentsply.com" /></td> 			
+						</tr>
+						<tr>
+							<td><label class="nome_colunas">DDD</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:60px" >Telefone Fixo 1</label></td>
+							<td><label class="nome_colunas_direita">Telefone Fixo 2</label></td>
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="80.651.848" /></td> 
+							<td><apex:outputText styleClass="texto_colunas_direita" style="margin-right:60px" value="01510" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" value="123456" /></td> 
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">Endereço (Rua/Avenida)</label></td>
+							<td><label class="nome_colunas_direita">*Número</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="Av. das Américas" /></td> 
+							<td><apex:outputText styleClass="texto_colunas_direita" value="350" /></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">Complemento</label></td>
+							<td><label class="nome_colunas_direita">*Bairro</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="BL 01 SL 214" /></td> 
+							<td><apex:outputText styleClass="texto_colunas_direita" value="Cond Le Monde - Ed LONDRES" /></td> 
+						</tr>
+						<tr>
+							<td><label class="nome_colunas">*CEP</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:60px">*Cidade</label></td>
+							<td><label class="nome_colunas_direita">UF*</label></td>
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="22640 - 102" /></td>  
+							<td><apex:outputText styleClass="texto_colunas_direita" style="margin-right:60px" value="BARRA DA TIJUCA" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" value="RJ" /></td>
+						</tr>
+						
+					</tbody>
+				</table>
+			</div>
+			<p class="subtitulo">Filial 1</p>
+			<div>
+				<table style="width:100%" cellspacing="0">
+					<tbody>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">Nome da Filial 1</label></td>
+							<td colspan="2"><label style="font-size:10px; float:right; margin-right:30px">CNPJ Filial 1</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="Filial 01" /></td> 
+							<td colspan="2"><apex:outputText styleClass="texto_colunas_direita" value="" /></td> 
+						</tr>			
+						<tr>
+							<td colspan="2"><label class="nome_colunas">*Inscrição Estadual da Filial 1</label></td>
+							<td colspan="2"><label style="font-size:10px; float:right; margin-right:30px">*Inscrição Municipal da Filial 1</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="12314124323" /></td> 
+							<td colspan="2"><apex:outputText styleClass="texto_colunas_direita" value="12314124323" /></td> 
+						</tr>
+						<tr>
+							<td colspan="4"><label class="nome_colunas">*E-mail de contato</label></td>	
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="fabrica@bsi.com.br" /></td> 			
+						</tr>
+						<tr>
+							<td><label class="nome_colunas">DDD</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:30px">Telefone Fixo 1</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:60px">Telefone Fixo 2</label></td>
+							<td><label class="nome_colunas_direita">Fax</label></td>
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="24" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" style="margin-right:30px" value="21 32379822" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" style="margin-right:60px" value="21 32379811" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" value="21 32379800" /></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">Endereço (Rua/Avenida)</label></td>
+							<td colspan="2"><label class="nome_colunas_direita">*Número</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="Av. das Américas" /></td> 
+							<td colspan="2"><apex:outputText styleClass="texto_colunas_direita" value="3506666" /></td> 
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">Complemento</label></td>
+							<td colspan="2"><label class="nome_colunas_direita">*Bairro</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="BL 01 SL 214" /></td> 
+							<td colspan="2"><apex:outputText styleClass="texto_colunas_direita" value="Cond Le Monde - Ed LONDRES" /></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">*CEP</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:60px">*Cidade</label></td>
+							<td><label class="nome_colunas_direita">UF*</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="22640 - 102" /></td> 
+							<td><apex:outputText styleClass="texto_colunas_direita" style="margin-right:60px" value="BARRA DA TIJUCA" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" value="RJ" /></td>
+						</tr>						
+					</tbody>
+				</table>
+			</div>
+			<p class="subtitulo">Filial 2</p>
+				<table style="width:100%" cellspacing="0">
+					<tbody>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">Nome da Filial 2</label></td>
+							<td colspan="2"><label style="font-size:10px; float:right; margin-right:30px">CNPJ Filial 2</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="" /></td> 
+							<td colspan="2"><apex:outputText styleClass="texto_colunas_direita" value="" /></td> 
+						</tr>			
+						<tr>
+							<td colspan="2"><label class="nome_colunas">*Inscrição Estadual da Filial 2</label></td>
+							<td colspan="2"><label style="font-size:10px; float:right; margin-right:30px">*Inscrição Municipal da Filial 2</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="" /></td> 
+							<td colspan="2"><apex:outputText styleClass="texto_colunas_direita" value="" /></td> 
+						</tr>
+						<tr>
+							<td colspan="4"><label class="nome_colunas">*E-mail de contato</label></td>	
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="" /></td> 			
+						</tr>
+						<tr>
+							<td><label class="nome_colunas">DDD</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:30px">Telefone Fixo 1</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:60px">Telefone Fixo 2</label></td>
+							<td><label class="nome_colunas_direita">Fax</label></td>
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" style="margin-right:30px" value="" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" style="margin-right:60px" value="" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" value="" /></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">Endereço (Rua/Avenida)</label></td>
+							<td colspan="2"><label class="nome_colunas_direita">*Número</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="" /></td> 
+							<td colspan="2"><apex:outputText styleClass="texto_colunas_direita" value="" /></td> 
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">Complemento</label></td>
+							<td colspan="2"><label class="nome_colunas_direita">*Bairro</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="" /></td> 
+							<td colspan="2"><apex:outputText styleClass="texto_colunas_direita" value="" /></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">*CEP</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:60px">*Cidade</label></td>
+							<td><label class="nome_colunas_direita">UF*</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="" /></td> 
+							<td><apex:outputText styleClass="texto_colunas_direita" style="margin-right:60px" value="" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" value="" /></td>
+						</tr>				
+					</tbody>
+				</table>
+			<hr class="quebra-linha"/>			
+			<!-- página 2 -->			
+			<h2>2. Dados do interlocutor de decisão <label style="font-size:8px">(Não precisa ser um Responsável Legal. Pessoa nomeada pelos administradores para primeiro acesso ao Portal de Gestão Prepax.)</label></h2><br />
+			<div>
+				<table style="width:100%">
+					<tbody>
+						<tr>
+							<td colspan="4"><label class="nome_colunas">*Nome Completo</label></td>	
+						</tr>
+						<tr>
+							<td colspan="4"><label style="font-size:12px">Leticia Falco Lopes</label></td>			
+						</tr>
+						<tr>
+							<td><label class="nome_colunas">*CPF</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:60px">*Data de Nascimento</label></td>
+							<td><label class="nome_colunas_direita">*Sexo</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:125px">F = Feminino<br />M = Masculino</label></td>
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="080596437 - 11" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" style="margin-right:60px" value="21/11/1979" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" value="F" /></td> 
+							<td></td> 
+						</tr>
+						<tr>
+							<td colspan="4"><label class="nome_colunas">*E-mail (que receberá link de ativação do Login e Senha para primeiro acesso ao Portal de Gestão Prepax)</label></td>	
+						</tr>
+						<tr>
+							<td colspan="4"><apex:outputText styleClass="texto_colunas" value="080596437 - 11" /></td>			
+						</tr>
+						
+						<tr>
+							<td colspan="2"><label class="nome_colunas">*Nível Hierárquico</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:60px">1 = Proprietário  3 = Gerência 5 = Outros<br />2 = Diretoria 4 = Supervisão</label></td>
+							<td><label class="nome_colunas_direita">Número de Matrícula</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="5" /></td>	
+							<td></td> 
+							<td><apex:outputText styleClass="texto_colunas_direita" value="123456" /></td> 
+						</tr>
+						<tr>
+							<td colspan="2"><label class="nome_colunas">*Nome do Cargo</label></td>
+							<td colspan="2"><label class="nome_colunas_direita">*Localização Interna</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><apex:outputText styleClass="texto_colunas" value="ESPECIALISTA DE TD MKT" /></td>	
+							<td colspan="2"><apex:outputText styleClass="texto_colunas_direita" value="MARKETING" /></td> 
+						</tr>
+						<tr>
+							<td><label class="nome_colunas">DDD</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:30px">Telefone Fixo 1</label></td>
+							<td><label class="nome_colunas_direita" style="margin-right:60px">Ramal</label></td>
+							<td><label class="nome_colunas_direita">Fax</label></td>
+						</tr>
+						<tr>
+							<td><apex:outputText styleClass="texto_colunas" value="2233-1800" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" style="margin-right:30px" value="21 32379800" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" style="margin-right:60px" value="21 32379800" /></td>
+							<td><apex:outputText styleClass="texto_colunas_direita" value="21 32379800" /></td>
+						</tr>						
+					</tbody>
+				</table>
+			</div>
+			<h2>3. Dados do interlocutor de operação <label style="font-size:10px">(Responsável pelo recebimento do cartão, recomendado definir 3 interlocutores)</label></h2><br />
+			<div>
+				<p class="subtitulo">Interlocutor de operação 1</p>
+				<table style="width:100%">
+					<tbody>
+						<tr>
+							<td colspan="4"><label style="font-size:10px">*Nome Completo</label></td>	
+						</tr>
+						<tr>
+							<td colspan="4"><label style="font-size:12px">Leticia Falco Lopes</label></td>			
+						</tr>
+						<tr>
+							<td><label style="font-size:10px">*CPF</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:60px">*Data de Nascimento</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">*Sexo</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:125px">F = Feminino<br />M = Masculino</label></td>
+						</tr>
+						<tr>
+							<td><label style="font-size:12px">080596437 - 11</label></td>
+							<td><label style="font-size:12px; float:right; margin-right:60px">21/11/1979</label></td> 
+							<td><label style="font-size:12px; float:right; margin-right:30px">F</label></td> 
+							<td></td> 
+						</tr>
+						<tr>
+							<td colspan="4"><label style="font-size:10px">*E-mail (que receberá link de ativação do Login e Senha para primeiro acesso ao Portal de Gestão Prepax)</label></td>	
+						</tr>
+						<tr>
+							<td colspan="4"><label style="font-size:12px">leticia.lopes@dentsply.com</label></td>			
+						</tr>
+						
+						<tr>
+							<td colspan="2"><label style="font-size:10px">*Nível Hierárquico</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:60px">1 = Proprietário  3 = Gerência 5 = Outros<br />2 = Diretoria 4 = Supervisão</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">Número de Matrícula</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:12px">5</label></td>
+							<td></td> 
+							<td><label style="font-size:12px; float:right; margin-right:30px">123456</label></td> 
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:10px">*Nome do Cargo</label></td>
+							<td colspan="2"><label style="font-size:10px; float:right; margin-right:30px">*Localização Interna</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:12px">ESPECIALISTA DE TD MKT</label></td>
+							<td colspan="2"><label style="font-size:12px; float:right; margin-right:30px">MARKETING</label></td> 
+						</tr>
+						<tr>
+							<td><label style="font-size:10px">DDD</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">Telefone Fixo 1</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:60px">Ramal</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">Fax</label></td>
+						</tr>
+						<tr>
+							<td><label style="font-size:12px">24</label></td>
+							<td><label style="font-size:12px; float:right; margin-right:30px">2233-1800</label></td> 
+							<td><label style="font-size:12px; float:right; margin-right:60px">21 32379800</label></td> 
+							<td><label style="font-size:12px; float:right; margin-right:30px">21 32379800</label></td> 
+						</tr>						
+					</tbody>
+				</table>
+				<p class="subtitulo">Interlocutor de operação 2</p>
+				<table style="width:100%">
+					<tbody>
+						<tr>
+							<td colspan="4"><label style="font-size:10px">*Nome Completo</label></td>	
+						</tr>
+						<tr>
+							<td colspan="4"><label style="font-size:12px">Leticia Falco Lopes</label></td>			
+						</tr>
+						<tr>
+							<td><label style="font-size:10px">*CPF</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:60px">*Data de Nascimento</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">*Sexo</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:125px">F = Feminino<br />M = Masculino</label></td>
+						</tr>
+						<tr>
+							<td><label style="font-size:12px">080596437 - 11</label></td>
+							<td><label style="font-size:12px; float:right; margin-right:60px">21/11/1979</label></td> 
+							<td><label style="font-size:12px; float:right; margin-right:30px">F</label></td> 
+							<td></td> 
+						</tr>
+						<tr>
+							<td colspan="4"><label style="font-size:10px">*E-mail (que receberá link de ativação do Login e Senha para primeiro acesso ao Portal de Gestão Prepax)</label></td>	
+						</tr>
+						<tr>
+							<td colspan="4"><label style="font-size:12px">leticia.lopes@dentsply.com</label></td>			
+						</tr>
+						
+						<tr>
+							<td colspan="2"><label style="font-size:10px">*Nível Hierárquico</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:60px">1 = Proprietário  3 = Gerência 5 = Outros<br />2 = Diretoria 4 = Supervisão</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">Número de Matrícula</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:12px">5</label></td>
+							<td></td> 
+							<td><label style="font-size:12px; float:right; margin-right:30px">123456</label></td> 
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:10px">*Nome do Cargo</label></td>
+							<td colspan="2"><label style="font-size:10px; float:right; margin-right:30px">*Localização Interna</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:12px">ESPECIALISTA DE TD MKT</label></td>
+							<td colspan="2"><label style="font-size:12px; float:right; margin-right:30px">MARKETING</label></td> 
+						</tr>
+						<tr>
+							<td><label style="font-size:10px">DDD</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">Telefone Fixo 1</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:60px">Ramal</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">Fax</label></td>
+						</tr>
+						<tr>
+							<td><label style="font-size:12px">24</label></td>
+							<td><label style="font-size:12px; float:right; margin-right:30px">2233-1800</label></td> 
+							<td><label style="font-size:12px; float:right; margin-right:60px">21 32379800</label></td> 
+							<td><label style="font-size:12px; float:right; margin-right:30px">21 32379800</label></td> 
+						</tr>						
+					</tbody>
+				</table>				
+				<p class="subtitulo">Interlocutor de operação 3</p>
+				<table style="width:100%">
+					<tbody>
+						<tr>
+							<td colspan="4"><label style="font-size:10px">*Nome Completo</label></td>	
+						</tr>
+						<tr>
+							<td colspan="4"><label style="font-size:12px">Leticia Falco Lopes</label></td>			
+						</tr>
+						<tr>
+							<td><label style="font-size:10px">*CPF</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:60px">*Data de Nascimento</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">*Sexo</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:125px">F = Feminino<br />M = Masculino</label></td>
+						</tr>
+						<tr>
+							<td><label style="font-size:12px">080596437 - 11</label></td>
+							<td><label style="font-size:12px; float:right; margin-right:60px">21/11/1979</label></td> 
+							<td><label style="font-size:12px; float:right; margin-right:30px">F</label></td> 
+							<td></td> 
+						</tr>
+						<tr>
+							<td colspan="4"><label style="font-size:10px">*E-mail (que receberá link de ativação do Login e Senha para primeiro acesso ao Portal de Gestão Prepax)</label></td>	
+						</tr>
+						<tr>
+							<td colspan="4"><label style="font-size:12px">leticia.lopes@dentsply.com</label></td>			
+						</tr>
+						
+						<tr>
+							<td colspan="2"><label style="font-size:10px">*Nível Hierárquico</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:60px">1 = Proprietário  3 = Gerência 5 = Outros<br />2 = Diretoria 4 = Supervisão</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">Número de Matrícula</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:12px">5</label></td>
+							<td></td> 
+							<td><label style="font-size:12px; float:right; margin-right:30px">123456</label></td> 
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:10px">*Nome do Cargo</label></td>
+							<td colspan="2"><label style="font-size:10px; float:right; margin-right:30px">*Localização Interna</label></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:12px">ESPECIALISTA DE TD MKT</label></td>
+							<td colspan="2"><label style="font-size:12px; float:right; margin-right:30px">MARKETING</label></td> 
+						</tr>
+						<tr>
+							<td><label style="font-size:10px">DDD</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">Telefone Fixo 1</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:60px">Ramal</label></td>
+							<td><label style="font-size:10px; float:right; margin-right:30px">Fax</label></td>
+						</tr>
+						<tr>
+							<td><label style="font-size:12px">24</label></td>
+							<td><label style="font-size:12px; float:right; margin-right:30px">2233-1800</label></td> 
+							<td><label style="font-size:12px; float:right; margin-right:60px">21 32379800</label></td> 
+							<td><label style="font-size:12px; float:right; margin-right:30px">21 32379800</label></td> 
+						</tr>						
+					</tbody>
+				</table>
+			</div>			
+			<h3>4. Produtos contratados*</h3>
+			<div>
+				<table style="width:100%"> 
+					<tbody>
+						<tr>
+							<td style="border-bottom:1px black solid"></td> 
+							<td style="text-align:center;border-bottom:1px black solid"><label class="nome_coluna_produto">*Número de Filiais</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><label class="nome_coluna_produto">*Quantidade de Cartões</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><label class="nome_coluna_produto">Quantidade de Recarga Prevista</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><label class="nome_coluna_produto">*Valor de Carga Médio por Cartão</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><label class="nome_coluna_produto">*Taxa de Administração (%)</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><label class="nome_coluna_produto">*Quantidade de Franquia de Saque</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><label class="nome_coluna_produto">*Permitir que colaboradores solicitem reemissão de cartão</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><label class="nome_coluna_produto">*Permitir que colaboradores realizem saque</label></td>
+						</tr>
+						<tr>
+							<td style="text-align:center"><label style="font-size:10px; text-align:center">Pagamentos</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid"  value="X" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid" value="X" /></td>
+						</tr>
+						<tr>
+							<td style="text-align:center"><label style="font-size:10px; text-align:center">Incentivo</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="---" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid"  value="X" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid" value="X" /></td>
+						</tr>
+						<tr>
+							<td style="text-align:center"><label style="font-size:10px; text-align:center">Premiação</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="---" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid"  value="X" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid" value="X" /></td>
+						</tr>
+						<tr>
+							<td style="text-align:center"><label style="font-size:10px; text-align:center">Premiação Viagem</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="---" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid"  value="X" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid" value="X" /></td>
+						</tr>
+						<tr>
+							<td style="text-align:center"><label style="font-size:10px; text-align:center">Campanhas</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="---" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid"  value="X" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid" value="X" /></td>
+						</tr>
+						<tr>
+							<td style="text-align:center"><label style="font-size:10px; text-align:center">Despesas Corporativas</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid"  value=" " /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid" value=" " /></td>
+						</tr>
+						<tr>
+							<td style="text-align:center"><label style="font-size:10px; text-align:center">Viagem Corporate</label></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="" /></td>
+							<td style="text-align:center;border-bottom:1px black solid"><apex:outputText styleClass="texto_colunas" value="---" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid"  value="" /></td>
+							<td style="text-align:center"><apex:outputText styleClass="texto_colunas" style="border:1px black solid" value="" /></td>
+						</tr>					
+					</tbody>				
+				</table>
+				<hr class="quebra-linha"/>
+				<table style="width:50%">
+					<tbody>
+						<tr>
+							<td><label style="font-size:10px">*Forma de Pagamento</label></td>
+							<td><label style="font-size:10px">*Negociação</label></td>
+						</tr>		
+						<tr>
+							<td><label style="font-size:12px">Antecipado</label></td>
+							<td><label style="font-size:12px;">Venda Direta</label></td> 
+						</tr>	
+						<tr>
+							<td colspan="2"><label style="font-size:10px">Nome da Empresa para Gravação nos Cartões (Máximo 30 caracteres)</label></td>	
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:12px">Dentsply Ind Com LT</label></td>			
+						</tr>
+					</tbody>				
+				</table>
+				<p class="subtitulo" style="border-bottom:none">Dados Bancários (será utilizado para ajustes financeiros e devoluções, se necessário)</p>
+				<table style="width:50%">
+					<tbody>
+						<tr>
+							<td><label style="font-size:10px">*Banco</label></td>
+							<td><label style="font-size:10px">*Agência/Dígito</label></td>
+							<td><label style="font-size:10px">*Conta</label></td>
+						</tr>		
+						<tr>
+							<td><label style="font-size:12px">341</label></td>
+							<td><label style="font-size:12px;">0122-0</label></td>
+							<td><label style="font-size:12px">18982-2</label></td> 
+						</tr>
+					</tbody>				
+				</table>
+			</div> 			
+			<h3>5 .Vendedor*</h3>
+			<div>
+				<table style="width:50%">
+					<tbody>
+						<tr>
+							<td><label style="font-size:10px">*Código Identificador do Vendedor</label></td>
+							<td><label style="font-size:10px">*Nome do Vendedor</label></td>
+						</tr>		
+						<tr>
+							<td><label style="font-size:12px">1268</label></td>
+							<td><label style="font-size:12px;">GABRIEL S GIANNONI</label></td> 
+						</tr>	
+						<tr>
+							<td><label style="font-size:10px">*DDD</label></td>
+							<td><label style="font-size:10px">*Telefone Fixo 1</label></td>	
+						</tr>
+						<tr>
+							<td><label style="font-size:12px">11</label></td>
+							<td><label style="font-size:12px;">997897704</label></td> 			
+						</tr>
+					</tbody>				
+				</table>
+			</div>
+			<h3>6. Assinaturas*</h3>
+			<div>
+			<p style="font-size:10px">Ao assinar a FICHA PROPOSTA, e uma vez aprovado o cadastro pela Alelo, declaramo-nos vinculados às disposições contidas no contrato de prestação de serviços registrado no
+			oficial de registro de títulos e documentos na comarca de Barueri, estado de São Paulo, referente ao produto descrito no item 4, do qual recebemos uma cópia, e declaramos
+			ainda estar de pleno acordo com todas as suas cláusulas e condições.</p>
+				<table style="width:50%">
+					<tbody>
+						<tr>
+							<td><label style="font-size:10px">Local</label></td>
+							<td><label style="font-size:10px">Data</label></td>
+						</tr>		
+						<tr>
+							<td>___________________________________</td>
+							<td><label style="font-size:12px;">24/12/2016</label></td> 
+						</tr>	
+						<tr>
+							<td>|__________________________________|</td>
+							<td>|__________________________________|</td>	
+						</tr>
+						<tr>
+							<td><label style="font-size:10px">Assinatura de Representante Legal da Empresa</label></td>
+							<td><label style="font-size:10px;">Assinatura de Representante Legal da Alelo</label></td> 			
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:10px">Nome do Representante Legal da Empresa</label></td>	
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:12px"></label></td>			
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:10px">CPF</label></td>	
+						</tr>
+						<tr>
+							<td colspan="2"><label style="font-size:12px"></label></td>			
+						</tr>
+						<tr>
+							<td>|__________________________________|</td>
+							<td>|__________________________________|</td>	
+						</tr>
+						<tr>
+							<td><label style="font-size:10px">Nome</label></td>
+							<td><label style="font-size:10px;">Nome</label></td> 			
+						</tr>
+						<tr>
+							<td><label style="font-size:12px"></label></td>	
+							<td><label style="font-size:12px"></label></td>		
+						</tr>
+						<tr>
+							<td><label style="font-size:10px">CPF</label></td>
+							<td><label style="font-size:10px;">CPF</label></td> 			
+						</tr>
+						<tr>
+							<td><label style="font-size:12px"></label></td>	
+							<td><label style="font-size:12px"></label></td>		
+						</tr>
+					</tbody>				
+				</table>
+			</div>
+		</div>
+	</body>
+</html>
+</apex:page>
