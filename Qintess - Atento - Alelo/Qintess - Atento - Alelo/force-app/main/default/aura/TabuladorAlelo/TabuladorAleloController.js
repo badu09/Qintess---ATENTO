@@ -31,10 +31,10 @@
         helper.getList(component, "c.getPickListValuesStatusPagamentos", "v.statusValuesFornAtualPagamentos");//Status Forn. Atual de Combustivel
         
         component.set('v.tableColumns', [
-            {label: 'Contrato', fieldName: 'contrato', type: 'text'},//Nome_do_Contrato__c
-            {label: 'Banco', fieldName: 'banco', type: 'text'},//Id_da_Conta__c
-            {label: 'Produto', fieldName: 'produto', type: 'text'},//Name
-            {label: 'Fat Médio', fieldName: 'fatMedio', type: 'currency', typeAttributes: { currencyCode: 'BR', maximumSignificantDigits: 5}},
+            {label: 'Contrato', fieldName: 'Numero_do_Contrato__c', type: 'text'},//Nome_do_Contrato__c
+            {label: 'Banco', fieldName: 'Banco__c', type: 'text'},//Id_da_Conta__c
+            {label: 'Produto', fieldName: 'Name', type: 'text'},//Name
+            {label: 'Fat Médio', fieldName: 'Id', type: 'currency', typeAttributes: { currencyCode: 'BR', maximumSignificantDigits: 5}},
         ]);
 
     },
@@ -46,5 +46,9 @@
     getAccountId : function(component, event, helper) {
         var accountId = event.getSource().get("v.value");
         helper.getAccountData(component, event, accountId);
+        helper.getProdutoAlelo(component, accountId);
+    },
+    consolidarId: function(component, event, helper){
+            
     }
 })

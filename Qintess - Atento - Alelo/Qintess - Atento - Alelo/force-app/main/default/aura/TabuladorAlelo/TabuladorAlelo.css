@@ -48,6 +48,7 @@
 
 .THIS #id {
     width: 160px;
+    margin-left: 20px;
 }
 
 .THIS ::-webkit-input-placeholder {
@@ -58,8 +59,27 @@
     width: 200px;
 }
 
+.THIS #cnpj {
+    width: 180px;
+    margin-left: 20px;
+}
+
+.THIS #razao {
+    width: 200px;
+}
 
 .THIS #folha {
-    padding-top: 10px;
-    width: 195px;
+    width: 200px;
+}
+
+.THIS #interlocutor {
+    width: 200px;
+}
+.THIS #ultimoContato {
+    width: 170px;
+    margin-left: 20px;
+}
+
+.THIS #proxContato {
+    width: 200px;
 }

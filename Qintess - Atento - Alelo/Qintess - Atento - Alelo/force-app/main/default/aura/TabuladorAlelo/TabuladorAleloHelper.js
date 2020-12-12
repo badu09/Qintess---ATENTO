@@ -105,6 +105,46 @@
             }
         });
         $A.enqueueAction(action);
+    },
+    getProdutoAlelo: function (cmp, accountId){
+        var action = cmp.get("c.getProdutosAleloByAccountId");
+        action.setParams({
+        	accountId: accountId
+        });
+        action.setCallback(this, function (response) {
+            var state = response.getState();
+            var data = response.getReturnValue();
+            if(state === "SUCCESS"){
+                cmp.set('v.dataTable', data);
+            } else {
+                var errors = data.getError();
+                if (errors[0] && errors[0].message) {
+                	console.log("Error message: " + errors[0].message);
+                }
+            }
+        });
+        $A.enqueueAction(action);
+    },
+    consolida: function (cmp, event, idList, mapParams){
+        var action = cmp.get("c.consolidar");
+        action.setParams({
+        	ids: idList,
+            params: mapParams
+        });
+        action.setCallback(this, function (response) {
+            var state = response.getState();
+            var data = response.getReturnValue();
+            if(state === "SUCCESS"){
+                //cmp.set('v.dataTable', data);
+                console.log("success");
+            } else {
+                var errors = data.getError();
+                if (errors[0] && errors[0].message) {
+                	console.log("Error message: " + errors[0].message);
+                }
+            }
+        });
+        $A.enqueueAction(action);
     }
     
 })

@@ -84,7 +84,7 @@
                     <div class="slds-form-element slds-gutters row">
                         <label class="slds-form-element__label" for="select-01"></label>
                         <div class="slds-grid">
-                            <div class="slds-col slds-size_1-of-6">
+                            <div class="slds-col slds-size_1-of-6" id="cnpj">
                                 <lightning:textarea
                                     aura:id="textAccountCNPJ"
                                     name="input2"
@@ -92,7 +92,7 @@
                                     value=""
                                 />
                             </div>
-                            <div class="slds-col slds-size_2-of-6">
+                            <div class="slds-col slds-size_2-of-6" id="razao">
                                 <lightning:textarea
                                     aura:id="textAccountRazaoSocial"
                                     name="input2"
@@ -113,7 +113,7 @@
                                     </aura:iteration>
                                 </lightning:select>
                             </div>
-                            <div class="slds-col slds-size_1-of-6">
+                            <div class="slds-col slds-size_1-of-6" id="interlocutor">
                                 <lightning:textarea
                                     aura:id="interlocutor"
                                     name="input2"
@@ -127,7 +127,7 @@
                     <div class="slds-form-element slds-gutters row">
                         <label class="slds-form-element__label" for="select-01"></label>
                         <div class="slds-grid">
-                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6" id="ultimoContato">
                                 <lightning:input type="date"
                                     aura:id="dataUltimoContato"
                                     name="input2"
@@ -135,7 +135,7 @@
                                     value=""
                                 />
                             </div>
-                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6" id="proxContato">
                                 <lightning:input type="date"
                                     aura:id="dataAgendProxContato"
                                     name="input2"
@@ -285,8 +285,7 @@
                                   aura:id="fornAtualAlimentacao"
                                   name="selectItem"
                                   value="1"
-                                  label="Forn. Atual de alimentação"
-                                >
+                                  label="Forn. Atual de alimentação">
                                     <option value="">Selecione uma opção</option>
                                         <aura:iteration items="{!v.valuesFornAtualAlimentacao}" var="item">
                                             <option text="{!item.label}" value="{!item.value}"/>
@@ -517,6 +516,21 @@
                                     </aura:iteration>
                                 </lightning:select>
                             </div>                   
+                        </div>
+                    </div>
+                    <!--Decima linha-->
+                    <div class="slds-form-element slds-gutters row">
+                    	<label class="slds-form-element__label" for="select-01"></label>
+                        <div class="slds-grid">
+                        	<div class="slds-select_container1 slds-col slds-size_1-of-3">
+                                <lightning:button variant="brand" label="Resetar" title="Resetar" onclick="{! c.resetar }" />
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-3">
+                                <lightning:button variant="brand" label="Consolidar Id" title="Consolidar Id" onclick="{! c.consolidarId }" />
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-3">
+                                <lightning:button variant="brand" label="Consolidar CNPJ" title="Consolidar CNPJ" onclick="{! c.consolidarCNPJ }" />
+                            </div>
                         </div>
                     </div>
                     
