@@ -231,6 +231,27 @@
         cmp.find("statusFornAtualPremiacao").set("v.value", "");
         cmp.find("statusFornAtualDespesas").set("v.value", "");
         cmp.find("statusFornAtualPagamentos").set("v.value", "");
+        cmp.find("textConsultorAtento").set('v.value', "");
+        cmp.find("grupoRel").set('v.value', "");
+    },
+    getConsultor: function(cmp, event){
+        var action = cmp.get("c.getNameUser");
+        action.setCallback(this, function (response) {
+            var state = response.getState();
+            var data = response.getReturnValue();
+            console.log('consultor data', data);
+            if(state === "SUCCESS"){
+                cmp.find("textConsultorAtento").set('v.value', data);
+                console.log("success");
+            } else {
+                var errors = response.getError();
+                if (errors[0] && errors[0].message) {
+                    this.showToastMessage(cmp, event, 'Erro', errors[0].message, 'Error');
+                	console.log("Error message: " + errors[0].message);
+                }
+            }
+        });
+        $A.enqueueAction(action);
     }
     
 })

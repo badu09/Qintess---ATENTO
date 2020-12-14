@@ -58,7 +58,7 @@
     <aura:attribute name="loading" type="boolean" default="false"/>
     
     <aura:handler name="init" value="{!this}" action="{!c.myAction}" />
-    
+
     <lightning:tabset  selectedTabId="Consultor Remoto">
         <aura:if isTrue="{!v.loading}">
             <div class="exampleHolder">
@@ -67,9 +67,11 @@
         </aura:if>
 
         <lightning:tab label="Consultor Remoto" id="consultorTab">
-            <lightning:card class="header" iconName="standard:survey" title="" >
+            <lightning:card class="header" >
+                <img src="{!$Resource.AleloNome + '/aleloNome.JPG'}" width="80" height="80" align="left"/>
+                <img src="{!$Resource.AtentoNome + '/atentoNome.JPG'}" width="80" height="80" align="right"/>
                 <div id="titulo">
-                    <h1>Consultor Remoto</h1> 
+                    <h1>Tabulador Consultor Remoto</h1> 
                 </div>    
                 <div class="container" id="main">
                     <!--Primeira linha-->
@@ -537,13 +539,13 @@
                     	<label class="slds-form-element__label" for="select-01"></label>
                         <div class="slds-grid">
                         	<div class="slds-select_container1 slds-col slds-size_1-of-3">
-                                <lightning:button class="resetar" variant="brand" label="Resetar" title="Resetar" onclick="{! c.reset }" />
+                                <lightning:button class="btnResetar" variant="brand" label="Resetar" title="Resetar" onclick="{! c.reset }" />
                             </div>
                             <div class="slds-select_container1 slds-col slds-size_1-of-3">
-                                <lightning:button variant="brand" label="Consolidar Id" title="Consolidar Id" onclick="{! c.consolidarId }" />
+                                <lightning:button class="btnConsolidarId" variant="brand" label="Consolidar Id" title="Consolidar Id" onclick="{! c.consolidarId }" />
                             </div>
                             <div class="slds-select_container1 slds-col slds-size_1-of-3">
-                                <lightning:button variant="brand" label="Consolidar CNPJ" title="Consolidar CNPJ" onclick="{! c.consolidarCNPJ }" />
+                                <lightning:button class="btnConsolidarCNPJ" variant="brand" label="Consolidar CNPJ" title="Consolidar CNPJ" onclick="{! c.consolidarCNPJ }" />
                             </div>
                         </div>
                     </div>
@@ -551,10 +553,13 @@
                 </div>
             </lightning:card>
         </lightning:tab>
-        <lightning:tab class="todo" label="Base Detalhada" id="baseTab">
-            <lightning:card iconName="standard:survey" title="">
+        <lightning:tab label="Base Detalhada" id="baseTab">
+            <lightning:card class="base1">
+                <div id="tituloBase">
+                    <h1>Base Detalhada</h1> 
+                </div> 
                 <div style="height: 300px">
-                    <lightning:datatable
+                    <lightning:datatable 
                         keyField="tableid"
                         data="{! v.dataTable }"
                         columns="{! v.tableColumns }"

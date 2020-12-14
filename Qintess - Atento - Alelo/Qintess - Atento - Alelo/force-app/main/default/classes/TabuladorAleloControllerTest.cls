@@ -91,7 +91,7 @@ public class TabuladorAleloControllerTest {
         params.put('fornPagamentos', 'SODEXO');
         params.put('statusPagamentos', 'Negociação - Aguardando Aprovação Alelo');
         
-        TabuladorAleloController.consolidar(ids, params);
+        TabuladorAleloController.consolidar(ids, params, true);
         
         Account acct = [SELECT Id, Name, Estado__c, CPF_CNPJ__c, Razao_Social__c, Data_Agendamento_prox_Contato__c,
                         FORNECEDOR_ATUAL_NATAL__c, Status_Negocia_o_Despesas__c 

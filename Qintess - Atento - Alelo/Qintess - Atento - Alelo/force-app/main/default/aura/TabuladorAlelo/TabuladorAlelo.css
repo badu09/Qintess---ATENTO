@@ -1,10 +1,8 @@
-
 .THIS #consultorTab {
     background-color: #017457;
     font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
     border: 3px solid #BDD752;
 }
-
 .THIS #titulo {
     font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
     color: #BDD752;
@@ -32,19 +30,75 @@
     font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
     font-size: 13px;
     color: rgb(255, 255, 255);
+    font-weight: bolder;
 }
 
 /*.THIS #campo {
    width: 200px;
 } */
 
-.THIS .resetar {
+.THIS .btnResetar {
     background-color: #017457;
     border: 2px solid #BDD752;
+    color:#BDD752;
+    font-weight: bolder;
 }
+
+.THIS .btnConsolidarId {
+    background-color: #017457;
+    border: 2px solid #BDD752;
+    color:#BDD752;
+    font-weight: bolder;
+}
+
+.THIS .btnConsolidarCNPJ {
+    background-color: #017457;
+    border: 2px solid #BDD752;
+    color:#BDD752;
+    font-weight: bolder;
+}
+
+.THIS .btnResetar:hover {
+    background-color: #BDD752;
+    color: #017457;
+    font-weight: bolder;
+}
+
+.THIS .btnConsolidarId:hover {
+    background-color: #BDD752;
+    color: #017457;
+    font-weight: bolder;
+}
+
+.THIS .btnConsolidarCNPJ:hover {
+    background-color: #BDD752;
+    color: #017457;
+    font-weight: bolder;
+}
+
 .THIS #baseTab {
     background-color: #017457;
     border: 2px solid #BDD752;
     font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
     padding: 10px;
+}
+
+.THIS #tituloBase {
+    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
+    color: #BDD752;
+    font-size: 21px;
+    background-color: #017457;
+    font-weight: 500;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.THIS .base1 {
+    background-color: #017457;
+}
+
+.THIS .tableid {
+    background-color: #017457;
 }

@@ -42,6 +42,7 @@
         var groupId = event.getSource().get("v.value");
         console.log(groupId);
         helper.getAccount(component, event, groupId);
+        helper.getConsultor(component, event);
     },
     getAccountId : function(component, event, helper) {
         var accountId = event.getSource().get("v.value");
