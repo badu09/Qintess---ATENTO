@@ -49,26 +49,39 @@
     <!-- attributes -->
     <aura:attribute name="dataTable" type="Object"/>
     <aura:attribute name="tableColumns" type="List"/>
+    <aura:attribute name="idLists" type="List"/>
+    
+    <!--map-->
+    <aura:attribute name="theMap" type="Map" default="{}"/>
+    
+    <!--loading-->
+    <aura:attribute name="loading" type="boolean" default="false"/>
     
     <aura:handler name="init" value="{!this}" action="{!c.myAction}" />
     
     <lightning:tabset  selectedTabId="Consultor Remoto">
-        <lightning:tab class="todo1" label="Consultor Remoto" id="consultorTab">
-            <lightning:card class="todo2" iconName="standard:survey" title="" >
+        <aura:if isTrue="{!v.loading}">
+            <div class="exampleHolder">
+                <lightning:spinner alternativeText="Loading" size="small" />
+            </div>
+        </aura:if>
+
+        <lightning:tab label="Consultor Remoto" id="consultorTab">
+            <lightning:card class="header" iconName="standard:survey" title="" >
                 <div id="titulo">
                     <h1>Consultor Remoto</h1> 
                 </div>    
-                <div class="container">
+                <div class="container" id="main">
                     <!--Primeira linha-->
                     <div class="slds-form-element slds-gutters row">
                         <div class="slds-grid">
-                            <div class="slds-col slds-size_1-of-6" id="id" >
+                            <div class="slds-col slds-size_1-of-6" id="campo" >
                                 <lightning:input aura:id="groupIdText" name="v.groupIdText" label="Id" placeholder="Selecione um ID" onchange="{!c.getGroupId}"/>
                             </div>
-                            <div class="slds-col slds-size_2-of-6" id="grupoRel">
-                                <lightning:select aura:id="select"
+                            <div class="slds-col slds-size_2-of-6" id="campo">
+                                <lightning:select aura:id="grupoRel"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Grupo_Rel"
                                   onchange="{!c.getAccountId}"
                                 >
@@ -84,7 +97,7 @@
                     <div class="slds-form-element slds-gutters row">
                         <label class="slds-form-element__label" for="select-01"></label>
                         <div class="slds-grid">
-                            <div class="slds-col slds-size_1-of-6" id="cnpj">
+                            <div class="slds-col slds-size_1-of-6" id="campo">
                                 <lightning:textarea
                                     aura:id="textAccountCNPJ"
                                     name="input2"
@@ -92,7 +105,7 @@
                                     value=""
                                 />
                             </div>
-                            <div class="slds-col slds-size_2-of-6" id="razao">
+                            <div class="slds-col slds-size_2-of-6" id="campo">
                                 <lightning:textarea
                                     aura:id="textAccountRazaoSocial"
                                     name="input2"
@@ -100,11 +113,11 @@
                                     value=""
                                 />
                             </div>
-                            <div class="slds-col slds-size_1-of-6" id="folha">
+                            <div class="slds-col slds-size_1-of-6" id="campo">
                                 <lightning:select
-                                  aura:id="select"
+                                  aura:id="folhaPgto"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Folha de Pagamento"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -113,7 +126,7 @@
                                     </aura:iteration>
                                 </lightning:select>
                             </div>
-                            <div class="slds-col slds-size_1-of-6" id="interlocutor">
+                            <div class="slds-col slds-size_1-of-6" id="campo">
                                 <lightning:textarea
                                     aura:id="interlocutor"
                                     name="input2"
@@ -127,7 +140,7 @@
                     <div class="slds-form-element slds-gutters row">
                         <label class="slds-form-element__label" for="select-01"></label>
                         <div class="slds-grid">
-                            <div class="slds-select_container1 slds-col slds-size_1-of-6" id="ultimoContato">
+                            <div class="slds-col slds-size_1-of-6" id="campo">
                                 <lightning:input type="date"
                                     aura:id="dataUltimoContato"
                                     name="input2"
@@ -135,7 +148,7 @@
                                     value=""
                                 />
                             </div>
-                            <div class="slds-select_container1 slds-col slds-size_1-of-6" id="proxContato">
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
                                 <lightning:input type="date"
                                     aura:id="dataAgendProxContato"
                                     name="input2"
@@ -147,7 +160,7 @@
                                 <lightning:select
                                   aura:id="risco"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Risco"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -160,23 +173,11 @@
                                 <lightning:input type="date"
                                   aura:id="mesRetencao"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Mês de Retenção"
                                  />
                             </div>
-                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
-                                <lightning:select
-                                  aura:id="prazodeBlindagem"
-                                  name="selectItem"
-                                  value="1"
-                                  label="Prazo de blindagem"
-                                >
-                                    <option value="">Selecione uma opção</option>
-                                    <aura:iteration items="{!v.valuesPrazodeBlindagem}" var="item">
-                                        <option text="{!item.label}" value="{!item.value}"/>
-                                    </aura:iteration>
-                                </lightning:select>
-                            </div>
+                            
                             
                         </div>
                     </div>
@@ -186,9 +187,22 @@
                         <div class="slds-grid">
                             <div class="slds-select_container1 slds-col slds-size_1-of-6">
                                 <lightning:select
+                                  aura:id="prazodeBlindagem"
+                                  name="selectItem"
+                                  value=""
+                                  label="Prazo de blindagem"
+                                >
+                                    <option value="">Selecione uma opção</option>
+                                    <aura:iteration items="{!v.valuesPrazodeBlindagem}" var="item">
+                                        <option text="{!item.label}" value="{!item.value}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-select_container1 slds-col slds-size_1-of-6">
+                                <lightning:select
                                   aura:id="statusdoGrupo"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Status do grupo"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -200,9 +214,9 @@
         
                             <div class="slds-select_container1 slds-col slds-size_1-of-6">
                                 <lightning:select
-                                  aura:id="fatordeRisco"
+                                  aura:id="fator_deRisco"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Fator de Risco"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -216,7 +230,7 @@
                                 <lightning:select
                                   aura:id="statusdeRisco"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Status de Risco"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -227,9 +241,9 @@
                             </div>
                             <div class="slds-select_container1 slds-col slds-size_1-of-6">
                                 <lightning:select
-                                  aura:id="statusdeRisco"
+                                  aura:id="acaoPosPerda"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Ação Pós Perda"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -242,7 +256,7 @@
                                 <lightning:input type="date"
                                   aura:id="mesPosPerda"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Mês Pós Perda"
                                  />
                             </div>                    
@@ -284,7 +298,7 @@
                                 <lightning:select
                                   aura:id="fornAtualAlimentacao"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Forn. Atual de alimentação">
                                     <option value="">Selecione uma opção</option>
                                         <aura:iteration items="{!v.valuesFornAtualAlimentacao}" var="item">
@@ -297,7 +311,7 @@
                                 <lightning:select
                                   aura:id="fornAtualRefeicao"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Forn. Atual de Transporte"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -311,7 +325,7 @@
                                 <lightning:select
                                   aura:id="fornAtualTransporte"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Forn. Atual de Transporte"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -324,7 +338,7 @@
                                 <lightning:select
                                   aura:id="fornAtualCombustivel"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Forn. Atual de Combustível"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -344,7 +358,7 @@
                                 <lightning:select
                                   aura:id="statusFornAtualAlimentacao"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Status de Negociação"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -358,7 +372,7 @@
                                 <lightning:select
                                   aura:id="statusFornAtualRefeicao"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Status de Negociação"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -372,7 +386,7 @@
                                 <lightning:select
                                   aura:id="statusFornAtualTransporte"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Status de Negociação"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -385,7 +399,7 @@
                                 <lightning:select
                                   aura:id="statusFornAtualCombustivel"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Status de Negociação"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -405,7 +419,7 @@
                                 <lightning:select
                                   aura:id="fornAtualNatal"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Forn. Atual de Natal"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -419,7 +433,7 @@
                                 <lightning:select
                                   aura:id="fornAtualPremiacao"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Forn. Atual de Premiação"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -433,7 +447,7 @@
                                 <lightning:select
                                   aura:id="fornAtualDespesas"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Forn. Atual de Despesas"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -446,7 +460,7 @@
                                 <lightning:select
                                   aura:id="fornAtualPagamentos"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Forn. Atual de Pagamentos"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -466,7 +480,7 @@
                                 <lightning:select
                                   aura:id="statusFornAtualNatal"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Status de Negociação"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -480,7 +494,7 @@
                                 <lightning:select
                                   aura:id="statusFornAtualPremiacao"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Status de Negociação"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -494,7 +508,7 @@
                                 <lightning:select
                                   aura:id="statusFornAtualDespesas"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Status de Negociação"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -507,7 +521,7 @@
                                 <lightning:select
                                   aura:id="statusFornAtualPagamentos"
                                   name="selectItem"
-                                  value="1"
+                                  value=""
                                   label="Status de Negociação"
                                 >
                                     <option value="">Selecione uma opção</option>
@@ -523,7 +537,7 @@
                     	<label class="slds-form-element__label" for="select-01"></label>
                         <div class="slds-grid">
                         	<div class="slds-select_container1 slds-col slds-size_1-of-3">
-                                <lightning:button variant="brand" label="Resetar" title="Resetar" onclick="{! c.resetar }" />
+                                <lightning:button class="resetar" variant="brand" label="Resetar" title="Resetar" onclick="{! c.reset }" />
                             </div>
                             <div class="slds-select_container1 slds-col slds-size_1-of-3">
                                 <lightning:button variant="brand" label="Consolidar Id" title="Consolidar Id" onclick="{! c.consolidarId }" />
@@ -538,13 +552,14 @@
             </lightning:card>
         </lightning:tab>
         <lightning:tab class="todo" label="Base Detalhada" id="baseTab">
-            <lightning:card class="todob" iconName="standard:survey" title="">
+            <lightning:card iconName="standard:survey" title="">
                 <div style="height: 300px">
                     <lightning:datatable
-                            keyField="tableid"
-                            data="{! v.dataTable }"
-                            columns="{! v.tableColumns }"
-                            hideCheckboxColumn="true"/>
+                        keyField="tableid"
+                        data="{! v.dataTable }"
+                        columns="{! v.tableColumns }"
+                        hideCheckboxColumn="true"
+                    />
                 </div>
             </lightning:card>
         </lightning:tab>

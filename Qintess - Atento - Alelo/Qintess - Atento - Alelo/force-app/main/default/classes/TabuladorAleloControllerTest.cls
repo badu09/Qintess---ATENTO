@@ -9,6 +9,12 @@ public class TabuladorAleloControllerTest {
     }
     
     @isTest
+    public static void testGetNameUser(){
+    	String name = TabuladorAleloController.getNameUser();
+        System.debug(name);
+    }
+    
+    @isTest
     public static void testGetAccounts(){
         Account acct = TestData.getAccount();
         acct.GrupoRelacionamentoId__c = '10';
@@ -42,6 +48,62 @@ public class TabuladorAleloControllerTest {
 
         List<Produtos_Alelo__c> listProd = TabuladorAleloController.getProdutosAleloByGrupoRelId('10');
         System.assertEquals(2, listProd.size(), 'O método "getProdutosAleloByGrupoRelId" não retornou os registros Produtos_Alelo__c esperados.');
+    }
+    
+    @isTest
+    public static void testConsolidar(){
+        List<Id> ids = new List<Id>();
+		Map<String, String> params = new Map<String, String>();
+        
+        Account acct_test = TestData.getAccount();
+        ids.add(acct_test.Id);
+        
+        params.put('cnpj', '24311653000150');
+        params.put('razaoSocial', 'Razao Social');
+        params.put('folhaDePagto', 'BANCO DO BRASIL');
+        params.put('interlocutor', 'Interlocutor');
+        params.put('dataDoUltimoContato', '2021-01-01');
+        params.put('dataAgendamentoProxContato', '2022-01-01');
+        params.put('risco', 'NÃO');
+        params.put('mesDeRetencao', '2020-12-12');
+        params.put('prazoDeBlindagem', '12 meses');
+        params.put('statusDoGrupo', 'Apresentação Consultor');
+        params.put('fatorDeRisco', 'Assédio Concorrência');
+        params.put('statusDoRisco', 'PERDIDO');
+        params.put('acaoPosPerda', 'Multa');
+        params.put('mesDePerda', '2020-12-12');
+        params.put('telefone', '1140004000');
+        params.put('email', 'email@gmail.com');
+        params.put('fornAlimentacao', 'CESTA FISICA');
+        params.put('statusAlimentacao', 'Negociação - Aguardando Aprovação Alelo');
+        params.put('fornRefeicao', 'ALELO/REFEITORIO');
+        params.put('statusRefeicao', 'Recusa - Acordo Sindical');
+        params.put('fornTransporte', 'FRETADO');
+        params.put('statusTransporte', 'Proposta Enviada - Em Análise');
+        params.put('fornCombustivel', 'GOOD CARD');
+        params.put('statusCombustivel', 'Não Ofertado');
+        params.put('fornNatal', 'DINHEIRO');
+        params.put('statusNatal', 'Não Ofertado');
+        params.put('fornPremiacao', 'NÃO FORNECE');
+        params.put('statusPremiacao', 'Negociação - Aguardando Aprovação Alelo');
+        params.put('fornDespesas', 'DINHEIRO');
+        params.put('statusDespesas', '100% Alelo');
+        params.put('fornPagamentos', 'SODEXO');
+        params.put('statusPagamentos', 'Negociação - Aguardando Aprovação Alelo');
+        
+        TabuladorAleloController.consolidar(ids, params);
+        
+        Account acct = [SELECT Id, Name, Estado__c, CPF_CNPJ__c, Razao_Social__c, Data_Agendamento_prox_Contato__c,
+                        FORNECEDOR_ATUAL_NATAL__c, Status_Negocia_o_Despesas__c 
+                        FROM Account WHERE Id = :acct_test.Id LIMIT 1];
+        
+        System.assertEquals(acct_test.Name, acct.Name);
+        System.assertEquals(acct_test.Estado__c, acct.Estado__c);
+        System.assertEquals('24311653000150', acct.CPF_CNPJ__c);
+		System.assertEquals('Razao Social', acct.Razao_Social__c);
+        System.assertEquals(Date.valueOf('2022-01-01'), acct.Data_Agendamento_prox_Contato__c);
+        System.assertEquals('DINHEIRO', acct.FORNECEDOR_ATUAL_NATAL__c);
+        System.assertEquals('100% Alelo', acct.Status_Negocia_o_Despesas__c);
     }
     
     @isTest

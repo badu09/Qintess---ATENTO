@@ -1,4 +1,4 @@
-public class TabuladorAleloController { //10/12/2020 - 14:11
+public class TabuladorAleloController {
     
     @AuraEnabled
     public static List<Account> getAccounts(String grupoRelId){
@@ -10,7 +10,6 @@ public class TabuladorAleloController { //10/12/2020 - 14:11
         }
     }
     
-    //  "Obs. Consultor Atento" ?
     @AuraEnabled
     public static Account getAccountInfo(String acctId){
     	return [SELECT Id, Name, GrupoRelacionamentoId__c, CPF_CNPJ__c, Razao_Social__c, Folha_de_Pagto__c, Interlocutor__c, 
@@ -25,11 +24,18 @@ public class TabuladorAleloController { //10/12/2020 - 14:11
     }
     
     @AuraEnabled
+    public static String getNameUser(){
+        String UserId = UserInfo.getUserId();
+        User myUser = [SELECT Id, Name FROM User WHERE Id = :UserId LIMIT 1];
+        return myUser.Name;
+    }
+    
+    @AuraEnabled
     public static List<Produtos_Alelo__c> getProdutosAleloByAccountId(String accountId){
         List<Opportunity> listOpp = [SELECT Id FROM Opportunity WHERE AccountId = :accountId];
         Map<Id, Opportunity> mapOpp = new Map<Id, Opportunity>(listOpp);
         Set<Id> setIdsOpp = mapOpp.keySet();
-        List<Produtos_Alelo__c> produtos = [SELECT Id, Name, Numero_do_Contrato__c, Banco__c FROM Produtos_Alelo__c WHERE Oportunidade__c IN :setIdsOpp];
+        List<Produtos_Alelo__c> produtos = [SELECT Id, Name, Numero_do_Contrato__c, Banco__c, Faturamento__c FROM Produtos_Alelo__c WHERE Oportunidade__c IN :setIdsOpp];
         return produtos;
     }
     
@@ -43,15 +49,97 @@ public class TabuladorAleloController { //10/12/2020 - 14:11
         Map<Id, Opportunity> mapOpp = new Map<Id, Opportunity>(listOpp);
         Set<Id> setIdsOpp = mapOpp.keySet();
         
-        List<Produtos_Alelo__c> produtos = [SELECT Id, Name, Numero_do_Contrato__c, Banco__c FROM Produtos_Alelo__c WHERE Oportunidade__c IN :setIdsOpp];
+        List<Produtos_Alelo__c> produtos = [SELECT Id, Name, Numero_do_Contrato__c, Banco__c, Faturamento__c FROM Produtos_Alelo__c WHERE Oportunidade__c IN :setIdsOpp];
         return produtos;
     }
 
     //Ações 
     
     @AuraEnabled
-    public static void consolidar(List<Id> ids, Map<String, String> params){
-    	//Update em todas as contas que pertencem ao Grupo de Relacionamento
+    public static void consolidar(List<Id> ids, Map<String, String> params, Boolean isCnpj){
+        System.debug('consolidar'+ids);
+        System.debug('isCnpj'+isCnpj);
+        System.debug('params'+params);
+        System.debug('params date '+params.get('risco'));
+        Map<Id, Account> mapAcct = new Map<Id, Account>([SELECT Id, CPF_CNPJ__c FROM Account WHERE Id IN :ids]);
+        List<Account> listAcctToUpdate = new List<Account>();
+        
+        for(Id idAcct : ids){
+            Account acct = mapAcct.get(idAcct);
+            if (params.get('cnpj') != null && isCnpj == true){
+                System.debug('cnpj animal');
+                acct.CPF_CNPJ__c = params.get('cnpj');
+            } else {
+                acct.CPF_CNPJ__c = acct.CPF_CNPJ__c; 
+            }
+                
+            if (params.get('razaoSocial') != null && isCnpj == true) 
+                acct.Razao_Social__c = params.get('razaoSocial');
+            if (params.get('folhaDePagto') != null) 
+                acct.Folha_de_Pagto__c = params.get('folhaDePagto');
+            if (params.get('interlocutor') != null) 
+                acct.Interlocutor__c = params.get('interlocutor');
+            if (params.get('dataDoUltimoContato') != null) 
+                acct.Data_do_ultimo_Contato__c = Date.valueOf(params.get('dataDoUltimoContato'));
+            if (params.get('dataAgendamentoProxContato') != null) 
+                acct.Data_Agendamento_prox_Contato__c = Date.valueOf(params.get('dataAgendamentoProxContato'));
+            if (params.get('risco') != null) 
+                System.debug('o risco esta aqui');
+                acct.Risco__c = params.get('risco');
+            if (params.get('mesDeRetencao') != null) 
+                acct.M_s_de_Reten_o__c = Date.valueOf(params.get('mesDeRetencao'));
+            if (params.get('prazoDeBlindagem') != null) 
+                acct.Prazo_de_Blindagem__c = params.get('prazoDeBlindagem');
+            if (params.get('statusDoGrupo') != null) 
+                acct.Status_do_Grupo__c = params.get('statusDoGrupo');
+            if (params.get('fatorDeRisco') != null) 
+                acct.Fator_de_Risco__c = params.get('fatorDeRisco');
+            if (params.get('statusDoRisco') != null) 
+                acct.Status_do_Risco__c = params.get('statusDoRisco');
+            if (params.get('acaoPosPerda') != null) 
+                acct.A_o_P_s_Perda__c = params.get('acaoPosPerda');
+            if (params.get('mesDePerda') != null) 
+                acct.Mes_de_Perda__c = Date.valueOf(params.get('mesDePerda'));
+            if (params.get('telefone') != null && isCnpj == true) 
+                acct.TelefoneAtual__c = params.get('telefone');
+            if (params.get('email') != null && isCnpj == true) 
+                acct.Email__c = params.get('email');
+            if (params.get('fornAlimentacao') != null) 
+                acct.FORNECEDOR_ATUAL_ALIMENTACAO__c = params.get('fornAlimentacao');
+            if (params.get('statusAlimentacao') != null) 
+                acct.Status_Negociacao_Alimentacao__c = params.get('statusAlimentacao');
+            if (params.get('fornRefeicao') != null) 
+                acct.FORNECEDOR_ATUAL_REFEICAO__c = params.get('fornRefeicao');
+            if (params.get('statusRefeicao') != null) 
+                acct.Status_Negociacao_Refeicao__c = params.get('statusRefeicao');
+            if (params.get('fornTransporte') != null) 
+                acct.FORNECEDOR_ATUAL_TRANSPORTE__c = params.get('fornTransporte');
+            if (params.get('statusTransporte') != null) 
+                acct.Status_Negociacao_Transporte__c = params.get('statusTransporte');
+            if (params.get('fornCombustivel') != null) 
+                acct.FORNECEDOR_ATUAL_COMBUSTIVEL__c = params.get('fornCombustivel');
+            if (params.get('statusCombustivel') != null) 
+                acct.Status_Negociacao_Combustivel__c = params.get('statusCombustivel');
+            if (params.get('fornNatal') != null) 
+                acct.FORNECEDOR_ATUAL_NATAL__c = params.get('fornNatal');
+            if (params.get('statusNatal') != null) 
+                acct.Status_Negociacao_Natal__c = params.get('statusNatal');
+            if (params.get('fornPremiacao') != null) 
+                acct.FORNECEDOR_ATUAL_PR_PAGOS_Premia_o_in__c = params.get('fornPremiacao');
+            if (params.get('statusPremiacao') != null) 
+                acct.Status_Negocia_o_PR_PAGOS_Premia_o__c = params.get('statusPremiacao');
+            if (params.get('fornDespesas') != null) 
+                acct.PR_PAGOS_Despesas__c = params.get('fornDespesas');
+            if (params.get('statusDespesas') != null) 
+                acct.Status_Negocia_o_Despesas__c = params.get('statusDespesas');
+            if (params.get('fornPagamentos') != null) 
+                acct.Fornecedor_Atual_de_Pagamentos__c = params.get('fornPagamentos');
+            if (params.get('statusPagamentos') != null) 
+                acct.Status_Negocia_o_Pagamentos__c = params.get('statusPagamentos');
+            listAcctToUpdate.add(acct);
+        }
+        if(!listAcctToUpdate.isEmpty()) update listAcctToUpdate;
+        
     }
     
     // ----- Retornar valores dos campos Picklist ----- //

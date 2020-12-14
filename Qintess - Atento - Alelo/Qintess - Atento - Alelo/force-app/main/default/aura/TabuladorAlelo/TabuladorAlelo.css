@@ -1,85 +1,50 @@
+
 .THIS #consultorTab {
     background-color: #017457;
-    border: 2px solid #BDD752;
     font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
-    padding: 10px;
-}
-.THIS.todo1{
-    background-color: #017457;
-    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
-    
-    
-}
-.THIS.container{
-    background-color: #017457;
-    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
-    
+    border: 3px solid #BDD752;
 }
 
+.THIS #titulo {
+    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
+    color: #BDD752;
+    font-size: 24px;
+    background-color: #017457;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.THIS .header {
+    background-color: #017457;
+}
+
+.THIS #main {
+    background: #017457;
+    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 20px;
+}
+
+.THIS label {
+    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
+    font-size: 13px;
+    color: rgb(255, 255, 255);
+}
+
+/*.THIS #campo {
+   width: 200px;
+} */
+
+.THIS .resetar {
+    background-color: #017457;
+    border: 2px solid #BDD752;
+}
 .THIS #baseTab {
     background-color: #017457;
     border: 2px solid #BDD752;
     font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
     padding: 10px;
-}
-.THIS.todob {
-    background-color: #017457;
-    border: 2px solid #BDD752;
-    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
-    padding: 10px;
-}
-.THIS label {
-    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
-    font-size: 13px;
-    color: rgb(8, 112, 55);
-}
-.THIS #titulo {
-    font-family: Century Gothic,CenturyGothic,AppleGothic,sans-serif;
-    color: #BDD752;
-    font-size: 22px;
-    width: 1100px;
-    height: 80px;
-    padding-left: 700px;
-    background-color: rgb(163, 159, 159);
-
-}
-
-/* -- Campos do Consultor Remoto -- */
-
-.THIS #id {
-    width: 160px;
-    margin-left: 20px;
-}
-
-.THIS ::-webkit-input-placeholder {
-    font-size: 13px;
-}
-
-.THIS #grupoRel {
-    width: 200px;
-}
-
-.THIS #cnpj {
-    width: 180px;
-    margin-left: 20px;
-}
-
-.THIS #razao {
-    width: 200px;
-}
-
-.THIS #folha {
-    width: 200px;
-}
-
-.THIS #interlocutor {
-    width: 200px;
-}
-.THIS #ultimoContato {
-    width: 170px;
-    margin-left: 20px;
-}
-
-.THIS #proxContato {
-    width: 200px;
 }
