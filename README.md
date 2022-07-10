@@ -1,3 +1,3 @@
-# Qintess - ___ATENTO___ - ALELO
+# Qintess - ___ALELO___ - ALELO
 
- Tabulador feito em ***Aura component, Apex e JavaScript*** para o cliente Atento.
+ Tabulador feito em ***Aura component, Apex e JavaScript*** para o cliente AELO.
